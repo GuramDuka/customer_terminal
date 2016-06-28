@@ -6,13 +6,7 @@ namespace srv1c {
 //------------------------------------------------------------------------------
 class infobase extends \SQLite3 {
 
-	protected $create_if_not_exists_ = true;
-
-	public function set_create_if_not_exists($create_if_not_exists) {
-		return $this->create_if_not_exists_ = $create_if_not_exists;
-	}
-
-    public function __construct(int $flags = SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE) {
+    public function __construct(int $flags = SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE, $create_if_not_exists = true) {
                                                    
 		$ib_file_name = APP_DIR . 'data' . DIRECTORY_SEPARATOR . 'base.db';
 
@@ -22,17 +16,18 @@ class infobase extends \SQLite3 {
 		$new_ib = file_exists($ib_file_name) === false;
 
 		parent::__construct($ib_file_name, $flags);
-		//$this->open($ib_file_name, $flags);
 		$this->enableExceptions(true);
 		$this->busyTimeout(5000);
 
-		if( ($new_ib || config::$debug) && $this->create_if_not_exists_ ) {
+		if( ($new_ib || config::$debug) && $create_if_not_exists ) {
 
 			try {
 
-				$this->exec('PRAGMA auto_vacuum = FULL');
+				$this->exec('PRAGMA auto_vacuum = NONE');
 				$this->exec('PRAGMA page_size = 16384');
-				$this->exec('PRAGMA cache_size = -131072');
+				$this->exec('PRAGMA cache_size = -262144');
+				$this->exec('PRAGMA default_cache_size = -262144');
+				$this->exec('PRAGMA count_changes = OFF');
 				$this->exec('PRAGMA synchronous = NORMAL');
 				$this->exec('PRAGMA journal_mode = WAL');
 				$this->exec('PRAGMA temp_store = MEMORY');
@@ -192,7 +187,7 @@ EOT
 		);
 
 		$dimensions = [ 'object' => '_uuid', 'property' => '_uuid', 'idx' => '' ];
-		$this->create_unique_indexes_on_registry('properties_registry', $dimensions);
+		$this->create_unique_indexes_on_registry('properties_registry', $dimensions, false);
 
 		// регистр ЗначенияПодбораАвтомобилейИнтернетПортала
 		$sql = '';
@@ -215,7 +210,7 @@ EOT
 		);
 
 		$dimensions = [ 'car' => '_uuid', 'category' => '_uuid', 'idx' => '' ];
-		$this->create_unique_indexes_on_registry('cars_selections_registry', $dimensions);
+		$this->create_unique_indexes_on_registry('cars_selections_registry', $dimensions, false);
 
 		for( $i = 0; $i < config::$cars_selections_registry_max_values_on_row; $i++ )
 			$this->exec(

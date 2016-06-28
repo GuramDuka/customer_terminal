@@ -18,8 +18,7 @@ class pager_handler extends handler {
 
 		$start_time = micro_time();
 
-		$this->infobase_ = new infobase;
-		$this->infobase_->set_create_if_not_exists(false);
+		$this->infobase_ = new infobase(, false);
 
 		$pgsz = config::$page_size;
 
