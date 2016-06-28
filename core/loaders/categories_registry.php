@@ -12,6 +12,7 @@ class categories_registry_loader extends objects_loader {
 			return;
 
 		$all_fields = [ 'category_uuid', 'product_uuid' ];
+		$dimensions = array_merge($all_fields, []);
 		$fields = [];
 		$fields_uuid = [];
 
@@ -26,7 +27,7 @@ class categories_registry_loader extends objects_loader {
 		$this->infobase_->exec('BEGIN TRANSACTION');
 
 		$st = null;
-		$st_erase = null;
+		$where = null;
 
 		foreach( $this->objects_ as $object ) {
 
@@ -40,21 +41,59 @@ class categories_registry_loader extends objects_loader {
 			foreach( $fields_uuid as $field )
 				$$field = uuid2bin(@$$field);
 
+			$w = '';
+
+			foreach( $dimensions as $dim ) {
+
+				if( $$dim === null )
+					continue;
+
+				$w .= " AND ${dim} = :${dim}";
+
+			}
+
+			if( $w !== $where ) {
+
+				$st_erase = null;
+				$where = $w;
+				$w = null;
+
+			}
+
+			$sql = <<<EOT
+				DELETE FROM
+					categories_registry
+				WHERE
+					1
+					${where}
+EOT
+			;
+
+			if( config::$debug ) {
+
+				$stp = $this->infobase_->prepare('EXPLAIN QUERY PLAN ' . $sql);
+
+				foreach( $dimensions as $field )
+					if( substr($field, -3) === 'uuid' )
+						$stp->bindParam(":${field}", $$field, SQLITE3_BLOB);
+					else
+						$stp->bindParam(":${field}", $$field);
+
+				$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
+
+				error_log($r['detail']);
+
+			}
+
 			if( $st_erase === null ) {
 
-				$st_erase = $this->infobase_->prepare(<<<'EOT'
-					DELETE FROM
-						categories_registry
-					WHERE
-						(category_uuid = :category_uuid
-							OR :category_uuid IS NULL)
-						AND (product_uuid = :product_uuid
-							OR :product_uuid IS NULL)
-EOT
-				);
+				$st_erase = $this->infobase_->prepare($sql);
 
-				$st_erase->bindParam(':category_uuid'	, $category_uuid	, SQLITE3_BLOB);
-				$st_erase->bindParam(':product_uuid'	, $product_uuid		, SQLITE3_BLOB);
+				foreach( $dimensions as $field )
+					if( substr($field, -3) === 'uuid' )
+						$stp->bindParam(":${field}", $$field, SQLITE3_BLOB);
+					else
+						$stp->bindParam(":${field}", $$field);
 
 			}
 

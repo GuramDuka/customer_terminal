@@ -11,7 +11,9 @@ class properties_registry_loader extends objects_loader {
 		if( $this->objects_ === null || count($this->objects_) === 0 )
 			return;
 
-		$all_fields = [ 'object_uuid', 'property_uuid', 'idx', 'value_uuid' ];
+		$all_fields = [ 'object_uuid', 'property_uuid', 'idx' ];
+		$dimensions = array_merge($all_fields, []);
+		$all_fields[] = 'value_uuid';
 		$fields = [];
 		$fields_uuid = [];
 
@@ -26,7 +28,7 @@ class properties_registry_loader extends objects_loader {
 		$this->infobase_->exec('BEGIN TRANSACTION');
 
 		$st = null;
-		$st_erase = null;
+		$where = null;
 
 		foreach( $this->objects_ as $object ) {
 
@@ -39,24 +41,59 @@ class properties_registry_loader extends objects_loader {
 			foreach( $fields_uuid as $field )
 				$$field = uuid2bin(@$$field);
 
+			$w = '';
+
+			foreach( $dimensions as $dim ) {
+
+				if( $$dim === null )
+					continue;
+
+				$w .= " AND ${dim} = :${dim}";
+
+			}
+
+			if( $w !== $where ) {
+
+				$st_erase = null;
+				$where = $w;
+				$w = null;
+
+			}
+
+			$sql = <<<EOT
+				DELETE FROM
+					properties_registry
+				WHERE
+					1
+					${where}
+EOT
+			;
+
+			if( config::$debug ) {
+
+				$stp = $this->infobase_->prepare('EXPLAIN QUERY PLAN ' . $sql);
+
+				foreach( $dimensions as $field )
+					if( substr($field, -3) === 'uuid' )
+						$stp->bindParam(":${field}", $$field, SQLITE3_BLOB);
+					else
+						$stp->bindParam(":${field}", $$field);
+
+				$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
+
+				error_log($r['detail']);
+
+			}
+
 			if( $st_erase === null ) {
 
-				$st_erase = $this->infobase_->prepare(<<<'EOT'
-					DELETE FROM
-						properties_registry
-					WHERE
-						(object_uuid = :object_uuid
-							OR :object_uuid IS NULL)
-						AND (property_uuid = :property_uuid
-							OR :property_uuid IS NULL)
-						AND (idx = :idx
-							OR :idx IS NULL)
-EOT
-				);
+				$st_erase = $this->infobase_->prepare($sql);
 
-				$st_erase->bindParam(':object_uuid'		, $object_uuid	, SQLITE3_BLOB);
-				$st_erase->bindParam(':property_uuid'	, $property_uuid, SQLITE3_BLOB);
-				$st_erase->bindParam(':idx'				, $idx);
+				foreach( $dimensions as $field )
+					if( substr($field, -3) === 'uuid' )
+						$stp->bindParam(":${field}", $$field, SQLITE3_BLOB);
+					else
+						$stp->bindParam(":${field}", $$field);
 
 			}
 

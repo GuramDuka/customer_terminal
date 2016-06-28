@@ -44,22 +44,6 @@ class system_remainders_registry_loader extends objects_loader {
 		$st_totals_sub = null;
 		$st_totals_del = null;
 
-		$where_alias = '';
-		$where = '';
-
-		foreach( $dimensions as $dim ) {
-
-			$w = <<<EOT
-				AND (r.${dim} = :${dim}
-					OR r.${dim} IS NULL)
-EOT
-			;
-
-			$where_alias .= $w;
-			$where .= str_replace('r.', '', $w);
-
-		}
-
 		$st_totals_op = <<<'EOT'
 			REPLACE INTO
 				system_remainders_registry
@@ -78,6 +62,8 @@ EOT
 EOT
 		;
 
+		$where = null;
+
 		foreach( $this->objects_ as $object ) {
 
 			// object may not present all fields then need initialize
@@ -89,10 +75,47 @@ EOT
 			foreach( $fields_uuid as $field )
 				$$field = uuid2bin(@$$field);
 
+			$w = '';
+
+			foreach( $dimensions as $dim ) {
+
+				if( $$dim === null )
+					continue;
+
+				$w .= " AND ${dim} = :${dim}";
+
+			}
+
+			if( $w !== $where ) {
+
+				$st_records_del = null;
+				$st_totals_add = null;
+				$st_totals_sub = null;
+				$st_totals_del = null;
+				$where = $w;
+				$w = null;
+
+			}
+
 			// subtract existing records from totals
 			if( $st_totals_sub === null ) {
 
-				$st_totals_sub = $this->infobase_->prepare(str_replace('${op}', '-', $st_totals_op . "${where_alias}"));
+				$sql = str_replace('${op}', '-', $st_totals_op . str_replace('AND ', 'AND r.', "${where}"));
+
+				if( config::$debug ) {
+
+					$stp = $this->infobase_->prepare('EXPLAIN QUERY PLAN ' . $sql);
+
+					foreach( $dimensions as $field )
+						$stp->bindParam(":${field}", $$field, SQLITE3_BLOB);
+
+					$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
+
+					error_log($r['detail']);
+
+				}
+
+				$st_totals_sub = $this->infobase_->prepare($sql);
 
 				foreach( $dimensions as $field )
 					$st_totals_sub->bindParam(":${field}", $$field, SQLITE3_BLOB);
@@ -103,7 +126,7 @@ EOT
 
 			if( $st_totals_del === null ) {
 
-				$st_totals_del = $this->infobase_->prepare(<<<EOT
+				$sql = <<<EOT
 					DELETE FROM
 						system_remainders_registry
 					WHERE
@@ -130,7 +153,22 @@ EOT
 						AND (reserve_quantity = 0
 							OR reserve_quantity IS NULL)
 EOT
-				);
+				;
+
+				if( config::$debug ) {
+
+					$stp = $this->infobase_->prepare('EXPLAIN QUERY PLAN ' . $sql);
+
+					foreach( $dimensions as $field )
+						$stp->bindParam(":${field}", $$field, SQLITE3_BLOB);
+
+					$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
+
+					error_log($r['detail']);
+
+				}
+
+				$st_totals_del = $this->infobase_->prepare($sql);
 
 				foreach( $dimensions as $field )
 					$st_totals_del->bindParam(":${field}", $$field, SQLITE3_BLOB);
@@ -141,14 +179,29 @@ EOT
 
 			if( $st_records_del === null ) {
 
-				$st_records_del = $this->infobase_->prepare(<<<EOT
+				$sql = <<<EOT
 					DELETE FROM
 						system_remainders_records_registry
 					WHERE
 						1
 						${where}
 EOT
-				);
+				;
+
+				if( config::$debug ) {
+
+					$stp = $this->infobase_->prepare('EXPLAIN QUERY PLAN ' . $sql);
+
+					foreach( $dimensions as $field )
+						$stp->bindParam(":${field}", $$field, SQLITE3_BLOB);
+
+					$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
+
+					error_log($r['detail']);
+
+				}
+
+				$st_records_del = $this->infobase_->prepare($sql);
 
 				foreach( $dimensions as $field )
 					$st_records_del->bindParam(":${field}", $$field, SQLITE3_BLOB);
@@ -191,7 +244,22 @@ EOT
 			// addition existing records to totals
 			if( $st_totals_add === null ) {
 
-				$st_totals_add = $this->infobase_->prepare(str_replace('${op}', '+', $st_totals_op . "${where_alias}"));
+				$sql = str_replace('${op}', '+', $st_totals_op . str_replace('AND ', 'AND r.', "${where}"));
+
+				if( config::$debug ) {
+
+					$stp = $this->infobase_->prepare('EXPLAIN QUERY PLAN ' . $sql);
+
+					foreach( $dimensions as $field )
+						$stp->bindParam(":${field}", $$field, SQLITE3_BLOB);
+
+					$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
+
+					error_log($r['detail']);
+
+				}
+
+				$st_totals_add = $this->infobase_->prepare($sql);
 
 				foreach( $dimensions as $field )
 					$st_totals_add->bindParam(":${field}", $$field, SQLITE3_BLOB);

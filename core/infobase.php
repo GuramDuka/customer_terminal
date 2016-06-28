@@ -187,7 +187,7 @@ EOT
 		);
 
 		$dimensions = [ 'object' => '_uuid', 'property' => '_uuid', 'idx' => '' ];
-		$this->create_unique_indexes_on_registry('properties_registry', $dimensions, false);
+		$this->create_unique_indexes_on_registry('properties_registry', $dimensions);
 
 		// регистр ЗначенияПодбораАвтомобилейИнтернетПортала
 		$sql = '';
@@ -210,7 +210,7 @@ EOT
 		);
 
 		$dimensions = [ 'car' => '_uuid', 'category' => '_uuid', 'idx' => '' ];
-		$this->create_unique_indexes_on_registry('cars_selections_registry', $dimensions, false);
+		$this->create_unique_indexes_on_registry('cars_selections_registry', $dimensions);
 
 		for( $i = 0; $i < config::$cars_selections_registry_max_values_on_row; $i++ )
 			$this->exec(
@@ -317,7 +317,7 @@ EOT
 EOT
 		);
 
-		$this->create_unique_indexes_on_registry('system_remainders_records_registry', $dimensions, false);
+		$this->create_unique_indexes_on_registry('system_remainders_records_registry', $dimensions);
 
 		$this->exec(
 			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'system_remainders_records_registry_by_shop_product'), -4)

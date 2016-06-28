@@ -101,7 +101,7 @@ EOT
 				FROM
 					products_pages
 				WHERE
-					pgnon IS NULL
+					0
 EOT
 			);
 
@@ -122,7 +122,7 @@ EOT
 				$vn = "r_${order}_${direction}";
 
 				$$vn = $infobase->query(<<<EOT
-					SELECT DISTINCT
+					SELECT
 						a.uuid					AS ${order}_${direction}_uuid,
 						a.code					AS ${order}_${direction}_code,
 						a.name					AS ${order}_${direction}_name,

@@ -12,6 +12,7 @@ class cars_selections_registry_loader extends objects_loader {
 			return;
 
 		$all_fields = [ 'car_uuid', 'category_uuid', 'idx' ];
+		$dimensions = array_merge($all_fields, []);
 
 		for( $i = 0; $i < config::$cars_selections_registry_max_values_on_row; $i++ )
 			$all_fields[] = "value${i}_uuid";
@@ -30,7 +31,7 @@ class cars_selections_registry_loader extends objects_loader {
 		$this->infobase_->exec('BEGIN TRANSACTION');
 
 		$st = null;
-		$st_erase = null;
+		$where = null;
 
 		foreach( $this->objects_ as $object ) {
 
@@ -43,40 +44,61 @@ class cars_selections_registry_loader extends objects_loader {
 			foreach( $fields_uuid as $field )
 				$$field = uuid2bin(@$$field);
 
-			$car_where		= $car_uuid			!== null ? 'AND car_uuid = :car_uuid'		: '';
-			$category_where	= $category_uuid	!== null ? 'AND category_uuid = :car_uuid'	: '';
-			$idx_where		= $idx				!== null ? 'AND idx = :car_uuid'			: '';
+			$w = '';
+
+			foreach( $dimensions as $dim ) {
+
+				if( $$dim === null )
+					continue;
+
+				$w .= " AND ${dim} = :${dim}";
+
+			}
+
+			if( $w !== $where ) {
+
+				$st_erase = null;
+				$where = $w;
+				$w = null;
+
+			}
 
 			$sql = <<<EOT
 				DELETE FROM
 					cars_selections_registry
 				WHERE
 					1
-					${car_where}
-					${category_where}
-					${idx_where}
+					${where}
 EOT
 			;
-
-			$st_erase = $this->infobase_->prepare($sql);
 
 			if( config::$debug ) {
 
 				$stp = $this->infobase_->prepare('EXPLAIN QUERY PLAN ' . $sql);
-				$stp->bindParam(':car_uuid'			, $car_uuid		, SQLITE3_BLOB);
-				$stp->bindParam(':category_uuid'	, $category_uuid, SQLITE3_BLOB);
-				$stp->bindParam(':idx'				, $idx);
 
-				$r = $stp->execute();
-				$r = $r->fetchArray(SQLITE3_ASSOC);
+				foreach( $dimensions as $field )
+					if( substr($field, -3) === 'uuid' )
+						$stp->bindParam(":${field}", $$field, SQLITE3_BLOB);
+					else
+						$stp->bindParam(":${field}", $$field);
+
+				$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
 
 				error_log($r['detail']);
 
 			}
 
-			$st_erase->bindParam(':car_uuid'		, $car_uuid		, SQLITE3_BLOB);
-			$st_erase->bindParam(':category_uuid'	, $category_uuid, SQLITE3_BLOB);
-			$st_erase->bindParam(':idx'				, $idx);
+			if( $st_erase === null ) {
+
+				$st_erase = $this->infobase_->prepare($sql);
+
+				foreach( $dimensions as $field )
+					if( substr($field, -3) === 'uuid' )
+						$st_erase->bindParam(":${field}", $$field, SQLITE3_BLOB);
+					else
+						$st_erase->bindParam(":${field}", $$field);
+
+			}
 
 			$st_erase->execute();
 
