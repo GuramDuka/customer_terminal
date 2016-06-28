@@ -1,0 +1,233 @@
+@font-face{
+	font-family: "Helvetica-Compressed";
+	src:url(/resources/assets/helvetic.ttf);
+}
+
+@media screen, print {
+
+	body {
+		background-color	: white;
+		border				: solid 0px black;
+		margin				: 0mm;
+		text-align			: center;
+		font-family			: "Arial", "Times New Roman";
+		color				: black;
+		overflow			: hidden;
+	}
+
+	div, p, span {
+		margin				: 0;
+		padding				: 0;
+	}
+
+	a[btn], a[btn]:active, a[btn]:hover, a[btn]:visited,
+	a[btg], a[btg]:active, a[btg]:hover, a[btg]:visited {
+		background			: #FFDD57;
+		border				: 1px solid #dfba3c;
+		border-radius		: 3px;
+		box-shadow			: none;
+		color				: #5f5b51;
+		cursor				: pointer;
+		display				: inline-block;
+		vertical-align		: middle;
+		line-height			: normal;
+		font-size			: 23px;
+		font-weight			: bold;
+		overflow			: hidden;
+		text-align			: center;
+		text-decoration		: none;
+		text-transform		: uppercase;
+		padding-left		: 15px;
+		padding-right		: 15px;
+		padding-top			: 5px;
+		padding-bottom		: 5px;
+		margin				: 0;
+	}
+
+	a[btg], a[btg]:active, a[btg]:hover, a[btg]:visited {
+		background			: #D9D9D9;
+		color				: #4C3C38;
+		border				: 1px solid #CACACA;
+	}
+
+	div {
+		width				: 100%;
+		float				: left;
+		overflow			: hidden;
+	}
+
+	div[top] {
+		height				: 120px;
+		margin-top			: 0;
+		margin-left			: 0;
+		margin-right		: 0;
+		margin-bottom		: 10px;
+	}
+
+	div[mag] {
+		width				: auto;
+		height				: inherit;
+		text-align			: left;
+		float				: left;
+	}
+
+	div[logo] {
+		width				: auto;
+		height				: 100%;
+		margin-top			: 0;
+		margin-left			: 0;
+		margin-right		: 8px;
+		margin-bottom		: 0;
+	}
+
+	div[logo]>img {
+		height				: 100%;
+	}
+
+	div[categories]>a[btg] {
+		margin-right		: 4px;
+	}
+
+	div[categories] {
+		height				: 40px;
+		margin-top			: 0;
+		margin-left			: 0;
+		margin-right		: 0;
+		margin-bottom		: 10px;
+		text-align			: left;
+	}
+
+	div[list] {
+		height				: 550px;
+	}
+
+	div[item0], div[item1], div[item2], div[item3], div[item4], div[item5] {
+		width				: 16.666666666666666666666666666667%;
+		width				: 16.51%;
+		height				: 520px;
+	}
+
+	div[item5] {
+		float				: right;
+	}
+
+	img[pimg] {
+		width				: 205px;
+		height				: 280px;
+		margin-top			: 0;
+		margin-left			: 0;
+		margin-right		: 0;
+		margin-bottom		: 8px;
+	}
+
+	p[pname] {
+		overflow			: hidden;
+		height				: 120px;
+		margin-top			: 0;
+		margin-left			: 0;
+		margin-right		: 0;
+		margin-bottom		: 8px;
+	}
+
+	p[price], p[quantity] {
+		overflow			: hidden;
+		height				: 20px;
+		margin-top			: 0;
+		margin-left			: 0;
+		margin-right		: 0;
+		margin-bottom		: 8px;
+	}
+
+	div[page_controls] {
+		height				: 40px;
+		vertical-align		: middle;
+	}
+
+	a[first_page], a[prev_page] {
+		float				: left;
+		margin-right		: 4px;
+	}
+
+	a[next_page], a[last_page] {
+		float				: right;
+		margin-left			: 4px;
+	}
+
+	div[bottom] {
+		height				: 200px;
+	}
+
+	div[mount] {
+		width				: 100%;
+		height				: 50%;
+	}
+
+	div[mount]>img {
+		width				: 100%;
+		height				: 100%;
+	}
+
+	/* disable text selection */
+	* {
+		-webkit-touch-callout: none; /* iOS Safari */
+		-webkit-user-select: none;   /* Chrome/Safari/Opera */
+		-o-user-select: none;
+		-khtml-user-select: none;    /* Konqueror */
+		-moz-user-select: none;      /* Firefox */
+		-ms-user-select: none;       /* Internet Explorer/Edge */
+		user-select: none;           /* Non-prefixed version, currently
+                                  not supported by any browser */
+	}
+
+	/* debug */
+
+	/*div {
+		border				: solid 1px black;
+	}*/
+
+	p[debug] {
+		font-family			: courier;
+		position			: fixed;
+		top					: 0.3%;
+		left				: 39%;
+		background			: darksalmon;
+		color				: darkgreen;
+		border				: solid 1px black;
+	}
+
+}
+
+@media screen {
+
+	@keyframes blink {  
+		from { opacity: 1.0; }
+		to { opacity: 0.0; }
+	}
+
+/* http://www.roblaplaca.com/examples/bezierBuilder/
+  cubic-bezier(.13, 1.01, -.01, 1.01)
+ */
+
+	*[blink] {
+		animation			: blink 0.6s cubic-bezier(1.0, 0, 0.7, 1.0) infinite alternate;
+	}
+
+	@keyframes noblink {}
+
+	*[noblink] {
+		animation			: noblink;
+	}
+
+}
+
+@media print {
+
+	@page {
+		size				: auto A4 portrait;
+		margin-top			: 5mm;
+		margin-bottom		: 5mm;
+		margin-left			: 5mm;
+		margin-right		: 5mm;
+	}
+
+}

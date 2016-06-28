@@ -1,0 +1,27 @@
+@media screen {
+
+	div[list] {
+		height				: 450px;
+	}
+
+	div[item0], div[item1], div[item2], div[item3], div[item4], div[item5] {
+		height				: 420px;
+	}
+
+	img[pimg] {
+		height				: 280px;
+	}
+
+	p[pname] {
+		height				: 80px;
+	}
+
+	p[price], p[quantity] {
+		height				: 20px;
+	}
+
+	div[page_controls] {
+		height				: 40px;
+	}
+
+}

@@ -1,0 +1,4 @@
+AuthType Basic
+AuthName "Restricted Content"
+AuthUserFile C:/Apache24/htdocs/resources/upload/.htpasswd
+Require valid-user
