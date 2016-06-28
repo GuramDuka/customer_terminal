@@ -25,8 +25,8 @@ class infobase extends \SQLite3 {
 
 				$this->exec('PRAGMA auto_vacuum = NONE');
 				$this->exec('PRAGMA page_size = 4096');
-				$this->exec('PRAGMA cache_size = -262144');
-				$this->exec('PRAGMA default_cache_size = -262144');
+				$this->exec('PRAGMA cache_size = -8192');
+				$this->exec('PRAGMA default_cache_size = -8192');
 				$this->exec('PRAGMA count_changes = OFF');
 				$this->exec('PRAGMA synchronous = NORMAL');
 				$this->exec('PRAGMA journal_mode = WAL');

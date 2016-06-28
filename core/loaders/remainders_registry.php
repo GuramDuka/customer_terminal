@@ -162,7 +162,7 @@ EOT
 		$cnt = count($this->objects_);
 		$rps = $ellapsed_seconds != 0 ? bcdiv($cnt, $ellapsed_seconds, 2) : $cnt;
 
-	    error_log(sprintf('%u', $cnt) . ' remainders updated, ' . $rps . ' rps, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+	    error_log(sprintf('%u', $cnt) . ' remainders registry updated, ' . $rps . ' rps, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
 
 	}
 
