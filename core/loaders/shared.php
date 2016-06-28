@@ -94,7 +94,7 @@ EOT
 
 			$category_table = 'products_' . uuid2table_name(bin2uuid($category_uuid)) . 'pages';
 
-			$infobase->exec(<<<EOT
+			/*$infobase->exec(<<<EOT
 				CREATE TABLE IF NOT EXISTS ${category_table} AS
 				SELECT
 					*
@@ -103,7 +103,8 @@ EOT
 				WHERE
 					0
 EOT
-			);
+			);*/
+			$infobase->exec($infobase->create_table_products_pages($category_table));
 
 			// extract variables in this scope // foreach( $categories as $category_uuid )
 			$v = [];
@@ -119,9 +120,35 @@ EOT
 			foreach( $orders as $order )
 				foreach( $directions as $direction ) {
 
-				$vn = "r_${order}_${direction}";
+				$vn = "st_${order}_${direction}";
+				$vr = "r_${order}_${direction}";
 
-				$$vn = $infobase->query(<<<EOT
+				$cte_name = 'products';
+				$cte = '';
+
+				if( $category_uuid !== null ) {
+
+					$cte_name .= '_cte';
+
+					$cte = <<<EOT
+						WITH products_cte AS (
+						    SELECT
+								a.*
+							FROM
+								products AS a
+									INNER JOIN categories_registry AS c
+									ON a.uuid = c.product_uuid
+										/*AND c.category_uuid = :category_uuid*/
+						    WHERE
+								c.category_uuid = :category_uuid
+						)
+EOT
+					;
+
+				}
+
+				$sql = <<<EOT
+					${cte}
 					SELECT
 						a.uuid					AS ${order}_${direction}_uuid,
 						a.code					AS ${order}_${direction}_code,
@@ -132,7 +159,7 @@ EOT
 						q.quantity				AS ${order}_${direction}_quantity,
 						COALESCE(r.quantity, 0)	AS ${order}_${direction}_reserve
 					FROM
-						products AS a
+						${cte_name} AS a
 							INNER JOIN images AS i
 							ON a.base_image_uuid = i.uuid
 							INNER JOIN prices_registry AS p
@@ -151,7 +178,12 @@ EOT
 						${order}_${direction}_${order} ${direction},
 						a.uuid
 EOT
-				);
+				;
+
+				$infobase->dump_plan($sql);
+				$$vn = $infobase->prepare($sql);
+				$$vn->bindParam(":category_uuid", $category_uuid, SQLITE3_BLOB);
+				$$vr = $$vn->execute();
 
 			}
 
@@ -205,7 +237,7 @@ EOT
 						if( !$r )
 							break;
 
-						extract(get_object_vars($r));
+						extract($r);
 
 					}
 
@@ -249,7 +281,7 @@ EOT
 		$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
 		$rps = $ellapsed_seconds != 0 ? bcdiv($pgupd, $ellapsed_seconds, 2) : $pgno;
 
-	    error_log(sprintf('%u', $pgno) . ' products pages updated, ' . $rps . ' pps, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+	    error_log(sprintf('%u', $pgupd) . ' products pages updated, ' . $rps . ' pps, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
 
 		/*$start_time = micro_time();
 		$infobase->exec('VACUUM');
@@ -263,7 +295,7 @@ EOT
 		$finish_time = micro_time();
 		$ellapsed_ms = bcsub($finish_time, $start_time);
 
-	    error_log('SQLITE3 ANAYLIZE, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+	    error_log('SQLITE ANAYLIZE, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
 
 	}
 

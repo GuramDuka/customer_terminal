@@ -18,12 +18,24 @@ class infobase extends \SQLite3 {
 		parent::__construct($ib_file_name, $flags);
 		$this->enableExceptions(true);
 		$this->busyTimeout(180000);
-		$this->exec('PRAGMA cache_size = -8192');
+		$this->exec('PRAGMA cache_size = -32768');
 		$this->exec('PRAGMA count_changes = OFF');
 		$this->exec('PRAGMA synchronous = NORMAL');
 		$this->exec('PRAGMA journal_mode = WAL');
 		$this->exec('PRAGMA temp_store = MEMORY');
 		$this->exec('PRAGMA auto_vacuum = NONE');
+
+		if( config::$debug ) {
+
+			$s = 'SQLITE compile options: ';
+			$result = $this->query('PRAGMA compile_options');
+
+			while( $r = $result->fetchArray(SQLITE3_ASSOC) )
+				$s .= "\n" . $r['compile_option'];
+
+			error_log($s);
+
+		}
 
 		if( $new_ib && $create_if_not_exists ) {
 
@@ -84,12 +96,18 @@ EOT
 			CREATE TABLE IF NOT EXISTS categories (
 				uuid			BLOB PRIMARY KEY ON CONFLICT REPLACE,
 				marked			INTEGER,
+				parent_uuid		BLOB,
 				code			TEXT,
 				name			TEXT,
 				selection		INTEGER,
 				display			INTEGER
 			) WITHOUT ROWID
 EOT
+		);
+
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'categories_order_by_parent'), -4)
+			. ' ON categories (parent_uuid)'
 		);
 
 		$this->exec(<<<'EOT'
@@ -341,6 +359,29 @@ EOT
 		$dimensions = [ 'shop' => '_uuid', 'product' => '_uuid' ];
 		$this->create_unique_indexes_on_registry('system_remainders_registry', $dimensions);
 
+		$this->exec($this->create_table_products_pages('products_pages'));
+
+	}
+
+	public function dump_plan($sql) {
+
+		if( config::$debug ) {
+
+			$result = $this->query('EXPLAIN QUERY PLAN ' . $sql);
+
+			$s = "\n${sql}";
+
+			while( $r = $result->fetchArray(SQLITE3_ASSOC) )
+				$s .= "\n" . $r['detail'];
+
+			error_log($s);
+
+		}
+
+	}
+
+	public function create_table_products_pages($table_name) {
+
 		$sql = '';
 
 		foreach( [ 'asc', 'desc' ] as $direction )
@@ -358,13 +399,13 @@ EOT
 EOT
 				;
 
-		$this->exec(<<<EOT
-			CREATE TABLE IF NOT EXISTS products_pages (
+		return <<<EOT
+			CREATE TABLE IF NOT EXISTS ${table_name} (
 				pgnon									INTEGER PRIMARY KEY ON CONFLICT REPLACE
 				${sql}
 			) WITHOUT ROWID
 EOT
-		);
+		;
 
 	}
 

@@ -102,19 +102,7 @@ EOT
 
 				$sql = str_replace('${op}', '-', $st_totals_op . str_replace('AND ', 'AND r.', "${where}"));
 
-				if( config::$debug ) {
-
-					$stp = $this->infobase_->prepare('EXPLAIN QUERY PLAN ' . $sql);
-
-					foreach( $dimensions as $field )
-						$stp->bindParam(":${field}", $$field, SQLITE3_BLOB);
-
-					$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
-
-					error_log("\n" . $sql . "\n" . $r['detail']);
-
-				}
-
+				$this->infobase_->dump_plan($sql);
 				$st_totals_sub = $this->infobase_->prepare($sql);
 
 				foreach( $dimensions as $field )
@@ -155,19 +143,7 @@ EOT
 EOT
 				;
 
-				if( config::$debug ) {
-
-					$stp = $this->infobase_->prepare('EXPLAIN QUERY PLAN ' . $sql);
-
-					foreach( $dimensions as $field )
-						$stp->bindParam(":${field}", $$field, SQLITE3_BLOB);
-
-					$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
-
-					error_log("\n" . $sql . "\n" . $r['detail']);
-
-				}
-
+				$this->infobase_->dump_plan($sql);
 				$st_totals_del = $this->infobase_->prepare($sql);
 
 				foreach( $dimensions as $field )
@@ -188,19 +164,7 @@ EOT
 EOT
 				;
 
-				if( config::$debug ) {
-
-					$stp = $this->infobase_->prepare('EXPLAIN QUERY PLAN ' . $sql);
-
-					foreach( $dimensions as $field )
-						$stp->bindParam(":${field}", $$field, SQLITE3_BLOB);
-
-					$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
-
-					error_log("\n" . $sql . "\n" . $r['detail']);
-
-				}
-
+				$this->infobase_->dump_plan($sql);
 				$st_records_del = $this->infobase_->prepare($sql);
 
 				foreach( $dimensions as $field )
@@ -246,19 +210,7 @@ EOT
 
 				$sql = str_replace('${op}', '+', $st_totals_op . str_replace('AND ', 'AND r.', "${where}"));
 
-				if( config::$debug ) {
-
-					$stp = $this->infobase_->prepare('EXPLAIN QUERY PLAN ' . $sql);
-
-					foreach( $dimensions as $field )
-						$stp->bindParam(":${field}", $$field, SQLITE3_BLOB);
-
-					$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
-
-					error_log("\n" . $sql . "\n" . $r['detail']);
-
-				}
-
+				$this->infobase_->dump_plan($sql);
 				$st_totals_add = $this->infobase_->prepare($sql);
 
 				foreach( $dimensions as $field )

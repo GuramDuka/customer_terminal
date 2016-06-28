@@ -11,7 +11,7 @@ class categories_loader extends objects_loader {
 		if( $this->objects_ === null || count($this->objects_) === 0 )
 			return;
 
-		$all_fields = [ 'uuid', 'marked', 'code', 'name', 'selection', 'display' ];
+		$all_fields = [ 'uuid', 'marked', 'parent_uuid', 'code', 'name', 'selection', 'display' ];
 		$fields = [];
 		$fields_uuid = [];
 

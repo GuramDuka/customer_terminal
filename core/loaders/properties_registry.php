@@ -60,32 +60,18 @@ class properties_registry_loader extends objects_loader {
 
 			}
 
-			$sql = <<<EOT
-				DELETE FROM
-					properties_registry
-				WHERE
-					1
-					${where}
-EOT
-			;
-
-			if( config::$debug ) {
-
-				$stp = $this->infobase_->prepare('EXPLAIN QUERY PLAN ' . $sql);
-
-				foreach( $dimensions as $field )
-					if( substr($field, -4) === 'uuid' )
-						$stp->bindParam(":${field}", $$field, SQLITE3_BLOB);
-					else
-						$stp->bindParam(":${field}", $$field);
-
-				$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
-
-				error_log("\n" . $sql . "\n" . $r['detail']);
-
-			}
-
 			if( $st_erase === null ) {
+
+				$sql = <<<EOT
+					DELETE FROM
+						properties_registry
+					WHERE
+						1
+						${where}
+EOT
+				;
+
+				$this->infobase_->dump_plan($sql);
 
 				$st_erase = $this->infobase_->prepare($sql);
 
