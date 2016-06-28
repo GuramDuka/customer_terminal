@@ -17,20 +17,20 @@ class infobase extends \SQLite3 {
 
 		parent::__construct($ib_file_name, $flags);
 		$this->enableExceptions(true);
-		$this->busyTimeout(5000);
+		$this->busyTimeout(180000);
+		$this->exec('PRAGMA cache_size = -8192');
+		$this->exec('PRAGMA count_changes = OFF');
+		$this->exec('PRAGMA synchronous = NORMAL');
+		$this->exec('PRAGMA journal_mode = WAL');
+		$this->exec('PRAGMA temp_store = MEMORY');
+		$this->exec('PRAGMA auto_vacuum = NONE');
 
-		if( ($new_ib || config::$debug) && $create_if_not_exists ) {
+		if( $new_ib && $create_if_not_exists ) {
 
 			try {
 
-				$this->exec('PRAGMA auto_vacuum = NONE');
 				$this->exec('PRAGMA page_size = 4096');
-				$this->exec('PRAGMA cache_size = -8192');
 				$this->exec('PRAGMA default_cache_size = -8192');
-				$this->exec('PRAGMA count_changes = OFF');
-				$this->exec('PRAGMA synchronous = NORMAL');
-				$this->exec('PRAGMA journal_mode = WAL');
-				$this->exec('PRAGMA temp_store = MEMORY');
 
 				$this->create_scheme();
 
@@ -117,6 +117,9 @@ EOT
 			) WITHOUT ROWID
 EOT
 		);
+
+		$dimensions = [ 'manufacturer' => '_uuid', 'model' => '_uuid', 'modification' => '_uuid', 'year' => '_uuid' ];
+		$this->create_unique_indexes_on_registry('cars', $dimensions);
 
 		// регистр категории объектов
 		$this->exec(<<<'EOT'
@@ -212,11 +215,12 @@ EOT
 		$dimensions = [ 'car' => '_uuid', 'category' => '_uuid', 'idx' => '' ];
 		$this->create_unique_indexes_on_registry('cars_selections_registry', $dimensions);
 
-		for( $i = 0; $i < config::$cars_selections_registry_max_values_on_row; $i++ )
+		// need only if select cars by products
+		/*for( $i = 0; $i < config::$cars_selections_registry_max_values_on_row; $i++ )
 			$this->exec(
 				'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', "cars_selections_registry_by_value${i}"), -4)
 				. " ON cars_selections_registry (value${i}_uuid)"
-			);
+			);*/
 
 		$this->exec(<<<'EOT'
 			CREATE TABLE IF NOT EXISTS images (
