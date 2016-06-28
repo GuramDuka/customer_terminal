@@ -43,26 +43,40 @@ class cars_selections_registry_loader extends objects_loader {
 			foreach( $fields_uuid as $field )
 				$$field = uuid2bin(@$$field);
 
-			if( $st_erase === null ) {
+			$car_where		= $car_uuid			!== null ? 'AND car_uuid = :car_uuid'		: '';
+			$category_where	= $category_uuid	!== null ? 'AND category_uuid = :car_uuid'	: '';
+			$idx_where		= $idx				!== null ? 'AND idx = :car_uuid'			: '';
 
-				$st_erase = $this->infobase_->prepare(<<<'EOT'
-					DELETE FROM
-						cars_selections_registry
-					WHERE
-						(car_uuid = :car_uuid
-							OR :car_uuid IS NULL)
-						AND (category_uuid = :category_uuid
-							OR :category_uuid IS NULL)
-						AND (idx = :idx
-							OR :idx IS NULL)
+			$sql = <<<EOT
+				DELETE FROM
+					cars_selections_registry
+				WHERE
+					1
+					${car_where}
+					${category_where}
+					${idx_where}
 EOT
-				);
+			;
 
-				$st_erase->bindParam(':car_uuid'		, $car_uuid		, SQLITE3_BLOB);
-				$st_erase->bindParam(':category_uuid'	, $category_uuid, SQLITE3_BLOB);
-				$st_erase->bindParam(':idx'				, $idx);
+			$st_erase = $this->infobase_->prepare($sql);
+
+			if( config::$debug ) {
+
+				$stp = $this->infobase_->prepare('EXPLAIN QUERY PLAN ' . $sql);
+				$stp->bindParam(':car_uuid'			, $car_uuid		, SQLITE3_BLOB);
+				$stp->bindParam(':category_uuid'	, $category_uuid, SQLITE3_BLOB);
+				$stp->bindParam(':idx'				, $idx);
+
+				$r = $stp->execute();
+				$r = $r->fetchArray(SQLITE3_ASSOC);
+
+				error_log($r['detail']);
 
 			}
+
+			$st_erase->bindParam(':car_uuid'		, $car_uuid		, SQLITE3_BLOB);
+			$st_erase->bindParam(':category_uuid'	, $category_uuid, SQLITE3_BLOB);
+			$st_erase->bindParam(':idx'				, $idx);
 
 			$st_erase->execute();
 
