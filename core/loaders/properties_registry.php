@@ -74,14 +74,14 @@ EOT
 				$stp = $this->infobase_->prepare('EXPLAIN QUERY PLAN ' . $sql);
 
 				foreach( $dimensions as $field )
-					if( substr($field, -3) === 'uuid' )
+					if( substr($field, -4) === 'uuid' )
 						$stp->bindParam(":${field}", $$field, SQLITE3_BLOB);
 					else
 						$stp->bindParam(":${field}", $$field);
 
 				$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
 
-				error_log($r['detail']);
+				error_log("\n" . $sql . "\n" . $r['detail']);
 
 			}
 
@@ -90,10 +90,10 @@ EOT
 				$st_erase = $this->infobase_->prepare($sql);
 
 				foreach( $dimensions as $field )
-					if( substr($field, -3) === 'uuid' )
-						$stp->bindParam(":${field}", $$field, SQLITE3_BLOB);
+					if( substr($field, -4) === 'uuid' )
+						$st_erase->bindParam(":${field}", $$field, SQLITE3_BLOB);
 					else
-						$stp->bindParam(":${field}", $$field);
+						$st_erase->bindParam(":${field}", $$field);
 
 			}
 

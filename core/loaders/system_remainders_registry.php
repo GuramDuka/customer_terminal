@@ -111,7 +111,7 @@ EOT
 
 					$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
 
-					error_log($r['detail']);
+					error_log("\n" . $sql . "\n" . $r['detail']);
 
 				}
 
@@ -164,7 +164,7 @@ EOT
 
 					$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
 
-					error_log($r['detail']);
+					error_log("\n" . $sql . "\n" . $r['detail']);
 
 				}
 
@@ -197,7 +197,7 @@ EOT
 
 					$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
 
-					error_log($r['detail']);
+					error_log("\n" . $sql . "\n" . $r['detail']);
 
 				}
 
@@ -255,7 +255,7 @@ EOT
 
 					$r = $stp->execute()->fetchArray(SQLITE3_ASSOC);
 
-					error_log($r['detail']);
+					error_log("\n" . $sql . "\n" . $r['detail']);
 
 				}
 
