@@ -1,3 +1,18 @@
+@font-face {
+	font-family	: "terminus";
+	src			: url(/resources/assets/terminus.ttf);
+}
+
+@font-face {
+	font-family	: "monofur";
+	src			: url(/resources/assets/monof56.ttf);
+}
+
+@font-face {
+	font-family	: "droid";
+	src			: url(/resources/assets/droid.ttf);
+}
+
 @media screen {
 
 	div[plist] {
@@ -8,8 +23,8 @@
 		height				: 420px;
 	}
 
-	img[pimg] {
-		height				: 280px;
+	div[pitem]>img[pimg] {
+		height				: 50%;
 	}
 
 	p[pname] {
@@ -22,6 +37,28 @@
 
 	div[plist_controls] {
 		height				: 40px;
+	}
+
+	/*div, div[pitem]>img[pimg] {
+		border				: solid 1px black;
+	}*/
+
+	div[debug] {
+		width				: auto !important;
+		display				: block;
+		font-family			: droid;
+		font-size			: 8pt;
+		position			: fixed;
+		top					: 0.3%;
+		left				: 39%;
+		background			: darksalmon;
+		color				: darkgreen;
+		border				: solid 1px black;
+		text-align			: left;
+	}
+
+	div[debug]>p {
+		display				: none;
 	}
 
 }

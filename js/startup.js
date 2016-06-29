@@ -192,7 +192,7 @@ function sprintf () {
 //------------------------------------------------------------------------------
 function sleep(ms) {
 
-    var unixtime_ms = new Date().getTime();
+    let unixtime_ms = new Date().getTime();
 
     while( new Date().getTime() < unixtime_ms + ms ) {}
 
@@ -222,9 +222,9 @@ function ellapsed_time_string(ms) {
 
 }
 //------------------------------------------------------------------------------
-function post_json(path, data, obj, success, error) {
+function post_json(path, data, success, error) {
 
-	var xhr = new XMLHttpRequest();
+	let xhr = new XMLHttpRequest();
 
 	xhr.open('POST', path, true);
 
@@ -235,14 +235,8 @@ function post_json(path, data, obj, success, error) {
 
 		if( this.readyState === XMLHttpRequest.DONE ) {
 			if( this.status === 200 ) {
-				if( success ) {
-					if( obj ) {
-						obj.data_ = JSON.parse(this.responseText);
-						obj.success();
-					}
-					else
-						success(JSON.parse(this.responseText));
-				}
+				if( success )
+					success(JSON.parse(this.responseText));
 			}
 			else if( error ) {
 				error(this);
@@ -266,25 +260,25 @@ function add_event(obj, type, fn) {
 	}
 }
 //------------------------------------------------------------------------------
-function xpath_eval(path, parent) {
+function xpath_eval(path, parent = undefined) {
 
-	var a = [];
-	var it = document.evaluate(path, parent, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+	let a = [];
+	let it = document.evaluate(path, parent ? parent : document, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
 	
-	for( var e; e = it.iterateNext(); )
+	for( let e; e = it.iterateNext(); )
 		a.push(e);
 
 	return a;
 }
 //------------------------------------------------------------------------------
-function xpath_eval_single(path, parent) {
+function xpath_eval_single(path, parent = undefined) {
 
-	var a = xpath_eval(path, parent);
+	let a = xpath_eval(path, parent);
 
 	if( a.length > 1 )
 		throw new Error('evaluate return multiple elements');
 
-	if( a.length == 1 )
+	if( a.length == 0 )
 		throw new Error('evaluate return no result');
 
 	return a[0];

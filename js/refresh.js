@@ -25,7 +25,7 @@ var refresh_away_callback = function() {
 
 			if( current_page !== html ) {
 
-				for( let element of xpath_eval('//body/div[@list]', document) )
+				for( let element of xpath_eval('//body/div[@list]') )
 					element.innerHTML = current_page;
 
 				current_page = html;

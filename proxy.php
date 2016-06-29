@@ -4,6 +4,7 @@ namespace { // global
 //------------------------------------------------------------------------------
 define('APP_DIR', realpath(__DIR__) . DIRECTORY_SEPARATOR);
 define('CORE_DIR', APP_DIR . 'core' . DIRECTORY_SEPARATOR);
+define('PROCESSORS_DIR', CORE_DIR . 'processors' . DIRECTORY_SEPARATOR);
 //------------------------------------------------------------------------------
 require_once CORE_DIR . 'startup.php';
 require_once CORE_DIR . 'handler.php';
@@ -15,7 +16,12 @@ class proxy_handler extends srv1c\handler {
 	protected function handle_request() {
 
 		$modules = [
-			'pager' => [ 'pager' => true ]
+			'pager' => [
+				'pager'			=> true
+			],
+			'categorer' => [
+				'categorer'		=> true
+			]
 		];
 
 		$module = @$this->request_->module;
@@ -30,7 +36,7 @@ class proxy_handler extends srv1c\handler {
 		if( !$modules[$module][$handler] )
 			throw new runtime_exception('Handler ' . $handler . ' disabled', E_ERROR);
 
-		require_once CORE_DIR . $module . '.php';
+		require_once PROCESSORS_DIR . $module . '.php';
 
 		$class_name = "srv1c\\${handler}_handler";
 

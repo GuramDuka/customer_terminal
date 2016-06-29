@@ -50,8 +50,13 @@ class loader_handler extends handler {
 		}
 
 		if( @$this->request_->rewrite_pages !== null
-			&& $this->request_->rewrite_pages )
+			&& $this->request_->rewrite_pages ) {
+
+			require_once LOADERS_DIR . 'pages_writer.php';
+
 			rewrite_pages($infobase);
+
+		}
 
     }
 
