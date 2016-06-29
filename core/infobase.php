@@ -37,7 +37,7 @@ class infobase extends \SQLite3 {
 
 		}
 
-		if( $new_ib && $create_if_not_exists ) {
+		if( ($new_ib && $create_if_not_exists) || config::$force_create_infobase ) {
 
 			try {
 
@@ -96,6 +96,7 @@ EOT
 			CREATE TABLE IF NOT EXISTS categories (
 				uuid			BLOB PRIMARY KEY ON CONFLICT REPLACE,
 				marked			INTEGER,
+				folder			INTEGER,
 				parent_uuid		BLOB,
 				code			TEXT,
 				name			TEXT,
@@ -369,7 +370,7 @@ EOT
 
 			$result = $this->query('EXPLAIN QUERY PLAN ' . $sql);
 
-			$s = "\n${sql}";
+			$s = "${sql}";
 
 			while( $r = $result->fetchArray(SQLITE3_ASSOC) )
 				$s .= "\n" . $r['detail'];

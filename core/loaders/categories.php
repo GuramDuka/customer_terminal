@@ -11,7 +11,7 @@ class categories_loader extends objects_loader {
 		if( $this->objects_ === null || count($this->objects_) === 0 )
 			return;
 
-		$all_fields = [ 'uuid', 'marked', 'parent_uuid', 'code', 'name', 'selection', 'display' ];
+		$all_fields = [ 'uuid', 'marked', 'folder', 'parent_uuid', 'code', 'name', 'selection', 'display' ];
 		$fields = [];
 		$fields_uuid = [];
 
@@ -49,6 +49,9 @@ class categories_loader extends objects_loader {
 				}
 
 				$st_erase->execute();
+
+				$category_table = 'products_' . uuid2table_name(bin2uuid($uuid)) . 'pages';
+				$infobase->exec("DROP TABLE IF EXISTS ${category_table}");
 
 			}
 			else {

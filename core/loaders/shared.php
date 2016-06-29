@@ -57,7 +57,7 @@ function rewrite_pages($infobase) {
 
 	if( $r->fetchArray(SQLITE3_NUM) ) {
 
-		$r = $infobase->query(<<<'EOT'
+		$result = $infobase->query(<<<'EOT'
 			SELECT
 				NULL
 			UNION ALL
@@ -65,18 +65,88 @@ function rewrite_pages($infobase) {
 				uuid
 			FROM
 				categories
-			WHERE
-				selection
-				AND display
 EOT
 		);
 
 		$categories = [];
 
-		while( list($uuid) = $r->fetchArray(SQLITE3_NUM) )
-			$categories[] = $uuid;
+		while( $r = $result->fetchArray(SQLITE3_NUM) )
+			$categories[] = $r[0];
 
 		foreach( $categories as $category_uuid ) {
+
+			$st = $infobase->prepare(<<<'EOT'
+				WITH cte0 AS (
+					SELECT
+						uuid
+					FROM
+						categories
+					WHERE
+						uuid = :category_uuid
+				),
+				cte1 AS (
+					SELECT
+						uuid
+					FROM
+						categories
+					WHERE
+						parent_uuid IN (SELECT uuid FROM cte0)
+				),
+				cte2 AS (
+					SELECT
+						uuid
+					FROM
+						categories
+					WHERE
+						parent_uuid IN (SELECT uuid FROM cte1)
+				),
+				cte3 AS (
+					SELECT
+						uuid
+					FROM
+						categories
+					WHERE
+						parent_uuid IN (SELECT uuid FROM cte2)
+				),
+				cte4 AS (
+					SELECT
+						uuid
+					FROM
+						categories
+					WHERE
+						parent_uuid IN (SELECT uuid FROM cte3)
+				)
+				SELECT uuid FROM cte0
+				UNION ALL
+				SELECT uuid FROM cte1
+				UNION ALL
+				SELECT uuid FROM cte2
+				UNION ALL
+				SELECT uuid FROM cte3
+				UNION ALL
+				SELECT uuid FROM cte4
+EOT
+			);
+
+			$st->bindParam(":category_uuid", $category_uuid, SQLITE3_BLOB);
+			$result = $st->execute();
+
+			$sub_categories = [];
+
+			while( $r = $result->fetchArray(SQLITE3_NUM) )
+				$sub_categories[] = $r[0];
+
+			$where = '';
+
+			for( $i = 0; $i < count($sub_categories); $i++ ) {
+
+				$where .= " OR c.category_uuid = :category${i}_uuid\n";
+				$n = "category${i}_uuid";
+				$$n = $sub_categories[$i];
+
+			}
+
+			$where = substr($where, 4);
 
 			//CREATE TEMPORARY TABLE Tcats AS
 			//WITH ft_cte AS (
@@ -140,7 +210,7 @@ EOT
 									ON a.uuid = c.product_uuid
 										/*AND c.category_uuid = :category_uuid*/
 						    WHERE
-								c.category_uuid = :category_uuid
+								${where}
 						)
 EOT
 					;
@@ -183,6 +253,14 @@ EOT
 				$infobase->dump_plan($sql);
 				$$vn = $infobase->prepare($sql);
 				$$vn->bindParam(":category_uuid", $category_uuid, SQLITE3_BLOB);
+
+				for( $i = 0; $i < count($sub_categories); $i++ ) {
+
+					$n = "category${i}_uuid";
+					$$vn->bindParam(":${n}", $$n, SQLITE3_BLOB);
+
+				}
+
 				$$vr = $$vn->execute();
 
 			}
@@ -260,9 +338,18 @@ EOT
 
 			}
 
-			$st = $infobase->prepare("DELETE FROM ${category_table} WHERE pgnon > :pgnon");
-			$st->bindParam(':pgnon', $pgnon);
-			$st->execute();
+			if( $pgnon < 0 ) {
+
+				$infobase->exec("DROP TABLE IF EXISTS ${category_table}");
+
+			}
+			else {
+
+				$st = $infobase->prepare("DELETE FROM ${category_table} WHERE pgnon > :pgnon");
+				$st->bindParam(':pgnon', $pgnon);
+				$st->execute();
+
+			}
 
 			$pgupd += $pgnon < 0 ? 0 : ($pgnon >> 4) + 1;
 

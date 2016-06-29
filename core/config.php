@@ -4,7 +4,8 @@ namespace { // global
 //------------------------------------------------------------------------------
 class config {
 
-	public static $debug = true;
+	public static $debug = false;
+	public static $force_create_infobase = false;
 	public static $page_size = 6;
 	public static $convert_images = true;
 	public static $images_format = 'jpg';
