@@ -97,18 +97,12 @@
 		text-align			: left;
 	}
 
-	div[list] {
+	div[plist] {
 		height				: 550px;
 	}
 
-	div[item0], div[item1], div[item2], div[item3], div[item4], div[item5] {
-		width				: 16.666666666666666666666666666667%;
-		width				: 16.51%;
+	div[pitem] {
 		height				: 520px;
-	}
-
-	div[item5] {
-		float				: right;
 	}
 
 	img[pimg] {
@@ -129,7 +123,7 @@
 		margin-bottom		: 8px;
 	}
 
-	p[price], p[quantity] {
+	p[pprice], p[pquantity] {
 		overflow			: hidden;
 		height				: 20px;
 		margin-top			: 0;
@@ -138,7 +132,7 @@
 		margin-bottom		: 8px;
 	}
 
-	div[page_controls] {
+	div[plist_controls] {
 		height				: 40px;
 		vertical-align		: middle;
 	}

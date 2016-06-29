@@ -18,7 +18,9 @@ class pager_handler extends handler {
 
 		$start_time = micro_time();
 
-		$this->infobase_ = new infobase(, false);
+		$this->infobase_ = new infobase;
+		$this->infobase_->set_create_if_not_exists(false);
+		$this->infobase_->initialize();
 
 		$pgsz = config::$page_size;
 
@@ -84,7 +86,7 @@ EOT
 				fclose($h);
 			}*/
 
-			if( $base_image !== null ) {
+			if( $base_image_uuid !== null ) {
 				$img_url = '/resources/'
 					. get_image_path($base_image_uuid, '/')
 					. '/' . bin2uuid($base_image_uuid)
@@ -94,33 +96,14 @@ EOT
 				$img_url = '/resources/asserts/nopic.jpg';
 			}
 
-			$img_url = htmlspecialchars($img_url, ENT_HTML5);
-			$pname = htmlspecialchars($name, ENT_HTML5);
-			$pprice = sprintf('%u', intval($price));
-			$q = $quantity - $reserve;
-			$q = sprintf(intval($q) == $q ? '%u' : '%.3f', $q);
-
-			$w = config::$image_width;
-			$h = config::$image_height;
-
-			// style="visibility: hidden">
-			$html = <<<EOT
-<img pimg alt="" src="${img_url}" width="${w}" height="${h}">
-<p pname>${pname}</p>
-<p price>${pprice}&nbsp;₽</p>
-<p quantity>${q}</p>
-<a btn buy>КУПИТЬ</a>
-EOT;
-
 			$page[$i] = [
 				'uuid'		=> $uuid,
 				'code'		=> $code,
-				'name'		=> $name,
-				'price'		=> $price,
+				'name'		=> htmlspecialchars($name, ENT_HTML5),
+				'price'		=> sprintf('%u', intval($price)),
 				'quantity'	=> $quantity,
 				'reserve'	=> $reserve,
-				'html'		=> $html,
-				'img_url'	=> $img_url
+				'img_url'	=> htmlspecialchars($img_url, ENT_HTML5)
 			];
 
 		}
@@ -130,6 +113,7 @@ EOT;
 		$r = $this->infobase_->query("SELECT max(pgnon) FROM ${category_table}");
 		list($pgnon) = $r->fetchArray(SQLITE3_NUM);
 		$this->response_['pages'] = $r ? ($pgnon >> 4) + 1 : 0;
+		$this->response_['page_size'] = config::$page_size;
 
 		$this->infobase_->exec('COMMIT TRANSACTION');
 

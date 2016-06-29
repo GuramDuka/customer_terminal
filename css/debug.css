@@ -1,10 +1,10 @@
 @media screen {
 
-	div[list] {
+	div[plist] {
 		height				: 450px;
 	}
 
-	div[item0], div[item1], div[item2], div[item3], div[item4], div[item5] {
+	div[pitem] {
 		height				: 420px;
 	}
 
@@ -16,11 +16,11 @@
 		height				: 80px;
 	}
 
-	p[price], p[quantity] {
+	p[pprice], p[pquantity] {
 		height				: 20px;
 	}
 
-	div[page_controls] {
+	div[plist_controls] {
 		height				: 40px;
 	}
 

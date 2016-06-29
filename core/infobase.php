@@ -6,7 +6,16 @@ namespace srv1c {
 //------------------------------------------------------------------------------
 class infobase extends \SQLite3 {
 
-    public function __construct(int $flags = SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE, $create_if_not_exists = true) {
+	protected $create_if_not_exists_ = true;
+
+	public function set_create_if_not_exists($v) {
+		$this->create_if_not_exists = $v;
+	}
+
+    public function __construct() {
+	}
+
+    public function initialize(int $flags = SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE) {
                                                    
 		$ib_file_name = APP_DIR . 'data' . DIRECTORY_SEPARATOR . 'base.db';
 
@@ -37,7 +46,7 @@ class infobase extends \SQLite3 {
 
 		}
 
-		if( ($new_ib && $create_if_not_exists) || config::$force_create_infobase ) {
+		if( ($new_ib && $this->create_if_not_exists) || config::$force_create_infobase ) {
 
 			try {
 

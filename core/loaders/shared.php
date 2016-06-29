@@ -55,7 +55,7 @@ function rewrite_pages($infobase) {
 	$entity = $infobase->escapeString('products_pages');
 	$r = $infobase->query("SELECT entity FROM dirties WHERE entity = '${entity}'");
 
-	if( $r->fetchArray(SQLITE3_NUM) ) {
+	if( $r->fetchArray(SQLITE3_NUM) || config::$force_rewrite_pages ) {
 
 		$result = $infobase->query(<<<'EOT'
 			SELECT

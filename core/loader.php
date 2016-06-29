@@ -12,6 +12,7 @@ class loader_handler extends handler {
 	protected function handle_request() {
 
 		$infobase = new infobase;
+		$infobase->initialize();
 
 		$loaders = [
 			'prices_registry',
