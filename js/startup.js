@@ -1,4 +1,8 @@
 //------------------------------------------------------------------------------
+String.prototype.isEmpty = function() {
+    return (this.length === 0 || !this.trim());
+};
+//------------------------------------------------------------------------------
 function sprintf () {
   //  discuss at: http://locutus.io/php/sprintf/
   // original by: Ash Searle (http://hexmen.com/blog/)
@@ -249,6 +253,8 @@ function post_json(path, data, success, error) {
 }
 //------------------------------------------------------------------------------
 function add_event(obj, type, fn) {
+
+	console.log(obj, type, fn);
 
 	if( obj.addEventListener ) {
 		obj.addEventListener(type, fn, false);

@@ -27,7 +27,7 @@ class HtmlPageState {
 
 		// render
 		this.start_ 		= 0;
-		this.wait_images_	= true;
+		this.wait_images_	= false;
 		this.request_		= null;
 
 	}
@@ -69,35 +69,88 @@ class Render {
 
 	}
 
-	assemble_page(data, invisible) {
+	assemble_page(paging_state, element, data, invisible) {
 
 		let products = data.products;
-		let style = 'visibility: ' + (invisible ? 'hidden' : 'visible');
+		let style = {
+			'visibility'	: invisible ? 'hidden' : 'visible'
+		};
 
-		style += '; width: ' + sprintf('%.5f', 97.7 / products.length) + '%';
+		let item_width = 97.7 / paging_state.page_size_;
 
-		let html = '';
+		if( paging_state.item_width_ !== item_width ) {
+			style.width = sprintf('%.5f', item_width) + '%';
+			paging_state.item_width_ = item_width;
+		}
 
-		for( let i = 0; i < products.length; i++ ) {
+		if( element.innerHTML.isEmpty() ) {
 
-			let product = products[i];
+			let html = '';
 
-			let q = sprintf(Math.trunc(product.quantity) == product.quantity ? '%u' : '%.3f', product.quantity);
-			let r = sprintf(Math.trunc(product.reserve) == product.reserve ? '%u' : '%.3f', product.reserve);
-			let style_float = i + 1 < products.length ? '; float: left' : '; float: right';
+			for( let i = 0; i < paging_state.page_size_; i++ )
+				html +=
+					'<div pitem="' + i + '">'
+					+ '<img pimg src="" alt="">'
+					+ '<p pname></p>'
+					+ '<p pprice></p>'
+					+ '<p pquantity></p>'
+					+ '<a btn buy>КУПИТЬ</a>'
+					+ '</div>';
+				;
 
-			html +=
-				'<div pitem pitem' + i + ' uuid="' + product.uuid + '" style="' + style + style_float + '">'
-				+ '<img pimg src="' + product.img_url + '" alt="">'
-				+ '<p pname>' + product.name + '</p>'
-				+ '<p price>' + product.price + '&nbsp;₽</p>'
-				+ '<p pquantity>' + q + (r ? '&nbsp;(' + r + ')' : '') + '</p>'
-				+ '<a btn buy>КУПИТЬ</a>'
-				+ '</div>';
+			element.innerHTML = html;
 
 		}
 
-		return html;
+		let get_quantity = function (product) {
+			return sprintf(Math.trunc(product.quantity) == product.quantity ? '%u' : '%.3f', product.quantity);
+		};
+
+		let get_reserve = function (product) {
+			return product.reserve ? '&nbsp;('
+					+ sprintf(Math.trunc(product.reserve) == product.reserve ? '%u' : '%.3f', product.reserve)
+					+ ')'
+				: '';
+		};
+
+		for( let a of xpath_eval('div[@pitem]', element) ) {
+
+			let i = parseInt(a.attributes.pitem.value, 10);
+			let uuid = '', name = '', img_url = '', price = '', quantity = '';
+
+			if( i < products.length ) {
+
+				let product = products[i];
+
+				uuid		= product.uuid;
+				name		= product.name;
+				img_url 	= product.img_url;
+				price		= Math.trunc(product.price) + '&nbsp;₽';
+				quantity	= get_quantity(product) + get_reserve(product);
+
+				style.visibility = 'visible';
+
+			}
+			else {
+				style.visibility = 'hidden';
+			}
+
+			a.setAttribute('uuid', uuid);
+
+			xpath_eval_single('img[@pimg]'		, a).src		= img_url;
+			xpath_eval_single('p[@pname]'		, a).innerHTML	= name;
+			xpath_eval_single('p[@pprice]'		, a).innerHTML	= price;
+			xpath_eval_single('p[@pquantity]'	, a).innerHTML	= quantity;
+
+			style.float = i + 1 < paging_state.page_size_ ? 'left' : 'right';
+
+			for( let key in	style )
+				if( a.style[key] !== style[key] )
+					a.style[key] = style[key];
+
+		}
+
+		return element.innerHTML;
 
 	}
 
@@ -128,11 +181,11 @@ class Render {
 		if( paging_state.pgno_ >= paging_state.pages_ ) {
 			paging_state.pgno_ = paging_state.pages_ > 0 ? paging_state.pages_ - 1 : 0;
 			render.rewrite_page();
+			return;
 		}
 
-		paging_state.page_html_	= this.assemble_page(data, state.wait_images_);
-		element.innerHTML		= paging_state.page_html_;
-
+		paging_state.page_html_	= this.assemble_page(paging_state, element, data, state.wait_images_);
+		Render.debug(2, 'NPAG: ' + paging_state.pgno_);
 
 		// make element visible on all images loaded
 		if( state.wait_images_ ) {
@@ -181,6 +234,7 @@ class Render {
 		};
 
 		Render.debug(0);
+		Render.debug(2);
 		post_json('proxy.php', request, (data) => this.pager_data_ready(start, element, data));
 
 	}
@@ -215,7 +269,7 @@ class Render {
 		element.innerHTML = html;
 
 		// set events for new a[@btc] elements
-		state.setup_events();
+		state.setup_events(xpath_eval('a[@btc]', element));
 
 		render.rewrite_page();
 		render.debug_ellapsed(0, start, data.ellapsed, 'CATG: ');
@@ -249,6 +303,22 @@ class HtmlPageEvents extends HtmlPageState {
 		super();
 
 		this.render_ = null;
+		this.events_ = [
+			/*'click',
+			'mousedown',
+			'mouseenter',
+			'mouseleave',
+			'mousemove',
+			'mouseout',
+			'mouseover',
+			'mouseup',*/
+			'touchstart',
+			'touchend',
+			'touchcancel',
+			'touchmove',
+			'touchenter',
+			'touchleave'
+		];
 
 	}
 
@@ -263,6 +333,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 		switch( e.type ) {
 
+			case 'click'		:
 			case 'touchend'		:
 
 				if( attrs.prev_page ) {
@@ -307,8 +378,8 @@ class HtmlPageEvents extends HtmlPageState {
 					if( state.category_ !== null )
 						xpath_eval_single('//div[@categories]/a[@btc and @uuid=\'' + state.category_ + '\']').removeAttribute('blink');
 
-					if( state.category_ !== attrs.uuid.nodeValue ) {
-						state.category_ = attrs.uuid.nodeValue;
+					if( state.category_ !== attrs.uuid.value ) {
+						state.category_ = attrs.uuid.value;
 						element.setAttribute('blink', '');
 					}
 					else {
@@ -342,42 +413,18 @@ class HtmlPageEvents extends HtmlPageState {
 
 		}
 
-		//e.preventDefault();
+		e.preventDefault();
 
 	}
 
-	setup_events() {
+	setup_events(elements) {
 
-		let events = [
-			/*'click',
-			'mousedown',
-			'mouseenter',
-			'mouseleave',
-			'mousemove',
-			'mouseout',
-			'mouseover',
-			'mouseup',*/
-			'touchstart',
-			'touchend',
-			'touchcancel',
-			'touchmove',
-			'touchenter',
-			'touchleave'
-		];
-
-		let base = '//div[@plist_controls]/a[@prev_page or @next_page or @first_page or @last_page]';
 		// xpath-to-select-multiple-tags
 		// //body/*[self::div or self::p or self::a]
 
-		for( let event of events ) {
-
-			for( let element of xpath_eval(base) )
+		for( let event of this.events_ )
+			for( let element of elements )
 				add_event(element, event , e => this.events_handler(e));
-
-			for( let element of xpath_eval('//div[@categories]/a[@btc]') )
-				add_event(element, event , e => this.events_handler(e));
-
-		}
 
 	}
 
@@ -393,7 +440,7 @@ class HtmlPageManager extends HtmlPageEvents {
 
 		Render.hide_cursor();
 
-		this.setup_events();
+		this.setup_events(xpath_eval('//div[@plist_controls]/a[@prev_page or @next_page or @first_page or @last_page]'));
 
 		this.render_ = new Render;
 		this.render_.state = this;
