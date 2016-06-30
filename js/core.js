@@ -73,11 +73,13 @@ class HtmlPageState {
 			}
 		];
 
+		this.category_		= null;
+
 		this.paging_state_by_category_ = {
 			null : Object.assign({}, this.paging_state_template)
 		};
 
-		this.category_		= null;
+		this.new_paging_state_ = this.paging_state_by_category_[this.category_];
 
 		// render
 		this.start_ 		= 0;
@@ -226,7 +228,7 @@ class Render {
 
 		let render = this;
 		let state = render.state_;
-		let paging_state = state.paging_state_by_category_[state.category_];
+		let paging_state = state.new_paging_state_;
 
 		paging_state.page_size_	= data.page_size;
 		paging_state.pages_		= data.pages;
@@ -265,6 +267,9 @@ class Render {
 		xpath_eval_single('div[@list_sort_order]/img[@btn_ico]', base).src = order.ico[direction];
 		xpath_eval_single('div[@list_sort_direction]/img[@btn_ico]', base).src = order.order_icons[direction];
 
+		// success rewrite page, save new state
+		state.paging_state_by_category_[state.category_] = state.new_paging_state_;
+
 		// make element visible on all images loaded
 		if( state.wait_images_ ) {
 
@@ -300,7 +305,7 @@ class Render {
 
 		let start = microtime();
 		let state = this.state_;
-		let paging_state = state.paging_state_by_category_[state.category_];
+		let paging_state = state.new_paging_state_;
 		let element = xpath_eval_single('//div[@plist]');
 		let request = {
 			'module'	: 'pager',
@@ -402,12 +407,15 @@ class HtmlPageEvents extends HtmlPageState {
 
 	events_handler(e) {
 
+		let touchobj, startx, dist;
+
 		let state = this;
 		let render = this.render_;
 		let element = e.currentTarget;
 		let attrs = element.attributes;
-		let paging_state = state.paging_state_by_category_[state.category_];
-		let touchobj, startx, dist;
+		let paging_state = Object.assign({}, state.paging_state_by_category_[state.category_]);
+
+		state.new_paging_state_ = paging_state;
 
 		switch( e.type ) {
 
