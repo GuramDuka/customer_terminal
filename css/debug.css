@@ -19,9 +19,9 @@
 		height				: 350px;
 	}
 
-	/*div, div[pitem]>img[pimg] {
+	div, div[pitem]>img[pimg] {
 		border				: solid 1px black;
-	}*/
+	}
 
 	div[debug] {
 		width				: auto !important;

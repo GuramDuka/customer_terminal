@@ -130,7 +130,7 @@ class Render {
 			'visibility'	: invisible ? 'hidden' : 'visible'
 		};
 
-		let item_width = 99.2 / paging_state.page_size_;
+		let item_width = 99.0 / paging_state.page_size_;
 
 		if( paging_state.item_width_ !== item_width ) {
 			style.width = sprintf('%.5f', item_width) + '%';
@@ -177,7 +177,7 @@ class Render {
 				let product = products[i];
 
 				uuid		= product.uuid;
-				name		= product.name + ' [' + product.code + ']';
+				name		= product.name;
 				img_url 	= product.img_url;
 				price		= Math.trunc(product.price) + '&nbsp;₽';
 				quantity	= get_quantity(product) + get_reserve(product);
@@ -186,9 +186,7 @@ class Render {
 
 			}
 			else {
-
 				style.visibility = 'hidden';
-
 			}
 
 			a.setAttribute('uuid', uuid);

@@ -112,7 +112,7 @@
 	}
 
 	div[plist] {
-		height				: 550px;
+		height				: 650px;
 	}
 
 	div[pitem] {
@@ -127,13 +127,15 @@
 
 	p[pname] {
 		overflow			: hidden;
-		height				: 15%;
+		height				: 25%;
 		margin-bottom		: 8px;
 	}
 
 	p[pprice], p[pquantity] {
 		overflow			: hidden;
 		margin-bottom		: 8px;
+		font-size			: 29px;
+		font-weight			: bold;
 	}
 
 	div[pcontrols] {
