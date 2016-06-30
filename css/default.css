@@ -150,6 +150,11 @@
 		margin-left			: 3px;
 	}
 
+	/* strange bug, fixed */
+	div[list_sort_order]>img[btn_ico] {
+		margin-top			: -1.2%;
+	}
+
 	div[plist_controls] {
 		width				: 69%;
 		float				: right;

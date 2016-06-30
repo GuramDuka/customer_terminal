@@ -177,7 +177,7 @@ class Render {
 				let product = products[i];
 
 				uuid		= product.uuid;
-				name		= product.name;
+				name		= product.name + ' [' + product.code + ']';
 				img_url 	= product.img_url;
 				price		= Math.trunc(product.price) + '&nbsp;₽';
 				quantity	= get_quantity(product) + get_reserve(product);
@@ -186,7 +186,9 @@ class Render {
 
 			}
 			else {
+
 				style.visibility = 'hidden';
+
 			}
 
 			a.setAttribute('uuid', uuid);
