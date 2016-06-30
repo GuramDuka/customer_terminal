@@ -15,27 +15,11 @@
 
 @media screen {
 
-	/*div[plist] {
-		height				: 450px;
+	div[plist] {
+		height				: 350px;
 	}
 
-	div[pitem] {
-		height				: 420px;
-	}
-
-	div[pitem]>img[pimg] {
-		height				: 50%;
-	}
-
-	p[pname] {
-		height				: 80px;
-	}
-
-	p[pprice], p[pquantity] {
-		height				: 20px;
-	}
-
-	div, div[pitem]>img[pimg] {
+	/*div, div[pitem]>img[pimg] {
 		border				: solid 1px black;
 	}*/
 

@@ -27,7 +27,7 @@ class infobase extends \SQLite3 {
 		parent::__construct($ib_file_name, $flags);
 		$this->enableExceptions(true);
 		$this->busyTimeout(180000);
-		$this->exec('PRAGMA cache_size = -32768');
+		$this->exec('PRAGMA cache_size = -32768'); // 524288
 		$this->exec('PRAGMA count_changes = OFF');
 		$this->exec('PRAGMA synchronous = NORMAL');
 		$this->exec('PRAGMA journal_mode = WAL');

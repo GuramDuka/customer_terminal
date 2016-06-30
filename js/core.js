@@ -10,8 +10,8 @@ class HtmlPageState {
 			pages_ 		: 0,
 			page_size_	: 0,
 			page_html_	: '',
-			order_		: 'name',
-			direction_	: 'asc'
+			order_		: 1,
+			direction_	: 0
 		};
 
 	}
@@ -19,24 +19,59 @@ class HtmlPageState {
 	constructor() {
 
 		// paging
-		this.directions = {
-			'asc', 'desc'
-		};
 
-		this.orders_ = {
-			'code'		: {
-				
-			},
-			'name'		: {
-				'order_icons' : {
-					'asc'	: '',
+		this.directions_ = [ 'asc', 'desc' ];
+
+		this.orders_ = [
+			{
+				name		: 'code',
+				display		: 'Код',
+				ico			: {
+					asc		: '/resources/assets/sorting/sort_number_column.ico',
+					desc	: '/resources/assets/sorting/sort_number_column.ico'
 				},
+				order_icons : {
+					asc		: '/resources/assets/sorting/sort_number.ico',
+					desc	: '/resources/assets/sorting/sort_number_descending.ico'
+				}
 			},
-			'price'		: {
+			{
+				name		: 'name',
+				display		: 'Наименование',
+				ico			: {
+					asc		: '/resources/assets/sorting/sort_alphabel_column.ico',
+					desc	: '/resources/assets/sorting/sort_alphabel_column.ico'
+				},
+				order_icons : {
+					asc		: '/resources/assets/sorting/sort_asc_az.ico',
+					desc	: '/resources/assets/sorting/sort_desc_az.ico'
+				}
 			},
-			'quantity'	: {
+			{
+				name		: 'price',
+				display		: 'Цена',
+				ico			: {
+					asc		: '/resources/assets/sorting/sort_price.ico',
+					desc	: '/resources/assets/sorting/sort_price_descending.ico'
+				},
+				order_icons : {
+					asc		: '/resources/assets/sorting/sort_ascending.ico',
+					desc	: '/resources/assets/sorting/sort_descending.ico'
+				}
+			},
+			{
+				name		: 'quantity',
+				display		: 'Количество',
+				ico			: {
+					asc		: '/resources/assets/sorting/sort_quantity.ico',
+					desc	: '/resources/assets/sorting/sort_quantity_descending.ico'
+				},
+				order_icons : {
+					asc		: '/resources/assets/sorting/sort_ascending.ico',
+					desc	: '/resources/assets/sorting/sort_descending.ico'
+				}
 			}
-		};
+		];
 
 		this.paging_state_by_category_ = {
 			null : Object.assign({}, this.paging_state_template)
@@ -122,12 +157,12 @@ class Render {
 		}
 
 		let get_quantity = function (product) {
-			return sprintf(Math.trunc(product.quantity) == product.quantity ? '%u' : '%.3f', product.quantity);
+			return sprintf(Math.trunc(product.quantity) == product.quantity ? '%d' : '%.3f', product.quantity);
 		};
 
 		let get_reserve = function (product) {
 			return product.reserve ? '&nbsp;('
-					+ sprintf(Math.trunc(product.reserve) == product.reserve ? '%u' : '%.3f', product.reserve)
+					+ sprintf(Math.trunc(product.reserve) == product.reserve ? '%d' : '%.3f', product.reserve)
 					+ ')'
 				: '';
 		};
@@ -206,20 +241,29 @@ class Render {
 		paging_state.page_html_	= this.assemble_page(paging_state, element, data, state.wait_images_);
 		Render.debug(2, 'NPAG: ' + paging_state.pgno_);
 
-		//xpath_eval('//div[@psort_controls]/div[@prev_page or @next_page or @first_page or @last_page]');
+		let base = xpath_eval_single('//div[@plist_controls]');
 
-		xpath_eval_single('//div[@plist_controls]/div[@first_page]').style.display =
+		xpath_eval_single('div[@first_page]', base).style.display =
 			paging_state.pgno_ < 2 || paging_state.pages_ < 2  ? 'none' : 'inline-block';
-		xpath_eval_single('//div[@plist_controls]/div[@prev_page]').style.display =
+		xpath_eval_single('div[@prev_page]', base).style.display =
 			paging_state.pgno_ === 0 || paging_state.pages_ < 2 ? 'none' : 'inline-block';
-		xpath_eval_single('//div[@plist_controls]/div[@prev_page]/span[@btn_txt]').innerText = (paging_state.pgno_ + 1) - 1;
-		xpath_eval_single('//div[@plist_controls]/div[@next_page]').style.display =
+		xpath_eval_single('div[@prev_page]/span[@btn_txt]', base).innerText = (paging_state.pgno_ + 1) - 1;
+		xpath_eval_single('div[@next_page]', base).style.display =
 			paging_state.pgno_ > paging_state.pages_ - 2 || paging_state.pages_ < 2 ? 'none' : 'inline-block';
-		xpath_eval_single('//div[@plist_controls]/div[@next_page]/span[@btn_txt]').innerText = (paging_state.pgno_ + 1) + 1;
-		xpath_eval_single('//div[@plist_controls]/div[@last_page]').style.display =
+		xpath_eval_single('div[@next_page]/span[@btn_txt]', base).innerText = (paging_state.pgno_ + 1) + 1;
+		xpath_eval_single('div[@last_page]', base).style.display =
 			paging_state.pgno_ > paging_state.pages_ - 3 || paging_state.pages_ < 3 ? 'none' : 'inline-block';
 		if( paging_state.pages_ > 0 )
 			xpath_eval_single('//div[@plist_controls]/div[@last_page]/span[@btn_txt]').innerText = paging_state.pages_;
+
+		base = xpath_eval_single('//div[@psort_controls]');
+
+		let order = state.orders_[paging_state.order_];
+		let direction = state.directions_[paging_state.direction_];
+
+		xpath_eval_single('div[@list_sort_order]/span[@btn_txt]', base).innerText = order.display;
+		xpath_eval_single('div[@list_sort_order]/img[@btn_ico]', base).src = order.ico[direction];
+		xpath_eval_single('div[@list_sort_direction]/img[@btn_ico]', base).src = order.order_icons[direction];
 
 		// make element visible on all images loaded
 		if( state.wait_images_ ) {
@@ -262,8 +306,8 @@ class Render {
 			'module'	: 'pager',
 			'handler'	: 'pager',
 			'category'	: state.category_,
-			'order'		: paging_state.order_,
-			'direction' : paging_state.direction_,
+			'order'		: state.orders_[paging_state.order_].name,
+			'direction' : state.directions_[paging_state.direction_],
 			'pgno'		: paging_state.pgno_
 		};
 
@@ -423,11 +467,21 @@ class HtmlPageEvents extends HtmlPageState {
 					render.rewrite_page();
 
 				}
-				else if( attrs.list_sort_field ) {
-					order_		: 'name',
-					direction_	: 'asc'
-				}
 				else if( attrs.list_sort_order ) {
+
+					if( ++paging_state.order_ >= state.orders_.length )
+						paging_state.order_ = 0;
+
+					render.rewrite_page();
+
+				}
+				else if( attrs.list_sort_direction ) {
+
+					if( ++paging_state.direction_ >= state.directions_.length )
+						paging_state.direction_ = 0;
+
+					render.rewrite_page();
+
 				}
 				break;
 
@@ -482,7 +536,7 @@ class HtmlPageManager extends HtmlPageEvents {
 		Render.hide_cursor();
 
 		this.setup_events(xpath_eval('//div[@plist_controls]/div[@prev_page or @next_page or @first_page or @last_page]'));
-		this.setup_events(xpath_eval('//div[@psort_controls]/div[@list_sort_field or @list_sort_order]'));
+		this.setup_events(xpath_eval('//div[@psort_controls]/div[@list_sort_order or @list_sort_direction]'));
 
 		this.render_ = new Render;
 		this.render_.state = this;

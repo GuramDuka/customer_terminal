@@ -112,7 +112,7 @@
 	}
 
 	div[plist] {
-		height				: 350px;
+		height				: 550px;
 	}
 
 	div[pitem] {
@@ -146,7 +146,7 @@
 		text-align			: left;
 	}
 
-	div[list_sort_field], div[list_sort_order] {
+	div[list_sort_order], div[list_sort_direction] {
 		margin-left			: 3px;
 	}
 
