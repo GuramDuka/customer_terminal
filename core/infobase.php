@@ -46,7 +46,7 @@ class infobase extends \SQLite3 {
 
 		}
 
-		if( ($new_ib && $this->create_if_not_exists) || config::$force_create_infobase ) {
+		if( ($new_ib && $this->create_if_not_exists_) || config::$force_create_infobase ) {
 
 			try {
 
