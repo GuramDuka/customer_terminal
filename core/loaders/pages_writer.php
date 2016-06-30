@@ -32,7 +32,7 @@ function rewrite_pages($infobase) {
 
 	if( $r->fetchArray(SQLITE3_NUM) || config::$force_rewrite_pages ) {
 
-		$result = $infobase->query(<<<'EOT'
+		$sql = <<<'EOT'
 			SELECT
 				NULL
 			UNION ALL
@@ -41,7 +41,11 @@ function rewrite_pages($infobase) {
 			FROM
 				categories
 EOT
-		);
+		;
+
+		$infobase->dump_plan($sql);
+
+		$result = $infobase->query($sql);
 
 		$categories = [];
 
@@ -50,7 +54,7 @@ EOT
 
 		foreach( $categories as $category_uuid ) {
 
-			$st = $infobase->prepare(<<<'EOT'
+			$sql = <<<'EOT'
 				WITH cte0 AS (
 					SELECT
 						uuid
@@ -90,38 +94,52 @@ EOT
 						categories
 					WHERE
 						parent_uuid IN (SELECT uuid FROM cte3)
+				),
+				cte AS (
+					SELECT uuid FROM cte0
+					UNION ALL
+					SELECT uuid FROM cte1
+					UNION ALL
+					SELECT uuid FROM cte2
+					UNION ALL
+					SELECT uuid FROM cte3
+					UNION ALL
+					SELECT uuid FROM cte4
 				)
-				SELECT uuid FROM cte0
-				UNION ALL
-				SELECT uuid FROM cte1
-				UNION ALL
-				SELECT uuid FROM cte2
-				UNION ALL
-				SELECT uuid FROM cte3
-				UNION ALL
-				SELECT uuid FROM cte4
+				SELECT
+					a.*
+				FROM
+					cte AS a
+				WHERE
+					uuid = :category_uuid
+					OR EXISTS(SELECT 1 FROM categories_registry AS c WHERE a.uuid = c.category_uuid LIMIT 1)
 EOT
-			);
+			;
+
+			$infobase->dump_plan($sql);
+			$st = $infobase->prepare($sql);
 
 			$st->bindParam(":category_uuid", $category_uuid, SQLITE3_BLOB);
 			$result = $st->execute();
-
 			$sub_categories = [];
 
 			while( $r = $result->fetchArray(SQLITE3_NUM) )
 				$sub_categories[] = $r[0];
 
-			$where = '';
+			$s = '';
 
 			for( $i = 0; $i < count($sub_categories); $i++ ) {
 
-				$where .= " OR c.category_uuid = :category${i}_uuid\n";
+				$s .= ", :category${i}_uuid";
 				$n = "category${i}_uuid";
 				$$n = $sub_categories[$i];
 
 			}
 
-			$where = substr($where, 4);
+			$condition	= empty($s) ? '' : 'category_uuid IN (' . substr($s, 2) . ') AND';
+			$cut0		= empty($s) ? '' : 'c.category_uuid AS category_uuid,';
+			$cut1		= empty($s) ? '' : 'categories_registry AS c INNER JOIN';
+			$cut2		= empty($s) ? '' : 'ON c.product_uuid = a.uuid';
 
 			//CREATE TEMPORARY TABLE Tcats AS
 			//WITH ft_cte AS (
@@ -156,7 +174,7 @@ EOT
 
 			foreach( $orders as $order )
 				foreach( $directions as $direction )
-					$v["r_${order}_${direction}"] = null;
+					$v["a_${order}_${direction}"] = [];
 
 			extract($v);
 
@@ -165,78 +183,63 @@ EOT
 			foreach( $orders as $order )
 				foreach( $directions as $direction ) {
 
-				$vn = "st_${order}_${direction}";
-				$vr = "r_${order}_${direction}";
-
-				$cte_name = 'products';
-				$cte = '';
-
-				if( $category_uuid !== null ) {
-
-					$cte_name .= '_cte';
-
-					$cte = <<<EOT
-						WITH products_cte AS (
-						    SELECT
-								a.*
-							FROM
-								products AS a
-									INNER JOIN categories_registry AS c
-									ON a.uuid = c.product_uuid
-										/*AND c.category_uuid = :category_uuid*/
-						    WHERE
-								${where}
-						)
-EOT
-					;
-
-				}
+				//$vn = "st_${order}_${direction}";
+				//$vr = "r_${order}_${direction}";
 
 				$sql = <<<EOT
-					${cte}
 					SELECT
+						${cut0}
 						a.uuid					AS ${order}_${direction}_uuid,
 						a.code					AS ${order}_${direction}_code,
 						a.name					AS ${order}_${direction}_name,
 						a.base_image_uuid		AS ${order}_${direction}_base_image_uuid,
 						i.ext					AS ${order}_${direction}_base_image_ext,
-						p.price					AS ${order}_${direction}_price,
 						q.quantity				AS ${order}_${direction}_quantity,
+						p.price					AS ${order}_${direction}_price,
 						COALESCE(r.quantity, 0)	AS ${order}_${direction}_reserve
 					FROM
-						${cte_name} AS a
+						${cut1} products AS a
+							${cut2}
 							INNER JOIN images AS i
 							ON a.base_image_uuid = i.uuid
 							INNER JOIN prices_registry AS p
 							ON a.uuid = p.product_uuid
-							INNER JOIN remainders_registry AS q
-							ON a.uuid = q.product_uuid
 							LEFT JOIN reserves_registry AS r
 							ON a.uuid = r.product_uuid
+							INNER JOIN remainders_registry AS q
+							ON a.uuid = q.product_uuid
 					WHERE
-						a.code > 0
-						AND a.name > ''
-						AND p.price > 0
-						AND q.quantity - COALESCE(r.quantity, 0) > 0
-						AND i.ext IS NOT NULL
+						${condition}
+						${order}_${direction}_code > 0
+						AND ${order}_${direction}_name > ''
+						AND ${order}_${direction}_price > 0
+						AND ${order}_${direction}_base_image_ext IS NOT NULL
+						AND ${order}_${direction}_quantity > 0
 					ORDER BY
 						${order}_${direction}_${order} ${direction},
-						a.uuid
+						${order}_${direction}_uuid
 EOT
 				;
 
 				$infobase->dump_plan($sql);
-				$$vn = $infobase->prepare($sql);
-				$$vn->bindParam(":category_uuid", $category_uuid, SQLITE3_BLOB);
+				$ste = $infobase->prepare($sql);
 
 				for( $i = 0; $i < count($sub_categories); $i++ ) {
 
 					$n = "category${i}_uuid";
-					$$vn->bindParam(":${n}", $$n, SQLITE3_BLOB);
+					$ste->bindParam(":${n}", $$n, SQLITE3_BLOB);
 
 				}
 
-				$$vr = $$vn->execute();
+				$res = $ste->execute();
+
+				$a = "a_${order}_${direction}";
+				$v = [];
+
+				while( $r = $res->fetchArray(SQLITE3_ASSOC) )
+					$v[] = $r;
+
+				$$a = $v;
 
 			}
 
@@ -276,33 +279,32 @@ EOT
 
 				}
 
-			for( $j = -1, $i = -1; ; ) {
+			for( $j = -1, $i = 0; ; $i++ ) {
 
-				$r = null;
+				$r = false;
 
 				foreach( $orders as $order ) {
 
 					foreach( $directions as $direction ) {
 
-						$n = "r_${order}_${direction}";
-						$r = $$n->fetchArray(SQLITE3_ASSOC);
+						$a = "a_${order}_${direction}";
 
-						if( !$r )
+						if( $i >= count($$a) ) {
+							$r = true;
 							break;
+						}
 
-						extract($r);
+						extract($$a[$i]);
 
 					}
 
-					if( !$r )
+					if( $r )
 						break;
-			
+		
 				}
 
-				if( !$r )
+				if( $r )
 					break;
-
-				$i++;
 
 				if( ($i % $pgsz) === 0 )
 					$j++;

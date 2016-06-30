@@ -228,12 +228,12 @@ function ellapsed_time_string(ms) {
 //------------------------------------------------------------------------------
 function post_json(path, data, success, error) {
 
-	let xhr = new XMLHttpRequest();
+	let xhr = new XMLHttpRequest;
 
 	xhr.open('POST', path, true);
-
-	// no-cache
-	xhr.setRequestHeader('If-Modified-Since', 'Sat, 1 Jan 2000 00:00:00 GMT');
+	xhr.timeout = 180000;
+	xhr.setRequestHeader('Content-Type', 'Content-Type: application/json; charset=utf-8');
+	xhr.setRequestHeader('If-Modified-Since', 'Sat, 1 Jan 2000 00:00:00 GMT') // no-cache;
 
 	xhr.onreadystatechange = function() {
 
@@ -250,6 +250,22 @@ function post_json(path, data, success, error) {
 	};
 
 	xhr.send(JSON.stringify(data, null, '\t'));
+}
+//------------------------------------------------------------------------------
+function post_json_sync(path, data) {
+
+	let xhr = new XMLHttpRequest;
+
+	xhr.open('POST', path, false);
+	xhr.setRequestHeader('Content-Type', 'Content-Type: application/json; charset=utf-8');
+	xhr.setRequestHeader('If-Modified-Since', 'Sat, 1 Jan 2000 00:00:00 GMT') // no-cache;
+	xhr.send(JSON.stringify(data, null, '\t'));
+
+	if( xhr.status === 200 )
+		return JSON.parse(xhr.responseText);
+
+	throw new Error(request.status.toString() + ' ' + request.statusText);
+
 }
 //------------------------------------------------------------------------------
 function add_event(obj, type, fn, phase = true) {

@@ -14,6 +14,7 @@ namespace srv1c {
 //------------------------------------------------------------------------------
 class config extends \config {
 
+	public static $explain = false;
 	public static $page_size = 6;
 	public static $convert_images = false;
 	public static $images_format = 'jpg';

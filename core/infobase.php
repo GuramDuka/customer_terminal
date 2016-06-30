@@ -375,7 +375,7 @@ EOT
 
 	public function dump_plan($sql) {
 
-		if( config::$debug ) {
+		if( config::$explain ) {
 
 			$result = $this->query('EXPLAIN QUERY PLAN ' . $sql);
 

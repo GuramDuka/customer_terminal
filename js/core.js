@@ -6,6 +6,7 @@ class HtmlPageState {
 	get paging_state_template() {
 
 		return {
+			category_	: null,
 			pgno_		: 0,
 			pages_ 		: 0,
 			page_size_	: 0,
@@ -78,8 +79,6 @@ class HtmlPageState {
 		this.paging_state_by_category_ = {
 			null : Object.assign({}, this.paging_state_template)
 		};
-
-		this.new_paging_state_ = this.paging_state_by_category_[this.category_];
 
 		// render
 		this.start_ 		= 0;
@@ -224,11 +223,11 @@ class Render {
 
 	}
 
-	pager_data_ready(start, element, data) {
+	pager_data_ready(start, element, new_paging_state, data) {
 
 		let render = this;
 		let state = render.state_;
-		let paging_state = state.new_paging_state_;
+		let paging_state = new_paging_state;
 
 		paging_state.page_size_	= data.page_size;
 		paging_state.pages_		= data.pages;
@@ -267,9 +266,6 @@ class Render {
 		xpath_eval_single('div[@list_sort_order]/img[@btn_ico]', base).src = order.ico[direction];
 		xpath_eval_single('div[@list_sort_direction]/img[@btn_ico]', base).src = order.order_icons[direction];
 
-		// success rewrite page, save new state
-		state.paging_state_by_category_[state.category_] = state.new_paging_state_;
-
 		// make element visible on all images loaded
 		if( state.wait_images_ ) {
 
@@ -301,24 +297,30 @@ class Render {
 
 	}
 
-	rewrite_page() {
+	rewrite_page(new_paging_state) {
 
 		let start = microtime();
 		let state = this.state_;
-		let paging_state = state.new_paging_state_;
 		let element = xpath_eval_single('//div[@plist]');
 		let request = {
 			'module'	: 'pager',
 			'handler'	: 'pager',
-			'category'	: state.category_,
-			'order'		: state.orders_[paging_state.order_].name,
-			'direction' : state.directions_[paging_state.direction_],
-			'pgno'		: paging_state.pgno_
+			'category'	: new_paging_state.category_,
+			'order'		: state.orders_[new_paging_state.order_].name,
+			'direction' : state.directions_[new_paging_state.direction_],
+			'pgno'		: new_paging_state.pgno_
 		};
 
 		Render.debug(0);
 		Render.debug(2);
-		post_json('proxy.php', request, (data) => this.pager_data_ready(start, element, data));
+
+		// async request
+		//post_json('proxy.php', request, (data) => this.pager_data_ready(start, element, data));
+
+		// sync request
+		let data = post_json_sync('proxy.php', request);
+
+		this.pager_data_ready(start, element, new_paging_state, data);
 
 	}
 
@@ -337,6 +339,7 @@ class Render {
 			if( !paging_state ) {
 
 				paging_state = Object.assign({}, state.paging_state_template);
+				paging_state.category_ = c.uuid;
 				state.paging_state_by_category_[c.uuid] = paging_state;
 
 			}
@@ -354,7 +357,7 @@ class Render {
 		// set events for new a[@btc] elements
 		state.setup_events(xpath_eval('div[@btc]', element));
 
-		render.rewrite_page();
+		render.rewrite_page(state.paging_state_by_category_[state.category_]);
 		render.debug_ellapsed(0, start, data.ellapsed, 'CATG: ');
 
 	}
@@ -371,7 +374,10 @@ class Render {
 		};
 
 		Render.debug(1);
-		post_json('proxy.php', request, (data) => this.categories_data_ready(start, element, data));
+
+		let data = post_json_sync('proxy.php', request);
+		
+		this.categories_data_ready(start, element, data);
 
 	}
 
@@ -413,9 +419,7 @@ class HtmlPageEvents extends HtmlPageState {
 		let render = this.render_;
 		let element = e.currentTarget;
 		let attrs = element.attributes;
-		let paging_state = Object.assign({}, state.paging_state_by_category_[state.category_]);
-
-		state.new_paging_state_ = paging_state;
+		let new_paging_state = Object.assign({}, state.paging_state_by_category_[state.category_]);
 
 		switch( e.type ) {
 
@@ -424,55 +428,65 @@ class HtmlPageEvents extends HtmlPageState {
 
 				if( attrs.prev_page ) {
 
-					if( paging_state.pgno_ > 0 ) {
-						paging_state.pgno_--;
-						render.rewrite_page();
+					if( new_paging_state.pgno_ > 0 ) {
+						new_paging_state.pgno_--;
+						render.rewrite_page(new_paging_state);
+						// success rewrite page, save new state
+						state.paging_state_by_category_[state.category_] = new_paging_state;
 					}
 
 				}
 				else if( attrs.next_page ) {
 
-					if( paging_state.pgno_ + 1 < paging_state.pages_ ) {
-						paging_state.pgno_++;
-						render.rewrite_page();
+					if( new_paging_state.pgno_ + 1 < new_paging_state.pages_ ) {
+						new_paging_state.pgno_++;
+						render.rewrite_page(new_paging_state);
+						// success rewrite page, save new state
+						state.paging_state_by_category_[state.category_] = new_paging_state;
 					}
 
 				}
 				else if( attrs.first_page ) {
 
-					if( paging_state.pgno_ != 0 ) {
-						paging_state.pgno_ = 0;
-						render.rewrite_page();
+					if( new_paging_state.pgno_ != 0 ) {
+						new_paging_state.pgno_ = 0;
+						render.rewrite_page(new_paging_state);
+						// success rewrite page, save new state
+						state.paging_state_by_category_[state.category_] = new_paging_state;
 					}
 
 				}
 				else if( attrs.last_page ) {
 
-					let newpgno = paging_state.pages_ > 0 ? paging_state.pages_ - 1 : 0;
+					let newpgno = new_paging_state.pages_ > 0 ? new_paging_state.pages_ - 1 : 0;
 
-					if( newpgno != paging_state.pgno_ ) {
-						paging_state.pgno_ = newpgno;
-						render.rewrite_page();
+					if( newpgno != new_paging_state.pgno_ ) {
+						new_paging_state.pgno_ = newpgno;
+						render.rewrite_page(new_paging_state);
+						// success rewrite page, save new state
+						state.paging_state_by_category_[state.category_] = new_paging_state;
 					}
 
 				}
 				else if( attrs.btc ) {
 
 					// categories buttons
+					let new_category = state.category_ !== attrs.uuid.value ? attrs.uuid.value : null;
+					new_paging_state = Object.assign({}, state.paging_state_by_category_[new_category]);
+
+					render.rewrite_page(new_paging_state);
+					// success rewrite page, save new state
+					state.paging_state_by_category_[new_category] = new_paging_state;
+
+					// switch on blinking new category
+					if( new_category !== state.category_ )
+						element.setAttribute('blink', '');
 
 					// switch off blinking current category
 					if( state.category_ !== null )
 						xpath_eval_single('//div[@categories]/div[@btc and @uuid=\'' + state.category_ + '\']').removeAttribute('blink');
 
-					if( state.category_ !== attrs.uuid.value ) {
-						state.category_ = attrs.uuid.value;
-						element.setAttribute('blink', '');
-					}
-					else {
-						state.category_ = null;
-					}
-
-					render.rewrite_page();
+					state.category_ = new_category;
 
 				}
 				else if( attrs.list_sort_order ) {
@@ -480,7 +494,7 @@ class HtmlPageEvents extends HtmlPageState {
 					if( ++paging_state.order_ >= state.orders_.length )
 						paging_state.order_ = 0;
 
-					render.rewrite_page();
+					render.rewrite_page(paging_state);
 
 				}
 				else if( attrs.list_sort_direction ) {
@@ -488,7 +502,7 @@ class HtmlPageEvents extends HtmlPageState {
 					if( ++paging_state.direction_ >= state.directions_.length )
 						paging_state.direction_ = 0;
 
-					render.rewrite_page();
+					render.rewrite_page(paging_state);
 
 				}
 				break;
