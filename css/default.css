@@ -18,42 +18,65 @@
 	div, img, i, br, p, span {
 		margin				: 0;
 		padding				: 0;
+		width				: 100%;
+		float				: left;
+		overflow			: hidden;
 	}
 
-	a[btn], a[btn]:active, a[btn]:hover, a[btn]:visited,
-	a[btc], a[btc]:active, a[btc]:hover, a[btc]:visited {
+	div[btn], div[btc] {
+    	min-width			: 32px;
+		width				: auto;
 		background			: #FFDD57;
 		border				: 1px solid #dfba3c;
 		border-radius		: 3px;
 		box-shadow			: none;
 		color				: #5f5b51;
+		color				: darkgreen;
 		cursor				: pointer;
 		display				: inline-block;
 		vertical-align		: middle;
-		line-height			: normal;
-		font-size			: 23px;
+		font-size			: 24px;
 		font-weight			: bold;
 		overflow			: hidden;
 		text-align			: center;
+		text-overflow		: ellipsis;
 		text-decoration		: none;
 		text-transform		: uppercase;
-		padding-left		: 15px;
-		padding-right		: 15px;
-		padding-top			: 5px;
-		padding-bottom		: 5px;
+		white-space			: nowrap;
+		padding-left		: 10px;
+		padding-right		: 10px;
+		padding-top			: 0px;
+		padding-bottom		: 0px;
 		margin				: 0;
+		height				: 35px;
+		line-height			: 35px;
+		float				: none;
+		position			: relative;
 	}
 
-	a[btc], a[btc]:active, a[btc]:hover, a[btc]:visited {
+	div[btc] {
 		background			: #D9D9D9;
 		color				: #4C3C38;
 		border				: 1px solid #CACACA;
 	}
 
-	div {
-		width				: 100%;
-		float				: left;
-		overflow			: hidden;
+	img[btn_ico], img[btn_ico_condensed] {
+		width				: 32px;
+		height				: 32px;
+		float				: none;
+		vertical-align		: middle;
+		/* fix: shift up */
+		margin-top			: -5.1%;
+	}
+
+	img[btn_ico_condensed] {
+		width				: 20px;
+	}
+
+	span[btn_txt] {
+		float				: none;
+		width				: auto;
+		height				: auto;
 	}
 
 	div[top] {
@@ -84,50 +107,57 @@
 		text-align			: left;
 	}
 
-	div[categories]>a[btc] {
+	div[categories]>div[btc] {
 		margin-left			: 4px;
 	}
 
 	div[plist] {
-		height				: 550px;
+		height				: 350px;
 	}
 
 	div[pitem] {
-		height				: 520px;
-		padding-left		: 2px;
-		padding-right		: 2px;
+		height				: 98%;
 	}
 
 	div[pitem]>img[pimg] {
+		max-width			: 98%;
 		height				: 50%;
 		margin-bottom		: 8px;
 	}
 
 	p[pname] {
 		overflow			: hidden;
-		height				: 120px;
+		height				: 15%;
 		margin-bottom		: 8px;
 	}
 
 	p[pprice], p[pquantity] {
 		overflow			: hidden;
-		height				: 20px;
 		margin-bottom		: 8px;
 	}
 
-	div[plist_controls] {
-		height				: 40px;
+	div[pcontrols] {
 		vertical-align		: middle;
 	}
 
-	a[first_page], a[prev_page] {
+	div[psort_controls] {
+		width				: 30%;
 		float				: left;
-		margin-right		: 4px;
+		text-align			: left;
 	}
 
-	a[next_page], a[last_page] {
+	div[list_sort_field], div[list_sort_order] {
+		margin-left			: 3px;
+	}
+
+	div[plist_controls] {
+		width				: 69%;
 		float				: right;
-		margin-left			: 4px;
+		text-align			: right;
+	}
+
+	div[first_page], div[prev_page], div[next_page], div[last_page] {
+		margin-right		: 3px;
 	}
 
 	div[bottom] {

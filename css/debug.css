@@ -15,7 +15,7 @@
 
 @media screen {
 
-	div[plist] {
+	/*div[plist] {
 		height				: 450px;
 	}
 
@@ -35,11 +35,7 @@
 		height				: 20px;
 	}
 
-	div[plist_controls] {
-		height				: 40px;
-	}
-
-	/*div, div[pitem]>img[pimg] {
+	div, div[pitem]>img[pimg] {
 		border				: solid 1px black;
 	}*/
 

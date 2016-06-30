@@ -252,12 +252,10 @@ function post_json(path, data, success, error) {
 	xhr.send(JSON.stringify(data, null, '\t'));
 }
 //------------------------------------------------------------------------------
-function add_event(obj, type, fn) {
-
-	console.log(obj, type, fn);
+function add_event(obj, type, fn, phase = true) {
 
 	if( obj.addEventListener ) {
-		obj.addEventListener(type, fn, false);
+		obj.addEventListener(type, fn, phase);
 	}
 	else if( obj.attachEvent ) {
 		obj.attachEvent('on' + type, function() {

@@ -19,6 +19,25 @@ class HtmlPageState {
 	constructor() {
 
 		// paging
+		this.directions = {
+			'asc', 'desc'
+		};
+
+		this.orders_ = {
+			'code'		: {
+				
+			},
+			'name'		: {
+				'order_icons' : {
+					'asc'	: '',
+				},
+			},
+			'price'		: {
+			},
+			'quantity'	: {
+			}
+		};
+
 		this.paging_state_by_category_ = {
 			null : Object.assign({}, this.paging_state_template)
 		};
@@ -56,7 +75,7 @@ class Render {
 		let p = xpath_eval_single('p[@debug' + level + ']', element);
 
 		p.innerHTML = s;
-		p.style.display = s !== null ? 'block' : 'none';
+		p.style.display = s !== null ? 'inline-block' : 'none';
 
 	}
 
@@ -76,7 +95,7 @@ class Render {
 			'visibility'	: invisible ? 'hidden' : 'visible'
 		};
 
-		let item_width = 97.7 / paging_state.page_size_;
+		let item_width = 99.2 / paging_state.page_size_;
 
 		if( paging_state.item_width_ !== item_width ) {
 			style.width = sprintf('%.5f', item_width) + '%';
@@ -94,7 +113,7 @@ class Render {
 					+ '<p pname></p>'
 					+ '<p pprice></p>'
 					+ '<p pquantity></p>'
-					+ '<a btn buy>КУПИТЬ</a>'
+					+ '<div btn buy>КУПИТЬ</div>'
 					+ '</div>';
 				;
 
@@ -161,7 +180,7 @@ class Render {
 
 			xpath_eval_single('//body').style.cursor = 'none';
 
-			for( let a of xpath_eval('//a[@btn or @btc]') )
+			for( let a of xpath_eval('//div[@btn or @btc]') )
 				a.style.cursor = 'none';
 
 		}
@@ -186,6 +205,21 @@ class Render {
 
 		paging_state.page_html_	= this.assemble_page(paging_state, element, data, state.wait_images_);
 		Render.debug(2, 'NPAG: ' + paging_state.pgno_);
+
+		//xpath_eval('//div[@psort_controls]/div[@prev_page or @next_page or @first_page or @last_page]');
+
+		xpath_eval_single('//div[@plist_controls]/div[@first_page]').style.display =
+			paging_state.pgno_ < 2 || paging_state.pages_ < 2  ? 'none' : 'inline-block';
+		xpath_eval_single('//div[@plist_controls]/div[@prev_page]').style.display =
+			paging_state.pgno_ === 0 || paging_state.pages_ < 2 ? 'none' : 'inline-block';
+		xpath_eval_single('//div[@plist_controls]/div[@prev_page]/span[@btn_txt]').innerText = (paging_state.pgno_ + 1) - 1;
+		xpath_eval_single('//div[@plist_controls]/div[@next_page]').style.display =
+			paging_state.pgno_ > paging_state.pages_ - 2 || paging_state.pages_ < 2 ? 'none' : 'inline-block';
+		xpath_eval_single('//div[@plist_controls]/div[@next_page]/span[@btn_txt]').innerText = (paging_state.pgno_ + 1) + 1;
+		xpath_eval_single('//div[@plist_controls]/div[@last_page]').style.display =
+			paging_state.pgno_ > paging_state.pages_ - 3 || paging_state.pages_ < 3 ? 'none' : 'inline-block';
+		if( paging_state.pages_ > 0 )
+			xpath_eval_single('//div[@plist_controls]/div[@last_page]/span[@btn_txt]').innerText = paging_state.pages_;
 
 		// make element visible on all images loaded
 		if( state.wait_images_ ) {
@@ -259,9 +293,9 @@ class Render {
 			}
 
 			html +=
-				'<a btc uuid="' + c.uuid + '"'
+				'<div btc uuid="' + c.uuid + '"'
 					+ (c.uuid === state.category_ ? ' blink' : '')
-				+ '>' + c.name + '</a>'
+				+ '>' + c.name + '</div>'
 			;
 
 		}
@@ -269,7 +303,7 @@ class Render {
 		element.innerHTML = html;
 
 		// set events for new a[@btc] elements
-		state.setup_events(xpath_eval('a[@btc]', element));
+		state.setup_events(xpath_eval('div[@btc]', element));
 
 		render.rewrite_page();
 		render.debug_ellapsed(0, start, data.ellapsed, 'CATG: ');
@@ -326,7 +360,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 		let state = this;
 		let render = this.render_;
-		let element = e.target;
+		let element = e.currentTarget;
 		let attrs = element.attributes;
 		let paging_state = state.paging_state_by_category_[state.category_];
 		let touchobj, startx, dist;
@@ -376,7 +410,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 					// switch off blinking current category
 					if( state.category_ !== null )
-						xpath_eval_single('//div[@categories]/a[@btc and @uuid=\'' + state.category_ + '\']').removeAttribute('blink');
+						xpath_eval_single('//div[@categories]/div[@btc and @uuid=\'' + state.category_ + '\']').removeAttribute('blink');
 
 					if( state.category_ !== attrs.uuid.value ) {
 						state.category_ = attrs.uuid.value;
@@ -389,7 +423,12 @@ class HtmlPageEvents extends HtmlPageState {
 					render.rewrite_page();
 
 				}
-
+				else if( attrs.list_sort_field ) {
+					order_		: 'name',
+					direction_	: 'asc'
+				}
+				else if( attrs.list_sort_order ) {
+				}
 				break;
 
 			case 'touchstart'	:
@@ -419,6 +458,8 @@ class HtmlPageEvents extends HtmlPageState {
 
 	setup_events(elements) {
 
+		for( let element of elements )
+			console.log('setup events: ', element);
 		// xpath-to-select-multiple-tags
 		// //body/*[self::div or self::p or self::a]
 
@@ -440,7 +481,8 @@ class HtmlPageManager extends HtmlPageEvents {
 
 		Render.hide_cursor();
 
-		this.setup_events(xpath_eval('//div[@plist_controls]/a[@prev_page or @next_page or @first_page or @last_page]'));
+		this.setup_events(xpath_eval('//div[@plist_controls]/div[@prev_page or @next_page or @first_page or @last_page]'));
+		this.setup_events(xpath_eval('//div[@psort_controls]/div[@list_sort_field or @list_sort_order]'));
 
 		this.render_ = new Render;
 		this.render_.state = this;
