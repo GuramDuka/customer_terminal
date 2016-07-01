@@ -9,7 +9,7 @@ try {
 	$handler = new srv1c\loader_handler;
 	$handler->handle_json_request();
 }
-catch( Exception $e ) {
+catch( Throwable $e ) {
     error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . $e->getTraceAsString());
 }
 //------------------------------------------------------------------------------

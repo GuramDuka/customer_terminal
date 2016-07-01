@@ -57,7 +57,7 @@ abstract class handler {
 		    //error_log(var_export($_FILES, true));
 
 		}
-		catch( \Exception $ex ) {
+		catch( \Throwable $ex ) {
 
 			$e = $ex;
 

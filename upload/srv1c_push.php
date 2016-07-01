@@ -13,7 +13,7 @@ try {
 	$handler->handle_json_request();
 	$handler->print_json();
 }
-catch( Exception $e ) {
+catch( Throwable $e ) {
     error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . $e->getTraceAsString());
 }
 //------------------------------------------------------------------------------

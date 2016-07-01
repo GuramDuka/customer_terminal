@@ -29,7 +29,7 @@ try {
     error_log('SQLITE ANAYLYZE, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
 
 }
-catch( Exception $e ) {
+catch( Throwable $e ) {
     error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . $e->getTraceAsString());
 }
 //------------------------------------------------------------------------------

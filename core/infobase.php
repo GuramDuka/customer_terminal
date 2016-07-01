@@ -55,7 +55,7 @@ class infobase extends \SQLite3 {
 				$this->create_scheme();
 
 			}
-			catch( \Exception $e ) {
+			catch( \Throwable $e ) {
 
 				parent::close();
 
@@ -405,7 +405,7 @@ EOT
 			}
 
 		}
-		catch( \Exception $e ) {
+		catch( \Throwable $e ) {
 
 			error_log($sql);
 			throw $e;
