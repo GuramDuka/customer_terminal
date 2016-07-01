@@ -12,27 +12,29 @@ class infobase extends \SQLite3 {
 		$this->create_if_not_exists = $v;
 	}
 
-    public function __construct() {
+	public function __construct() {
 	}
 
-    public function initialize(int $flags = SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE) {
+    public function initialize(int $flags = SQLITE3_OPEN_READWRITE/* | SQLITE3_OPEN_CREATE*/) {
                                                    
-		$ib_file_name = APP_DIR . 'data' . DIRECTORY_SEPARATOR . 'base.db';
+		$ib_file_name = APP_DIR . 'data' . DIRECTORY_SEPARATOR . 'base.sqlite';
 
 		if( file_exists(dirname($ib_file_name)) === false )
 			mkdir(dirname($ib_file_name), 0777, true);
 
 		$new_ib = file_exists($ib_file_name) === false;
 
-		parent::__construct($ib_file_name, $flags);
+		parent::open($ib_file_name, $flags | SQLITE3_OPEN_CREATE);
 		$this->enableExceptions(true);
-		$this->busyTimeout(180000);
+		$this->exec('PRAGMA page_size = 65536');
 		$this->exec('PRAGMA cache_size = -32768'); // 524288
 		$this->exec('PRAGMA count_changes = OFF');
 		$this->exec('PRAGMA synchronous = NORMAL');
 		$this->exec('PRAGMA journal_mode = WAL');
 		$this->exec('PRAGMA temp_store = MEMORY');
 		$this->exec('PRAGMA auto_vacuum = NONE');
+		$this->exec('PRAGMA default_cache_size = -8192');
+		$this->busyTimeout(180000);
 
 		if( config::$debug ) {
 
@@ -50,15 +52,12 @@ class infobase extends \SQLite3 {
 
 			try {
 
-				$this->exec('PRAGMA page_size = 4096');
-				$this->exec('PRAGMA default_cache_size = -8192');
-
 				$this->create_scheme();
 
 			}
-			catch( Exception $e ) {
+			catch( \Exception $e ) {
 
-				parent::__destruct();
+				parent::close();
 
 				unlink($ib_file_name);
 				
@@ -265,6 +264,11 @@ EOT
 			. ' ON images (object_uuid)'
 		);
 
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'images_by_uuid_ext'), -4)
+			. ' ON images (uuid, ext)'
+		);
+
 		$this->exec(<<<'EOT'
 			CREATE TABLE IF NOT EXISTS prices_records_registry (
 				recorder_uuid	BLOB,
@@ -288,6 +292,11 @@ EOT
 EOT
 		);
 
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'prices_registry_by_product_price'), -4)
+			. ' ON prices_registry (product_uuid, price)'
+		);
+
 		$this->exec(<<<'EOT'
 			CREATE TABLE IF NOT EXISTS remainders_records_registry (
 				recorder_uuid	BLOB,
@@ -306,6 +315,11 @@ EOT
 				quantity		NUMERIC
 			) WITHOUT ROWID
 EOT
+		);
+
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'remainders_registry_by_product_quantity'), -4)
+			. ' ON remainders_registry (product_uuid, quantity)'
 		);
 
 		$this->exec(<<<'EOT'
@@ -375,16 +389,26 @@ EOT
 
 	public function dump_plan($sql) {
 
-		if( config::$explain ) {
+		try {
 
-			$result = $this->query('EXPLAIN QUERY PLAN ' . $sql);
+			if( config::$explain ) {
 
-			$s = "${sql}";
+				$result = $this->query('EXPLAIN QUERY PLAN ' . $sql);
 
-			while( $r = $result->fetchArray(SQLITE3_ASSOC) )
-				$s .= "\n" . $r['detail'];
+				$s = "${sql}";
 
-			error_log($s);
+				while( $r = $result->fetchArray(SQLITE3_ASSOC) )
+					$s .= "\n" . $r['detail'];
+
+				error_log($s);
+
+			}
+
+		}
+		catch( \Exception $e ) {
+
+			error_log($sql);
+			throw $e;
 
 		}
 

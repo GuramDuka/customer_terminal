@@ -32,6 +32,68 @@ function rewrite_pages($infobase) {
 
 	if( $r->fetchArray(SQLITE3_NUM) || config::$force_rewrite_pages ) {
 
+		// create temp tables
+
+		$infobase->exec(<<<'EOT'
+			CREATE TEMP TABLE IF NOT EXISTS f_categories (
+	    	   uuid BLOB PRIMARY KEY ON CONFLICT REPLACE
+			)
+EOT
+		);
+
+		foreach( [ 'rpf', 'cf' ] as $x )
+			$infobase->exec(<<<EOT
+				CREATE TEMP TABLE IF NOT EXISTS ${x}_products (
+					uuid			BLOB PRIMARY KEY ON CONFLICT REPLACE,
+					code       		INTEGER,
+					name       		TEXT,
+					base_image_uuid	BLOB,
+					quantity		NUMERIC,
+					price			NUMERIC
+				)
+EOT
+			);
+
+		$start_time_st = micro_time();
+
+		// fetch only not empty name and have image, price, quantity
+		$sql = <<<'EOT'
+			REPLACE INTO rpf_products
+			SELECT 
+				q.product_uuid AS uuid,
+				a.code,
+				a.name,
+				a.base_image_uuid,
+				q.quantity,
+				p.price
+			FROM
+				remainders_registry AS q
+				INNER JOIN prices_registry AS p
+				ON q.product_uuid = p.product_uuid
+                		AND q.quantity > 0
+				INNER JOIN products AS a
+				ON q.product_uuid = a.uuid
+			WHERE
+				p.price > 0
+				AND a.code > 0
+				AND a.name > ''
+EOT
+		;
+
+		$infobase->dump_plan($sql);
+		$infobase->exec($sql);
+
+		if( config::$rewrite_pages_timing ) {
+
+			$finish_time = micro_time();
+			$ellapsed_ms = bcsub($finish_time, $start_time_st);
+			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
+
+	    	error_log('rpf_products updated, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+
+		}
+
+		// fetch all categories
 		$sql = <<<'EOT'
 			SELECT
 				NULL
@@ -54,48 +116,22 @@ EOT
 
 		foreach( $categories as $category_uuid ) {
 
-			$sql = <<<'EOT'
-				WITH cte0 AS (
-					SELECT
-						uuid
-					FROM
-						categories
-					WHERE
-						uuid = :category_uuid
-				),
-				cte1 AS (
-					SELECT
-						uuid
-					FROM
-						categories
-					WHERE
-						parent_uuid IN (SELECT uuid FROM cte0)
-				),
-				cte2 AS (
-					SELECT
-						uuid
-					FROM
-						categories
-					WHERE
-						parent_uuid IN (SELECT uuid FROM cte1)
-				),
-				cte3 AS (
-					SELECT
-						uuid
-					FROM
-						categories
-					WHERE
-						parent_uuid IN (SELECT uuid FROM cte2)
-				),
-				cte4 AS (
-					SELECT
-						uuid
-					FROM
-						categories
-					WHERE
-						parent_uuid IN (SELECT uuid FROM cte3)
-				),
-				cte AS (
+			// fetch categories hierarchy
+			if( $category_uuid !== null ) {
+
+				$start_time_st = micro_time();
+
+				$infobase->exec('DELETE FROM f_categories');
+
+				$sql = <<<'EOT'
+				WITH
+					cte0 AS (SELECT uuid FROM categories WHERE uuid = :category_uuid),
+					cte1 AS (SELECT uuid FROM categories WHERE parent_uuid IN (SELECT uuid FROM cte0)),
+					cte2 AS (SELECT uuid FROM categories WHERE parent_uuid IN (SELECT uuid FROM cte1)),
+					cte3 AS (SELECT uuid FROM categories WHERE parent_uuid IN (SELECT uuid FROM cte2)),
+					cte4 AS (SELECT uuid FROM categories WHERE parent_uuid IN (SELECT uuid FROM cte3))
+	
+					INSERT INTO f_categories
 					SELECT uuid FROM cte0
 					UNION ALL
 					SELECT uuid FROM cte1
@@ -105,71 +141,68 @@ EOT
 					SELECT uuid FROM cte3
 					UNION ALL
 					SELECT uuid FROM cte4
-				)
-				SELECT
-					a.*
-				FROM
-					cte AS a
-				WHERE
-					uuid = :category_uuid
-					OR EXISTS(SELECT 1 FROM categories_registry AS c WHERE a.uuid = c.category_uuid LIMIT 1)
 EOT
-			;
+				;
 
-			$infobase->dump_plan($sql);
-			$st = $infobase->prepare($sql);
+				$infobase->dump_plan($sql);
+				$st = $infobase->prepare($sql);
+				$st->bindParam(":category_uuid", $category_uuid, SQLITE3_BLOB);
+				$st->execute();
 
-			$st->bindParam(":category_uuid", $category_uuid, SQLITE3_BLOB);
-			$result = $st->execute();
-			$sub_categories = [];
+				if( config::$rewrite_pages_timing ) {
 
-			while( $r = $result->fetchArray(SQLITE3_NUM) )
-				$sub_categories[] = $r[0];
+					$finish_time = micro_time();
+					$ellapsed_ms = bcsub($finish_time, $start_time_st);
+					$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
 
-			$s = '';
+			    	error_log('f_categories updated, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
 
-			for( $i = 0; $i < count($sub_categories); $i++ ) {
+				}
 
-				$s .= ", :category${i}_uuid";
-				$n = "category${i}_uuid";
-				$$n = $sub_categories[$i];
+
+				$start_time_st = micro_time();
+
+				$infobase->exec('DELETE FROM cf_products');
+
+				$sql = <<<'EOT'
+					INSERT INTO cf_products
+					SELECT
+						p.*
+					FROM
+						rpf_products AS p
+						INNER JOIN categories_registry AS c
+						ON p.uuid = c.product_uuid
+						INNER JOIN f_categories AS f
+						ON f.uuid = c.category_uuid
+EOT
+				;
+
+				$infobase->dump_plan($sql);
+				$st = $infobase->prepare($sql);
+				$st->bindParam(":category_uuid", $category_uuid, SQLITE3_BLOB);
+				$st->execute();
+
+				if( config::$rewrite_pages_timing ) {
+
+					$finish_time = micro_time();
+					$ellapsed_ms = bcsub($finish_time, $start_time_st);
+					$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
+
+			    	error_log('cf_products updated, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+
+				}
 
 			}
-
-			$condition	= empty($s) ? '' : 'category_uuid IN (' . substr($s, 2) . ') AND';
-			$cut0		= empty($s) ? '' : 'c.category_uuid AS category_uuid,';
-			$cut1		= empty($s) ? '' : 'categories_registry AS c INNER JOIN';
-			$cut2		= empty($s) ? '' : 'ON c.product_uuid = a.uuid';
-
-			//CREATE TEMPORARY TABLE Tcats AS
-			//WITH ft_cte AS (
-			//    SELECT uuid, name FROM categories
-			//    WHERE selection
-			//)
-			//SELECT * FROM ft_cte;
 
 			// CREATE TABLE IF NOT EXISTS products_${category_uuid}_pages AS
 			// SELECT *
 			// FROM products_pages
 			// WHERE pgnon IS NULL;
 
-			// only not empty name and have image, price, quantity
-
 			$category_table = 'products_' . uuid2table_name(bin2uuid($category_uuid)) . 'pages';
-
-			/*$infobase->exec(<<<EOT
-				CREATE TABLE IF NOT EXISTS ${category_table} AS
-				SELECT
-					*
-				FROM
-					products_pages
-				WHERE
-					0
-EOT
-			);*/
 			$infobase->exec($infobase->create_table_products_pages($category_table));
 
-			// extract variables in this scope // foreach( $categories as $category_uuid )
+			// create variables in this scope // foreach( $categories as $category_uuid )
 			$v = [];
 
 			foreach( $orders as $order )
@@ -178,59 +211,41 @@ EOT
 
 			extract($v);
 
-			// assign extracted variables
+			// assign created variables
 
 			foreach( $orders as $order )
 				foreach( $directions as $direction ) {
 
-				//$vn = "st_${order}_${direction}";
-				//$vr = "r_${order}_${direction}";
+				$start_time_st = micro_time();
 
 				$sql = <<<EOT
 					SELECT
-						${cut0}
 						a.uuid					AS ${order}_${direction}_uuid,
 						a.code					AS ${order}_${direction}_code,
 						a.name					AS ${order}_${direction}_name,
-						a.base_image_uuid		AS ${order}_${direction}_base_image_uuid,
+						i.uuid					AS ${order}_${direction}_base_image_uuid,
 						i.ext					AS ${order}_${direction}_base_image_ext,
-						q.quantity				AS ${order}_${direction}_quantity,
-						p.price					AS ${order}_${direction}_price,
+						a.quantity				AS ${order}_${direction}_quantity,
+						a.price					AS ${order}_${direction}_price,
 						COALESCE(r.quantity, 0)	AS ${order}_${direction}_reserve
 					FROM
-						${cut1} products AS a
-							${cut2}
+						rpf_products AS a
 							INNER JOIN images AS i
 							ON a.base_image_uuid = i.uuid
-							INNER JOIN prices_registry AS p
-							ON a.uuid = p.product_uuid
+								AND i.ext > ''
 							LEFT JOIN reserves_registry AS r
 							ON a.uuid = r.product_uuid
-							INNER JOIN remainders_registry AS q
-							ON a.uuid = q.product_uuid
-					WHERE
-						${condition}
-						${order}_${direction}_code > 0
-						AND ${order}_${direction}_name > ''
-						AND ${order}_${direction}_price > 0
-						AND ${order}_${direction}_base_image_ext IS NOT NULL
-						AND ${order}_${direction}_quantity > 0
 					ORDER BY
 						${order}_${direction}_${order} ${direction},
 						${order}_${direction}_uuid
 EOT
 				;
 
+				if( $category_uuid !== null )
+					$sql = str_replace('rpf_products', 'cf_products', $sql);
+
 				$infobase->dump_plan($sql);
 				$ste = $infobase->prepare($sql);
-
-				for( $i = 0; $i < count($sub_categories); $i++ ) {
-
-					$n = "category${i}_uuid";
-					$ste->bindParam(":${n}", $$n, SQLITE3_BLOB);
-
-				}
-
 				$res = $ste->execute();
 
 				$a = "a_${order}_${direction}";
@@ -241,7 +256,19 @@ EOT
 
 				$$a = $v;
 
+				if( config::$rewrite_pages_timing ) {
+
+					$finish_time = micro_time();
+					$ellapsed_ms = bcsub($finish_time, $start_time_st);
+					$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
+
+			    	error_log('products by categories fetched, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+
+				}
+
 			}
+
+			$start_time_st = micro_time();
 
 			$v = [];
 			$gf = 'pgnon';
@@ -320,6 +347,16 @@ EOT
 			$st->execute();
 
 			$pgupd += $pgnon < 0 ? 0 : ($pgnon >> 4) + 1;
+
+			if( config::$rewrite_pages_timing ) {
+
+				$finish_time = micro_time();
+				$ellapsed_ms = bcsub($finish_time, $start_time_st);
+				$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
+
+		    	error_log("${category_table} updated, ellapsed: " . ellapsed_time_string($ellapsed_ms));
+
+			}
 
 		}
 

@@ -178,7 +178,7 @@ class Render {
 				let product = products[i];
 
 				uuid		= product.uuid;
-				name		= product.name;
+				name		= product.name + '[' + product.code + ']';
 				img_url 	= product.img_url;
 				price		= Math.trunc(product.price) + '&nbsp;₽';
 				quantity	= get_quantity(product) + get_reserve(product);
@@ -491,18 +491,22 @@ class HtmlPageEvents extends HtmlPageState {
 				}
 				else if( attrs.list_sort_order ) {
 
-					if( ++paging_state.order_ >= state.orders_.length )
-						paging_state.order_ = 0;
+					if( ++new_paging_state.order_ >= state.orders_.length )
+						new_paging_state.order_ = 0;
 
-					render.rewrite_page(paging_state);
+					render.rewrite_page(new_paging_state);
+					// success rewrite page, save new state
+					state.paging_state_by_category_[state.category_] = new_paging_state;
 
 				}
 				else if( attrs.list_sort_direction ) {
 
-					if( ++paging_state.direction_ >= state.directions_.length )
-						paging_state.direction_ = 0;
+					if( ++new_paging_state.direction_ >= state.directions_.length )
+						new_paging_state.direction_ = 0;
 
-					render.rewrite_page(paging_state);
+					render.rewrite_page(new_paging_state);
+					// success rewrite page, save new state
+					state.paging_state_by_category_[state.category_] = new_paging_state;
 
 				}
 				break;
