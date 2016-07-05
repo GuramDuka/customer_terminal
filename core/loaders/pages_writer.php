@@ -6,7 +6,7 @@ function rewrite_pages($infobase) {
 
 	$pgsz = config::$page_size;
 
-	$all_fields = [ 'uuid', 'code', 'name', 'base_image_uuid', 'base_image_ext', 'price', 'quantity', 'reserve' ];
+	$all_fields = [ 'uuid', 'code', 'name', 'base_image_uuid', 'base_image_ext', 'price', 'remainder', 'reserve' ];
 
 	$fields = [];
 	$fields_uuid = [];
@@ -18,7 +18,7 @@ function rewrite_pages($infobase) {
 			$fields[] = $field;
 
 
-	$orders = [ 'code', 'name', 'price', 'quantity' ];
+	$orders = [ 'code', 'name', 'price', 'remainder' ];
 	$directions = [ 'asc', 'desc' ];
 
 	$pgupd = 0;

@@ -21,7 +21,7 @@ class proxy_handler extends srv1c\handler {
 			],
 			'categorer' => [
 				'categorer'		=> true
-			]
+			],
 			'producter' => [
 				'producter'		=> true
 			]

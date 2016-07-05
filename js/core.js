@@ -142,6 +142,29 @@ class Render {
 		}
 
 		let element = xpath_eval_single('//div[@plist]');
+
+		if( element.innerHTML.isEmpty() ) {
+
+			// create products page list and install events
+			let html = '';
+
+			for( let i = 0; i < paging_state.page_size_; i++ )
+				html +=
+					'<div pitem="' + i + '">'
+					+ '<img pimg src="" alt="">'
+					+ '<p pname></p>'
+					+ '<p pprice></p>'
+					+ '<p pquantity></p>'
+					+ '<div btn buy>КУПИТЬ</div>'
+					+ '</div>';
+				;
+
+			element.innerHTML = html;
+
+			this.state_.setup_events(xpath_eval('div[@pitem]/img[@pimg]', element));
+
+		}
+
 		let products = data.products;
 		let style = {
 			'visibility'	: invisible ? 'hidden' : 'visible'
@@ -155,14 +178,13 @@ class Render {
 		}
 
 		let get_quantity = function (product) {
-			return sprintf(Math.trunc(product.quantity) == product.quantity ? '%d' : '%.3f', product.quantity);
+			let f = Math.trunc(product.remainder) == product.remainder ? '%d' : '%.3f';
+			return sprintf(f, product.remainder);
 		};
 
 		let get_reserve = function (product) {
-			return product.reserve ? '&nbsp;('
-					+ sprintf(Math.trunc(product.reserve) == product.reserve ? '%d' : '%.3f', product.reserve)
-					+ ')'
-				: '';
+			let f = Math.trunc(product.reserve) == product.reserve ? '%d' : '%.3f';
+			return product.reserve ? '&nbsp;(' + sprintf(f, product.reserve) + ')' : '';
 		};
 
 		for( let a of xpath_eval('div[@pitem]', element) ) {
@@ -228,48 +250,23 @@ class Render {
 		xpath_eval_single('div[@list_sort_order]/img[@btn_ico]', base).src = order.ico[direction];
 		xpath_eval_single('div[@list_sort_direction]/img[@btn_ico]', base).src = order.order_icons[direction];
 
-		// make element visible on all images loaded
-		if( state.wait_images_ ) {
-
-			let imgs = xpath_eval('div[@pitem]/img', element);
-			let cnt = imgs.length;
-
-			for( let img of imgs ) {
-
-				add_event(img, 'load', function () {
-
-					if( --cnt > 0 )
-						return;
-
-					for( let e of xpath_eval('div[@pitem]', element) )
-						e.style.visibility = 'visible';
-
-					render.debug_ellapsed(1, paging_state.start_, data.ellapsed, 'PAGE: ');
-				
-				});
-
-			}
-
-		}
-		else {
-
-			this.debug_ellapsed(1, paging_state.start_, data.ellapsed, 'PAGE: ');
-
-		}
+		this.debug_ellapsed(1, paging_state.start_, data.ellapsed, 'PAGE: ');
 
 	}
 
 	static hide_cursor() {
 
 		// hide cursor
-		if( touch ) {
+		let cr = touch ? 'none' : 'pointer';
 
-			xpath_eval_single('//body').style.cursor = 'none';
+		if( touch )
+			xpath_eval_single('//body').style.cursor = cr;
 
-			for( let a of xpath_eval('//div[@btn or @btc]') )
-				a.style.cursor = 'none';
+		for( let a of xpath_eval('//div[@btn or @btc]') )
+			a.style.cursor = cr;
 
-		}
+		for( let a of xpath_eval('//div[@pitem]/img[@pimg]') )
+			a.style.cursor = cr;
 
 	}
 
@@ -298,7 +295,7 @@ class Render {
 			request.direction	= state.directions_[new_paging_state.direction_];
 			request.pgno		= new_paging_state.pgno_;
 
-			assemble_page(new_paging_state, post_json_sync('proxy.php', request));
+			this.assemble_page(new_paging_state, post_json_sync('proxy.php', request));
 
 			plist.style.display = 'inline-block';
 			pinfo.style.display = 'none';
@@ -310,7 +307,7 @@ class Render {
 			request.handler		= 'producter';
 			request.product_	= new_paging_state.product_;
 
-			assemble_info(new_paging_state, post_json_sync('proxy.php', request));
+			this.assemble_info(new_paging_state, post_json_sync('proxy.php', request));
 
 			plist.style.display = 'none';
 			pinfo.style.display = 'inline-block';
@@ -568,25 +565,6 @@ class HtmlPageManager extends HtmlPageEvents {
 
 		Render.hide_cursor();
 
-		// create products page list and install events
-		let element = xpath_eval_single('//div[@plist]');
-
-		let html = '';
-
-		for( let i = 0; i < paging_state.page_size_; i++ )
-			html +=
-				'<div pitem="' + i + '">'
-				+ '<img pimg src="" alt="">'
-				+ '<p pname></p>'
-				+ '<p pprice></p>'
-				+ '<p pquantity></p>'
-				+ '<div btn buy>КУПИТЬ</div>'
-				+ '</div>';
-			;
-
-		element.innerHTML = html;
-
-		this.setup_events(xpath_eval('div[@pitem]/img[@pimg]'), element);
 		this.setup_events(xpath_eval('//div[@plist_controls]/div[@prev_page or @next_page or @first_page or @last_page]'));
 		this.setup_events(xpath_eval('//div[@psort_controls]/div[@list_sort_order or @list_sort_direction]'));
 

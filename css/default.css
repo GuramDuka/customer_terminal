@@ -119,6 +119,12 @@
 		display				: none;
 	}
 
+	div[pinfo]>img {
+		width				: auto;
+		height				: auto;
+		max-width			: 30%;
+	}
+
 	div[pitem] {
 		height				: 98%;
 	}

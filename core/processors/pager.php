@@ -38,7 +38,7 @@ class pager_handler extends handler {
 				${order}_${direction}_base_image_uuid	AS base_image_uuid,
 				${order}_${direction}_base_image_ext	AS base_image_ext,
 				${order}_${direction}_price				AS price,
-				${order}_${direction}_quantity			AS quantity,
+				${order}_${direction}_remainder			AS remainder,
 				${order}_${direction}_reserve			AS reserve
 			FROM
 				${category_table}
@@ -55,36 +55,9 @@ EOT
 
 		$page = [];
 
-		for( $i = 0; $r = $result->fetchArray(SQLITE3_ASSOC); $i++ ) {
+		while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
 
 			extract($r);
-
-			$uuid = bin2uuid($uuid);
-
-			/*$fname = APP_DIR
-				. get_product_path($u)
-				. DIRECTORY_SEPARATOR . $uuid . '.html';
-
-			$h = @fopen($fname, 'rb');
-
-			\runtime_exception::throw_false($h);
-
-			try {
-
-				$s = fstat($h);
-
-				$r = flock($h, LOCK_SH);
-				\runtime_exception::throw_false($r);
-
-				$html = fread($h, $s['size']);
-				\runtime_exception::throw_false($html);
-
-				flock($h, LOCK_UN);
-
-			}
-			finally {
-				fclose($h);
-			}*/
 
 			if( $base_image_uuid !== null ) {
 				$img_url = '/resources/'
@@ -96,12 +69,12 @@ EOT
 				$img_url = '/resources/asserts/nopic.jpg';
 			}
 
-			$page[$i] = [
-				'uuid'		=> $uuid,
+			$page[] = [
+				'uuid'		=> bin2uuid($uuid),
 				'code'		=> $code,
 				'name'		=> htmlspecialchars($name, ENT_HTML5),
 				'price'		=> $price,
-				'quantity'	=> $quantity,
+				'remainder'	=> $remainder,
 				'reserve'	=> $reserve,
 				'img_url'	=> htmlspecialchars($img_url, ENT_HTML5)
 			];
