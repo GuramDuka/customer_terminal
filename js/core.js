@@ -102,7 +102,19 @@ class Render {
 	}
 
 	constructor() {
+
 		this.state_ = null;
+
+		this.get_remainder = function (product) {
+			let f = Math.trunc(product.remainder) == product.remainder ? '%d' : '%.3f';
+			return sprintf(f, product.remainder);
+		};
+
+		this.get_reserve = function (product) {
+			let f = Math.trunc(product.reserve) == product.reserve ? '%d' : '%.3f';
+			return product.reserve ? '&nbsp;(' + sprintf(f, product.reserve) + ')' : '';
+		};
+
 	}
 
 	static debug(level, s = null) {
@@ -121,6 +133,22 @@ class Render {
 		let ellapsed = finish - start;
 
 		Render.debug(level, prefix + ellapsed_time_string(ellapsed) + ', ' + http_ellapsed);
+
+	}
+
+	static hide_cursor() {
+
+		// hide cursor
+		let cr = touch ? 'none' : 'pointer';
+
+		if( touch )
+			xpath_eval_single('//body').style.cursor = cr;
+
+		for( let a of xpath_eval('//div[@btn or @btc]') )
+			a.style.cursor = cr;
+
+		for( let a of xpath_eval('//div[@pitem]/img[@pimg]') )
+			a.style.cursor = cr;
 
 	}
 
@@ -177,16 +205,6 @@ class Render {
 			paging_state.item_width_ = item_width;
 		}
 
-		let get_quantity = function (product) {
-			let f = Math.trunc(product.remainder) == product.remainder ? '%d' : '%.3f';
-			return sprintf(f, product.remainder);
-		};
-
-		let get_reserve = function (product) {
-			let f = Math.trunc(product.reserve) == product.reserve ? '%d' : '%.3f';
-			return product.reserve ? '&nbsp;(' + sprintf(f, product.reserve) + ')' : '';
-		};
-
 		for( let a of xpath_eval('div[@pitem]', element) ) {
 
 			let i = parseInt(a.attributes.pitem.value, 10);
@@ -200,7 +218,7 @@ class Render {
 				name		= product.name + '[' + product.code + ']';
 				img_url 	= product.img_url;
 				price		= Math.trunc(product.price) + '&nbsp;₽';
-				quantity	= get_quantity(product) + get_reserve(product);
+				quantity	= this.get_remainder(product) + this.get_reserve(product);
 
 				style.visibility = 'visible';
 
@@ -254,23 +272,18 @@ class Render {
 
 	}
 
-	static hide_cursor() {
-
-		// hide cursor
-		let cr = touch ? 'none' : 'pointer';
-
-		if( touch )
-			xpath_eval_single('//body').style.cursor = cr;
-
-		for( let a of xpath_eval('//div[@btn or @btc]') )
-			a.style.cursor = cr;
-
-		for( let a of xpath_eval('//div[@pitem]/img[@pimg]') )
-			a.style.cursor = cr;
-
-	}
-
 	assemble_info(paging_state, data) {
+
+		let product = data.product;
+
+		uuid		= product.uuid;
+		name		= product.name + '[' + product.code + ']';
+		img_url 	= product.img_url;
+		price		= Math.trunc(product.price) + '&nbsp;?';
+		quantity	= this.get_remainder(product) + this.get_reserve(product);
+
+		let element = xpath_eval_single('//div[@pinfo]');
+
 	}
 
 	rewrite_page(new_paging_state) {

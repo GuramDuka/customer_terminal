@@ -81,7 +81,7 @@
 
 	div[top] {
 		height				: 120px;
-		margin-bottom		: 10px;
+		margin-bottom		: 3px;
 	}
 
 	div[mag] {
@@ -102,13 +102,21 @@
 	}
 
 	div[categories] {
-		height				: 40px;
-		margin-bottom		: 10px;
+		float				: left;
+		height				: auto;
+		margin-bottom		: 3px;
 		text-align			: left;
+		width				: auto;
 	}
 
 	div[categories]>div[btc] {
-		margin-left			: 4px;
+		margin-left			: 3px;
+	}
+
+	div[btn][back] {
+		float				: right;
+		width				: auto;
+		margin-right		: 3px;
 	}
 
 	div[plist], div[pinfo] {
