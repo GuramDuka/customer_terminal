@@ -225,7 +225,7 @@ EOT
 						a.name					AS ${order}_${direction}_name,
 						i.uuid					AS ${order}_${direction}_base_image_uuid,
 						i.ext					AS ${order}_${direction}_base_image_ext,
-						a.quantity				AS ${order}_${direction}_quantity,
+						a.quantity				AS ${order}_${direction}_remainder,
 						a.price					AS ${order}_${direction}_price,
 						COALESCE(r.quantity, 0)	AS ${order}_${direction}_reserve
 					FROM
@@ -368,12 +368,16 @@ EOT
 
 	if( $pgupd !== 0 ) {
 
-		$finish_time = micro_time();
-		$ellapsed_ms = bcsub($finish_time, $start_time);
-		$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
-		$rps = $ellapsed_seconds != 0 ? bcdiv($pgupd, $ellapsed_seconds, 2) : $pgno;
+		if( config::$log_timing ) {
 
-	    error_log(sprintf('%u', $pgupd) . ' products pages updated, ' . $rps . ' pps, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+			$finish_time = micro_time();
+			$ellapsed_ms = bcsub($finish_time, $start_time);
+			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
+			$rps = $ellapsed_seconds != 0 ? bcdiv($pgupd, $ellapsed_seconds, 2) : $pgno;
+
+		    error_log(sprintf('%u', $pgupd) . ' products pages updated, ' . $rps . ' pps, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+
+		}
 
 	}
 

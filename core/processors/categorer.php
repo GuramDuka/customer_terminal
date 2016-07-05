@@ -44,7 +44,7 @@ class categorer_handler extends handler {
 			ORDER BY
 				name
 EOT
-			);
+		);
 
 		$st->bindParam(":parent_uuid", $parent_uuid, SQLITE3_BLOB);
 		$result = $st->execute();
@@ -79,6 +79,9 @@ EOT
 		$ellapsed_s = ellapsed_time_string($ellapsed_ms);
 
 		$this->response_['ellapsed'] = $ellapsed_s;
+
+		if( config::$log_timing )
+		    error_log('categories list retrieved, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
 
     }
 

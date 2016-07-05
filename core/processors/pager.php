@@ -123,7 +123,8 @@ EOT
 
 		$this->response_['ellapsed'] = $ellapsed_s;
 
-	    //error_log('products page fetch, ellapsed: ' . $ellapsed_s);
+		if( config::$log_timing )
+		    error_log('page retrieved, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
 
 		// no-cache
 		//header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0'); 

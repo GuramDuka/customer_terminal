@@ -184,6 +184,11 @@ EOT
 EOT
 		);
 
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'properties_order_by_assignment_uuid'), -4)
+			. ' ON properties (assignment_uuid)'
+		);
+
 		// справочник значения свойств объектов
 		$this->exec(<<<'EOT'
 			CREATE TABLE IF NOT EXISTS properties_values (
@@ -419,7 +424,7 @@ EOT
 		$sql = '';
 
 		foreach( [ 'asc', 'desc' ] as $direction )
-			foreach( [ 'code', 'name', 'price', 'quantity' ] as $order )
+			foreach( [ 'code', 'name', 'price', 'remainder' ] as $order )
 				$sql .= <<<EOT
 					,
 					${order}_${direction}_uuid				BLOB,
@@ -428,7 +433,7 @@ EOT
 					${order}_${direction}_base_image_uuid	BLOB,
 					${order}_${direction}_base_image_ext	TEXT,
 					${order}_${direction}_price				NUMERIC,
-					${order}_${direction}_quantity			NUMERIC,
+					${order}_${direction}_remainder			NUMERIC,
 					${order}_${direction}_reserve			NUMERIC
 EOT
 				;

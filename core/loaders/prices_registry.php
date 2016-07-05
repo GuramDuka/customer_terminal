@@ -167,13 +167,17 @@ EOT
 
 		$this->infobase_->exec('COMMIT TRANSACTION');
 
-		$finish_time = micro_time();
-		$ellapsed_ms = bcsub($finish_time, $start_time);
-		$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
-		$cnt = count($this->objects_);
-		$rps = $ellapsed_seconds != 0 ? bcdiv($cnt, $ellapsed_seconds, 2) : $cnt;
+		if( config::$log_timing ) {
 
-	    error_log(sprintf('%u', $cnt) . ' prices registry updated, ' . $rps . ' rps, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+			$finish_time = micro_time();
+			$ellapsed_ms = bcsub($finish_time, $start_time);
+			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
+			$cnt = count($this->objects_);
+			$rps = $ellapsed_seconds != 0 ? bcdiv($cnt, $ellapsed_seconds, 2) : $cnt;
+
+	    	error_log(sprintf('%u', $cnt) . ' prices registry updated, ' . $rps . ' rps, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+
+		}
 
 	}
 

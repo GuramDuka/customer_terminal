@@ -111,8 +111,12 @@
 		margin-left			: 4px;
 	}
 
-	div[plist] {
+	div[plist], div[pinfo] {
 		height				: 650px;
+	}
+
+	div[pinfo] {
+		display				: none;
 	}
 
 	div[pitem] {

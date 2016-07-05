@@ -15,7 +15,7 @@
 
 @media screen {
 
-	div[plist] {
+	div[plist], div[pinfo] {
 		height				: 350px;
 	}
 
