@@ -59,16 +59,6 @@ EOT
 
 			extract($r);
 
-			if( $base_image_uuid !== null ) {
-				$img_url = '/resources/'
-					. get_image_path($base_image_uuid, '/')
-					. '/' . bin2uuid($base_image_uuid)
-					. '.' . (config::$convert_images ? config::$images_format : $base_image_ext);
-			}
-			else {
-				$img_url = '/resources/asserts/nopic.jpg';
-			}
-
 			$page[] = [
 				'uuid'		=> bin2uuid($uuid),
 				'code'		=> $code,
@@ -76,7 +66,7 @@ EOT
 				'price'		=> $price,
 				'remainder'	=> $remainder,
 				'reserve'	=> $reserve,
-				'img_url'	=> htmlspecialchars($img_url, ENT_HTML5)
+				'img_url'	=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext), ENT_HTML5)
 			];
 
 		}

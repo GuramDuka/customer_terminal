@@ -5,6 +5,8 @@ namespace { // global
 class config {
 
 	public static $debug = false;
+	public static $log_request = false;
+	public static $log_response = false;
 
 };
 //------------------------------------------------------------------------------

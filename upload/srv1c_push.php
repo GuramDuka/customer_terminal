@@ -11,7 +11,7 @@ require_once CORE_DIR . 'loader.php';
 try {
 	$handler = new srv1c\loader_handler;
 	$handler->handle_json_request();
-	$handler->print_json();
+	print($handler->get_json());
 }
 catch( Throwable $e ) {
     error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . $e->getTraceAsString());

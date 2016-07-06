@@ -15,6 +15,9 @@ class proxy_handler extends srv1c\handler {
 
 	protected function handle_request() {
 
+		if( config::$log_request )
+			error_log(var_export($this->request_, true));
+
 		$modules = [
 			'pager' => [
 				'pager'			=> true
@@ -44,8 +47,18 @@ class proxy_handler extends srv1c\handler {
 		$class_name = "srv1c\\${handler}_handler";
 
 		$handler = new $class_name;
-		$handler->handle_json_request();
-		$handler->print_json();
+		$handler->request_ = $this->request_;
+
+		$this->request_ = null;
+		unset($handler->request_->module);
+		unset($handler->request_->handler);
+
+		$handler->handle_request();
+
+		print($handler->get_json());
+
+		if( config::$log_response )
+			error_log(var_export($handler->response_, true));
 
     }
 

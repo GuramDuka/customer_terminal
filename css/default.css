@@ -15,7 +15,7 @@
 		overflow			: hidden;
 	}
 
-	div, img, i, br, p, span {
+	div, img, i, br, p, span, pre, hr {
 		margin				: 0;
 		padding				: 0;
 		width				: 100%;
@@ -119,44 +119,170 @@
 		margin-right		: 3px;
 	}
 
+	div[btn][back]>img[btn_ico] {
+		transform			: scaleY(-1); /* flip horizontally */
+	}
+
 	div[plist], div[pinfo] {
 		height				: 650px;
 	}
 
 	div[pinfo] {
+		width				: 100%;
 		display				: none;
+		text-align			: center;
 	}
 
-	div[pinfo]>img {
+	div[pinfo]>div[pimg] {
+		width				: 20%;
+		height				: 100%;
+		float				: left;
+		background-size		: contain;
+		background-repeat	: no-repeat;
+		background-position	: center;
+	}
+
+	div[pinfo]>div[pmid] {
+		width				: 50%;
+		height				: 100%;
+		float				: left;
+	}
+
+	div[pinfo]>div[pright] {
+		width				: 29.5%;
+		height				: 100%;
+		float				: right;
+		text-align			: left;
+	}
+
+	div[pinfo]>div[pmid]>p[pname], div[pinfo]>div[pright]>p[pprice], div[pinfo]>div[pright]>p[pquantity] {
+		width				: 100%;
+		height				: auto;
+		font-size			: 22px;
+		font-weight			: bolder;
+		float				: none;
+	}
+
+	div[pinfo]>div[pright]>p[pprice], div[pinfo]>div[pright]>p[pquantity] {
+		font-stretch		: ultra-condensed;
+		text-overflow		: ellipsis;
+		text-decoration		: none;
+		text-transform		: uppercase;
+	}
+
+	div[pinfo]>div[pmid]>div[pproperties] {
+		border				: 1px solid lightgray;
+		border-radius		: 3px;
+		box-shadow			: none;
+		color				: #001289;
+		width				: 100%;
+		height				: 75%;
+		overflow			: auto;
+		/*font-family			: droid;*/
+		font-size			: 16px;
+		font-weight			: bold;
+		font-stretch		: ultra-condensed;
+		text-overflow		: ellipsis;
+		text-decoration		: none;
+		text-transform		: uppercase;
+		float				: none;
+
+		/* http://lea.verou.me/css3patterns */
+
+		/*background-color	: #fff;
+		background-image	:
+			linear-gradient(90deg, transparent 50%, #abced4 50%, #abced4 50.5%, transparent 50.5%),
+			linear-gradient(#eee .1em, transparent .1em);
+		background-size		: 100% 1.2em;*/
+
+		background-color	: white;
+		background-image	:
+								linear-gradient(rgba(0,2,105,.1) 2px, transparent 2px),
+								linear-gradient(90deg, rgba(0,2,105,.1) 2px, transparent 2px),
+								linear-gradient(rgba(0,2,105,.2) 1px, transparent 1px),
+								linear-gradient(90deg, rgba(0,2,105,.2) 1px, transparent 1px);
+		background-size		: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+		background-position	: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
+
+		-moz-column-count	: 2;
+		-moz-column-width	: auto;
+		-moz-column-rule	: thick inset blue;
+		-moz-column-fill	: auto;
+	}
+
+	div[pinfo]>div[pmid]>p[pproperties_head] {
+		color				: black;
+		float				: none;
+		width				: 100%;
+		height				: auto;
+		font-size			: 22px;
+		font-weight			: bold;
+		text-transform		: uppercase;
+	}
+
+	div[pinfo]>div[pmid]>hr {
+		color				: gold;
+		width				: 100%;
+		height				: auto;
+		float				: none;
+	}
+
+	div[pinfo]>div[pmid]>div[pproperties]>p[pproperty] {
 		width				: auto;
 		height				: auto;
-		max-width			: 30%;
+		float				: none;
+		white-space			: nowrap;
+		text-align			: left;
+		vertical-align		: middle;
+	}
+
+	div[pinfo]>div[pmid]>div[pproperties]>p[pproperty]>span[pproperty_name] {
+		float				: left;
+		width				: auto;
+		text-align			: left;
+		text-overflow		: ellipsis;
+		font-stretch		: ultra-condensed;
+	}
+
+	div[pinfo]>div[pmid]>div[pproperties]>p[pproperty]>span[pproperty_value] {
+		float				: right;
+		width				: auto;
+		text-align			: left;
+		text-overflow		: ellipsis;
+		font-stretch		: ultra-condensed;
 	}
 
 	div[pitem] {
-		height				: 98%;
+		height				: 99%;
 	}
 
-	div[pitem]>img[pimg] {
-		max-width			: 98%;
+	div[pitem]>div[pimg] {
+		float				: none;
+		width				: 100%;
 		height				: 50%;
-		margin-bottom		: 8px;
+		margin-bottom		: 3px;
+		background-size		: contain;
+		background-repeat	: no-repeat;
+		background-position	: center;
 	}
 
-	p[pname] {
+	div[pitem]>p[pname] {
+		float				: none;
 		overflow			: hidden;
-		height				: 25%;
-		margin-bottom		: 8px;
+		height				: 19%;
+		margin-bottom		: 3px;
 	}
 
-	p[pprice], p[pquantity] {
+	div[pitem]>p[pprice], div[pitem]>p[pquantity] {
+		float				: none;
 		overflow			: hidden;
-		margin-bottom		: 8px;
-		font-size			: 29px;
+		margin-bottom		: 3px;
+		font-size			: 22px;
 		font-weight			: bold;
 	}
 
 	div[pcontrols] {
+		float				: none;
 		vertical-align		: middle;
 	}
 
@@ -244,7 +370,7 @@
 	}
 
 	*[fadein] {
-		animation			: fadein 250ms;
+		animation			: fadein 300ms cubic-bezier(1.0, 0, 0.05, 1.0);
 	}
 
 }

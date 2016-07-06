@@ -21,6 +21,19 @@ function get_image_path($uuid, $dir_sep = DIRECTORY_SEPARATOR, $range = 256) {
 
 }
 //------------------------------------------------------------------------------
+function get_image_url($base_image_uuid, $base_image_ext) {
+
+	if( $base_image_uuid !== null )
+		return
+			'/resources/'
+			. get_image_path($base_image_uuid, '/')
+			. '/' . bin2uuid($base_image_uuid)
+			. '.' . (config::$convert_images ? config::$images_format : $base_image_ext);
+
+	return '/resources/asserts/nopic.jpg';
+
+}
+//------------------------------------------------------------------------------
 function uuid2table_name($uuid, $suf = '_') {
 
 	return $uuid !== null ? str_replace('-', '_', $uuid) . $suf : '';

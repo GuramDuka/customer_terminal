@@ -15,6 +15,7 @@ class loader_handler extends handler {
 		$infobase->initialize();
 
 		$loaders = [
+			'constants',
 			'prices_registry',
 			'remainders_registry',
 			'reserves_registry',

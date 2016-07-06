@@ -71,8 +71,10 @@ abstract class handler {
 			error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . $e->getTraceAsString());
     }
 
-	public function print_json() {
-		print json_encode($this->response_, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT/* | JSON_HEX_QUOT | JSON_HEX_APOS*/);
+	public function get_json() {
+
+		return json_encode($this->response_, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT/* | JSON_HEX_QUOT | JSON_HEX_APOS*/);
+
 	}
 
 };

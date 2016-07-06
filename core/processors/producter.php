@@ -10,25 +10,23 @@ require_once LOADERS_DIR . 'shared.php';
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------
-class categorer_handler extends handler {
-
-	protected $infobase_;
+class producter_handler extends handler {
 
 	protected function handle_request() {
 
 		$start_time = micro_time();
 
-		$this->infobase_ = new infobase;
-		$this->infobase_->set_create_if_not_exists(false);
-		$this->infobase_->initialize();
+		$infobase = new infobase;
+		$infobase->set_create_if_not_exists(false);
+		$infobase->initialize();
 
 		extract(get_object_vars($this->request_));
 
 		$product_uuid = uuid2bin($product);
 
-		$this->infobase_->exec('BEGIN TRANSACTION');
+		$infobase->exec('BEGIN TRANSACTION');
 
-		$this->infobase_->exec(<<<EOT
+		/*$infobase->exec(<<<EOT
 			CREATE TEMP TABLE IF NOT EXISTS t_properties (
 				uuid			BLOB PRIMARY KEY ON CONFLICT REPLACE,
 				code       		INTEGER,
@@ -37,10 +35,10 @@ class categorer_handler extends handler {
 EOT
 		);
 
-		$this->infobase_->exec(<<<EOT
+		$infobase->exec(<<<EOT
 			CREATE TEMP TABLE IF NOT EXISTS t_product_properties (
-				property_uuid	BLOB,
 				property_name	TEXT,
+				property_uuid	BLOB,
 				property_idx	INTEGER,
 				value_uuid		BLOB,
 				value_type		INTEGER,
@@ -51,21 +49,22 @@ EOT
 EOT
 		);
 
-		$st = $this->infobase_->query(<<<EOT
+		$m = $infobase->escapeString('Справочник "Номенклатура"');
+
+		$result = $infobase->query(<<<EOT
 			SELECT
-				uuid
+				a.uuid
 			FROM
-				properties_assignments
+				properties_assignments AS a
 			WHERE
-				name = 'Справочник "Номенклатура"'
+				a.name = '${m}'
 EOT
 		);
 
-		$result = $st->execute();
+		while( $r = $result->fetchArray(SQLITE3_NUM) )
+			$assignment_uuid = $r[0];
 
-		while( list($assigment_uuid) = $result->fetchArray(SQLITE3_NUM) );
-
-		$st = $this->infobase_->prepare(<<<EOT
+		$st = $infobase->prepare(<<<EOT
 			INSERT INTO t_properties
 			SELECT
 				uuid,
@@ -74,72 +73,105 @@ EOT
 			FROM
 				properties
 			WHERE
-				assigment_uuid = :assigment_uuid
-			ORDER BY
-				name
+				assignment_uuid = :assignment_uuid
 EOT
 		);
 
-		$st->bindParam(":assigment_uuid", $assigment_uuid, SQLITE3_BLOB);
+		$st->bindParam(':assignment_uuid', $assignment_uuid, SQLITE3_BLOB);
 		$st->execute();
 
-		$st = $this->infobase_->prepare(<<<EOT
+		$st = $infobase->prepare(<<<EOT
 			INSERT INTO t_product_properties
 			SELECT
-				p.property_uuid,
-				p.name AS property_name,
-				p.idx AS property_idx,
+				p.name			AS property_name,
+				r.property_uuid	AS property_uuid,
+				r.idx			AS property_idx,
+				v.uuid			AS value_uuid,
+				v.value_type	AS value_type,
+				v.value_b		AS value_b,
+				v.value_n		AS value_n,
+				v.value_s		AS value_s
 			FROM
-				properties_registry AS p
+				properties_registry AS r
+					INNER JOIN properties AS p
+					ON r.property_uuid = p.uuid
 					INNER JOIN properties_values AS v
-					ON p.value_uuid = v.uuid
+					ON r.value_uuid = v.uuid
 			WHERE
-				p.object_uuid = :product_uuid
+				r.object_uuid = :product_uuid
 EOT
 		);
 
-		$st->bindParam(":product_uuid", $product_uuid, SQLITE3_BLOB);
+		$st->bindParam(':product_uuid', $product_uuid, SQLITE3_BLOB);
 		$st->execute();
 
-		$st = $this->infobase_->prepare(<<<EOT
+		$st = $infobase->prepare(<<<EOT
 			SELECT
-				t.uuid,
-				t.name,
-				p.idx,
-				p.value_uuid,
-				p.value_type,
-				COALESCE(p.value_b, p.value_n, p.value_s) AS value
+				t.property_uuid								AS property_uuid,
+				t.property_name								AS property_name,
+				t.property_idx								AS property_idx,
+				t.value_uuid								AS value_uuid,
+				t.value_type								AS value_type,
+				COALESCE(t.value_b, t.value_n, t.value_s)	AS value
 			FROM
-				t_properties AS t
-					LEFT JOIN t_product_properties AS p
-					ON t.uuid = p.property_uuid
+				t_product_properties AS t
 			ORDER BY
-				t.name,
-				p.idx
+				t.property_name,
+				t.property_idx
 EOT
 		);
 
+		$result = $st->execute();*/
+
+		$st = $infobase->prepare(<<<EOT
+			SELECT
+				p.name										AS property_name,
+				r.property_uuid								AS property_uuid,
+				r.idx										AS property_idx,
+				v.uuid										AS value_uuid,
+				v.value_type								AS value_type,
+				COALESCE(v.value_b, v.value_n, v.value_s)	AS value
+
+			FROM
+				properties_registry AS r
+					INNER JOIN properties AS p
+					ON r.property_uuid = p.uuid
+					INNER JOIN properties_values AS v
+					ON r.value_uuid = v.uuid
+			WHERE
+				r.object_uuid = :product_uuid
+EOT
+		);
+
+		$st->bindParam(':product_uuid', $product_uuid, SQLITE3_BLOB);
 		$result = $st->execute();
 
 		$properties = [];
 
 		while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
 
-			$r['uuid'] = bin2uuid($r['uuid']);
-			$r['name'] = htmlspecialchars($r['name'], ENT_HTML5);
+			extract($r);
 
-			$categories[] = $r;
+			$properties[] = [
+				'property_uuid'	=> bin2uuid($property_uuid),
+				'property_name'	=> htmlspecialchars($property_name, ENT_HTML5),
+				'property_idx'	=> $property_idx,
+				'value_uuid'	=> bin2uuid($value_uuid),
+				'value_type'	=> $value_type,
+				'value'			=> is_string($value) ? htmlspecialchars($value, ENT_HTML5) : $value
+			];
 
 		}
 
 		$this->response_['properties'] = $properties;
 
-		$st = $this->infobase_->prepare(<<<EOT
+		$st = $infobase->prepare(<<<EOT
 			SELECT
 				a.uuid					AS uuid,
+				a.code					AS code,
 				a.name					AS name,
 				a.base_image_uuid		AS base_image_uuid,
-				i.ext					AS base_image_ext
+				i.ext					AS base_image_ext,
 				q.quantity				AS remainder,
 				p.price					AS price,
 				COALESCE(r.quantity, 0)	AS reserve
@@ -148,7 +180,7 @@ EOT
 					INNER JOIN images AS i
 					ON a.base_image_uuid = i.uuid
 					INNER JOIN prices_registry AS p
-					ON a.product_uuid = p.product_uuid
+					ON a.uuid = p.product_uuid
 					INNER JOIN remainders_registry AS q
 					ON a.uuid = q.product_uuid
 					LEFT JOIN reserves_registry AS r
@@ -158,11 +190,27 @@ EOT
 EOT
 		);
 
+		$st->bindParam(':product_uuid', $product_uuid, SQLITE3_BLOB);
 		$result = $st->execute();
+		$r = $result->fetchArray(SQLITE3_ASSOC);
 
-		$this->response_['product'] = $result->fetchArray(SQLITE3_ASSOC);
+		if( $r ) {
 
-		$this->infobase_->exec('COMMIT TRANSACTION');
+			extract($r);
+
+			$this->response_['product'] = [
+				'uuid'		=> bin2uuid($uuid),
+				'code'		=> $code,
+				'name'		=> htmlspecialchars($name, ENT_HTML5),
+				'price'		=> $price,
+				'remainder'	=> $remainder,
+				'reserve'	=> $reserve,
+				'img_url'	=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext), ENT_HTML5)
+			];
+
+		}
+
+		$infobase->exec('COMMIT TRANSACTION');
 
 		$finish_time = micro_time();
 		$ellapsed_ms = bcsub($finish_time, $start_time);

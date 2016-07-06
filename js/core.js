@@ -61,8 +61,8 @@ class HtmlPageState {
 				}
 			},
 			{
-				name		: 'quantity',
-				display		: 'Количество',
+				name		: 'remainder',
+				display		: 'Остаток',
 				ico			: {
 					asc		: '/resources/assets/sorting/sort_quantity.ico',
 					desc	: '/resources/assets/sorting/sort_quantity_descending.ico'
@@ -147,7 +147,7 @@ class Render {
 		for( let a of xpath_eval('//div[@btn or @btc]') )
 			a.style.cursor = cr;
 
-		for( let a of xpath_eval('//div[@pitem]/img[@pimg]') )
+		for( let a of xpath_eval('//div[@pitem]/div[@pimg]') )
 			a.style.cursor = cr;
 
 	}
@@ -179,7 +179,7 @@ class Render {
 			for( let i = 0; i < paging_state.page_size_; i++ )
 				html +=
 					'<div pitem="' + i + '" fadein>'
-					+ '<img pimg src="" alt="">'
+					+ '<div pimg></div>'
 					+ '<p pname></p>'
 					+ '<p pprice></p>'
 					+ '<p pquantity></p>'
@@ -189,7 +189,8 @@ class Render {
 
 			element.innerHTML = html;
 
-			this.state_.setup_events(xpath_eval('div[@pitem]/img[@pimg]', element));
+			this.state_.setup_events(xpath_eval('div[@pitem]', element), false);
+			this.state_.setup_events(xpath_eval('div[@pitem]/div[@pimg]', element));
 
 		}
 
@@ -231,7 +232,7 @@ class Render {
 
 			a.setAttribute('uuid', uuid);
 
-			xpath_eval_single('img[@pimg]'		, a).src		= img_url;
+			xpath_eval_single('div[@pimg]'		, a).style['background-image'] = 'url(' + img_url + ')';
 			xpath_eval_single('p[@pname]'		, a).innerHTML	= name;
 			xpath_eval_single('p[@pprice]'		, a).innerHTML	= price;
 			xpath_eval_single('p[@pquantity]'	, a).innerHTML	= quantity;
@@ -241,17 +242,6 @@ class Render {
 			for( let key in	style )
 				if( a.style[key] !== style[key] )
 					a.style[key] = style[key];
-
-		}
-
-		for( let a of items ) {
-
-			// remove the element from the page entirely and re-insert it
-			let newone = a.cloneNode(true);
-			a.parentNode.replaceChild(newone, a);
-			a = newone;
-
-			a.setAttribute('fadein', '');
 
 		}
 
@@ -277,7 +267,7 @@ class Render {
 		let order = state.orders_[paging_state.order_];
 		let direction = state.directions_[paging_state.direction_];
 
-		xpath_eval_single('div[@list_sort_order]/span[@btn_txt]', base).innerText = order.display;
+		xpath_eval_single('div[@list_sort_order]/span[@btn_txt]', base).innerText = '';//order.display;
 		xpath_eval_single('div[@list_sort_order]/img[@btn_ico]', base).src = order.ico[direction];
 		xpath_eval_single('div[@list_sort_direction]/img[@btn_ico]', base).src = order.order_icons[direction];
 
@@ -288,14 +278,39 @@ class Render {
 	assemble_info(paging_state, data) {
 
 		let product = data.product;
-
-		uuid		= product.uuid;
-		name		= product.name + '[' + product.code + ']';
-		img_url 	= product.img_url;
-		price		= Math.trunc(product.price) + '&nbsp;?';
-		quantity	= this.get_remainder(product) + this.get_reserve(product);
-
 		let element = xpath_eval_single('//div[@pinfo]');
+
+		element.setAttribute('uuid', product.uuid);
+
+		let html = ''
+			+ '<div pimg style="background-image: url(' + product.img_url + ')"></div>'
+			+ '<div pmid>'
+			+ '<p pname>' + product.name + '[' + product.code + ']' + '</p>'
+			+ '<hr><p pproperties_head>Характеристики</p><hr>'
+			+ '<div pproperties>'
+		;
+
+		for( let p of data.properties ) {
+
+			html = html
+				+ '<p pproperty property_uuid="' + p.property_uuid + '" property_idx="' + p.property_idx + '" value_uuid="' + p.value_uuid + '" value_type="' + p.value_type + '">'
+				+ '<span pproperty_name>' + p.property_name + '</span>'
+				+ '<span pproperty_value>&nbsp;' + p.value + '</span>'
+				+ '</p>'
+			;
+
+		}
+
+		html = html
+			+ '</div>'
+			+ '</div>'
+			+ '<div pright>'
+			+ '<p pprice>Цена: ' + Math.trunc(product.price) + '&nbsp;₽' + '</p>'
+			+ '<p pquantity>Остаток: ' + this.get_remainder(product) + this.get_reserve(product) + '</p>'
+			+ '</div>'
+		;
+
+		element.innerHTML = html;
 
 	}
 
@@ -303,13 +318,15 @@ class Render {
 
 		let state = this.state_;
 
-		Render.debug(0);
+		Render.debug(1);
 		Render.debug(2);
 
 		new_paging_state.start_ = microtime();
 
 		let plist = xpath_eval_single('//div[@plist]');
 		let pinfo = xpath_eval_single('//div[@pinfo]');
+		let backb = xpath_eval_single('//div[@btn and @back]');
+		let pctrl = xpath_eval_single('//div[@pcontrols]');
 		let request = {};
 
 		if( new_paging_state.product_ === null ) {
@@ -323,21 +340,31 @@ class Render {
 
 			this.assemble_page(new_paging_state, post_json_sync('proxy.php', request));
 
+			pctrl.style.display = 'inline-block';
 			plist.style.display = 'inline-block';
 			pinfo.style.display = 'none';
+			backb.style.display = 'none';
 
 		}
 		else {
 
 			request.module		= 'producter';
 			request.handler		= 'producter';
-			request.product_	= new_paging_state.product_;
+			request.product		= new_paging_state.product_;
 
 			this.assemble_info(new_paging_state, post_json_sync('proxy.php', request));
 
+			pctrl.style.display = 'none';
 			plist.style.display = 'none';
 			pinfo.style.display = 'inline-block';
+			backb.style.display = 'inline-block';
 
+		}
+
+		// restore fadein annimation effect if needed
+		for( let e of xpath_eval('//*[@fadein_rest]') ) {
+			e.removeAttribute('fadein_rest');
+			e.setAttribute('fadein', '');
 		}
 
 	}
@@ -391,7 +418,7 @@ class Render {
 			'parent'	: state.category_
 		};
 
-		Render.debug(1);
+		Render.debug(0);
 
 		let data = post_json_sync('proxy.php', request);
 		
@@ -411,6 +438,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 		this.render_ = null;
 		this.events_ = [
+			'animationend',
 			/*'click',
 			'mousedown',
 			'mouseenter',
@@ -441,45 +469,56 @@ class HtmlPageEvents extends HtmlPageState {
 
 		switch( e.type ) {
 
+			case 'animationend'	:
+				if( attrs.fadein && attrs.fadein.value.isEmpty() ) {
+					element.removeAttribute('fadein');
+					element.setAttribute('fadein_rest', '');
+				}
+				break;
+
 			case 'click'		:
 			case 'touchend'		:
 
-				if( attrs.prev_page ) {
+				if( attrs.btn && attrs.prev_page ) {
 
 					if( new_paging_state.pgno_ > 0 ) {
 						new_paging_state.pgno_--;
+						new_paging_state.product_ = null;
 						render.rewrite_page(new_paging_state);
 						// success rewrite page, save new state
 						state.paging_state_by_category_[state.category_] = new_paging_state;
 					}
 
 				}
-				else if( attrs.next_page ) {
+				else if( attrs.btn && attrs.next_page ) {
 
 					if( new_paging_state.pgno_ + 1 < new_paging_state.pages_ ) {
 						new_paging_state.pgno_++;
+						new_paging_state.product_ = null;
 						render.rewrite_page(new_paging_state);
 						// success rewrite page, save new state
 						state.paging_state_by_category_[state.category_] = new_paging_state;
 					}
 
 				}
-				else if( attrs.first_page ) {
+				else if( attrs.btn && attrs.first_page ) {
 
 					if( new_paging_state.pgno_ != 0 ) {
 						new_paging_state.pgno_ = 0;
+						new_paging_state.product_ = null;
 						render.rewrite_page(new_paging_state);
 						// success rewrite page, save new state
 						state.paging_state_by_category_[state.category_] = new_paging_state;
 					}
 
 				}
-				else if( attrs.last_page ) {
+				else if( attrs.btn && attrs.last_page ) {
 
 					let newpgno = new_paging_state.pages_ > 0 ? new_paging_state.pages_ - 1 : 0;
 
 					if( newpgno != new_paging_state.pgno_ ) {
 						new_paging_state.pgno_ = newpgno;
+						new_paging_state.product_ = null;
 						render.rewrite_page(new_paging_state);
 						// success rewrite page, save new state
 						state.paging_state_by_category_[state.category_] = new_paging_state;
@@ -492,6 +531,7 @@ class HtmlPageEvents extends HtmlPageState {
 					let new_category = state.category_ !== attrs.uuid.value ? attrs.uuid.value : null;
 					new_paging_state = Object.assign({}, state.paging_state_by_category_[new_category]);
 
+					new_paging_state.product_ = null;
 					render.rewrite_page(new_paging_state);
 					// success rewrite page, save new state
 					state.paging_state_by_category_[new_category] = new_paging_state;
@@ -507,21 +547,23 @@ class HtmlPageEvents extends HtmlPageState {
 					state.category_ = new_category;
 
 				}
-				else if( attrs.list_sort_order ) {
+				else if( attrs.btn && attrs.list_sort_order ) {
 
 					if( ++new_paging_state.order_ >= state.orders_.length )
 						new_paging_state.order_ = 0;
 
+					new_paging_state.product_ = null;
 					render.rewrite_page(new_paging_state);
 					// success rewrite page, save new state
 					state.paging_state_by_category_[state.category_] = new_paging_state;
 
 				}
-				else if( attrs.list_sort_direction ) {
+				else if( attrs.btn && attrs.list_sort_direction ) {
 
 					if( ++new_paging_state.direction_ >= state.directions_.length )
 						new_paging_state.direction_ = 0;
 
+					new_paging_state.product_ = null;
 					render.rewrite_page(new_paging_state);
 					// success rewrite page, save new state
 					state.paging_state_by_category_[state.category_] = new_paging_state;
@@ -532,7 +574,16 @@ class HtmlPageEvents extends HtmlPageState {
 					&& element.parentNode.parentNode.attributes.plist ) {
 
 					// switch view to product info
-					new_paging_state.product_ = element.parentNode.attributes.uuid;
+					new_paging_state.product_ = element.parentNode.attributes.uuid.value;
+
+					render.rewrite_page(new_paging_state);
+					// success rewrite page, save new state
+					state.paging_state_by_category_[state.category_] = new_paging_state;
+
+				}
+				else if( attrs.btn && attrs.back ) {
+
+					new_paging_state.product_ = null;
 
 					render.rewrite_page(new_paging_state);
 					// success rewrite page, save new state
@@ -566,7 +617,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 	}
 
-	setup_events(elements) {
+	setup_events(elements, phase = true) {
 
 		for( let element of elements )
 			console.log('setup events: ', element);
@@ -575,7 +626,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 		for( let event of this.events_ )
 			for( let element of elements )
-				add_event(element, event , e => this.events_handler(e));
+				add_event(element, event , e => this.events_handler(e), phase);
 
 	}
 
@@ -591,6 +642,7 @@ class HtmlPageManager extends HtmlPageEvents {
 
 		Render.hide_cursor();
 
+		this.setup_events(xpath_eval('//div[@btn and @back]'));
 		this.setup_events(xpath_eval('//div[@plist_controls]/div[@prev_page or @next_page or @first_page or @last_page]'));
 		this.setup_events(xpath_eval('//div[@psort_controls]/div[@list_sort_order or @list_sort_direction]'));
 

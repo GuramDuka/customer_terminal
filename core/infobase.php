@@ -78,6 +78,24 @@ class infobase extends \SQLite3 {
 EOT
 		);
 
+		// константы
+		$this->exec(<<<'EOT'
+			CREATE TABLE IF NOT EXISTS constants (
+				name			TEXT PRIMARY KEY ON CONFLICT REPLACE,
+				value_type		INTEGER,	/* 1 - boolean, 2 - numeric, 3 - string, 4 - reference */
+				value_b			INTEGER,	/* boolean */
+				value_n			NUMERIC,	/* numeric */
+				value_s			TEXT,		/* string */
+				value_uuid		BLOB		/* reference */
+			) WITHOUT ROWID
+EOT
+		);
+
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'constants_by_value_uuid'), -4)
+			. ' ON constants (value_uuid)'
+		);
+
 		$this->exec(<<<'EOT'
 			CREATE TABLE IF NOT EXISTS products (
 				uuid			BLOB PRIMARY KEY ON CONFLICT REPLACE,
@@ -194,10 +212,10 @@ EOT
 			CREATE TABLE IF NOT EXISTS properties_values (
 				uuid			BLOB PRIMARY KEY ON CONFLICT REPLACE,
 				marked			INTEGER,
-				vr				INTEGER, /* if true then virtual value */
+				vr				INTEGER,	/* if true then virtual value */
 				code			TEXT,
 				property_uuid	BLOB,
-				value_type		INTEGER,	/* 1 - boolean, 2 - numeric, 3 - string */
+				value_type		INTEGER,	/* 1 - boolean, 2 - numeric, 3 - string, 4 - reference */
 				value_b			INTEGER,	/* boolean */
 				value_n			NUMERIC,	/* numeric */
 				value_s			TEXT		/* string */
