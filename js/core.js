@@ -178,7 +178,7 @@ class Render {
 
 			for( let i = 0; i < paging_state.page_size_; i++ )
 				html +=
-					'<div pitem="' + i + '">'
+					'<div pitem="' + i + '" fadein>'
 					+ '<img pimg src="" alt="">'
 					+ '<p pname></p>'
 					+ '<p pprice></p>'
@@ -205,7 +205,9 @@ class Render {
 			paging_state.item_width_ = item_width;
 		}
 
-		for( let a of xpath_eval('div[@pitem]', element) ) {
+		let items = xpath_eval('div[@pitem]', element);
+
+		for( let a of items ) {
 
 			let i = parseInt(a.attributes.pitem.value, 10);
 			let uuid = '', name = '', img_url = '', price = '', quantity = '';
@@ -239,6 +241,17 @@ class Render {
 			for( let key in	style )
 				if( a.style[key] !== style[key] )
 					a.style[key] = style[key];
+
+		}
+
+		for( let a of items ) {
+
+			// remove the element from the page entirely and re-insert it
+			let newone = a.cloneNode(true);
+			a.parentNode.replaceChild(newone, a);
+			a = newone;
+
+			a.setAttribute('fadein', '');
 
 		}
 
