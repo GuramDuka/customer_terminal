@@ -15,7 +15,7 @@ class infobase extends \SQLite3 {
 	public function __construct() {
 	}
 
-    public function initialize(int $flags = SQLITE3_OPEN_READWRITE/* | SQLITE3_OPEN_CREATE*/) {
+    public function initialize(int $flags = SQLITE3_OPEN_READWRITE) {
                                                    
 		$ib_file_name = APP_DIR . 'data' . DIRECTORY_SEPARATOR . 'base.sqlite';
 
@@ -26,14 +26,18 @@ class infobase extends \SQLite3 {
 
 		parent::open($ib_file_name, $flags | SQLITE3_OPEN_CREATE);
 		$this->enableExceptions(true);
-		$this->exec('PRAGMA page_size = 65536');
-		$this->exec('PRAGMA cache_size = -32768'); // 524288
-		$this->exec('PRAGMA count_changes = OFF');
-		$this->exec('PRAGMA synchronous = NORMAL');
-		$this->exec('PRAGMA journal_mode = WAL');
-		$this->exec('PRAGMA temp_store = MEMORY');
-		$this->exec('PRAGMA auto_vacuum = NONE');
-		$this->exec('PRAGMA default_cache_size = -8192');
+
+		if( $new_ib ) {
+			$this->exec('PRAGMA page_size = 4096');
+			$this->exec('PRAGMA cache_size = -131072'); // 524288
+			$this->exec('PRAGMA count_changes = OFF');
+			$this->exec('PRAGMA synchronous = NORMAL');
+			$this->exec('PRAGMA journal_mode = WAL');
+			$this->exec('PRAGMA temp_store = MEMORY');
+			$this->exec('PRAGMA auto_vacuum = NONE');
+			$this->exec('PRAGMA default_cache_size = -131072');
+		}
+
 		$this->busyTimeout(180000);
 
 		if( config::$debug ) {
@@ -66,6 +70,8 @@ class infobase extends \SQLite3 {
 			}
 
 		}
+
+		return $new_ib;
 
     }
 
@@ -141,6 +147,7 @@ EOT
 			CREATE TABLE IF NOT EXISTS shops (
 				uuid			BLOB PRIMARY KEY ON CONFLICT REPLACE,
 				marked			INTEGER,
+				vr				INTEGER,	/* if true then virtual value */
 				code			INTEGER,
 				name			TEXT
 			) WITHOUT ROWID

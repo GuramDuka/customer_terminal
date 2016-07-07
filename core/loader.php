@@ -2,6 +2,8 @@
 //------------------------------------------------------------------------------
 namespace srv1c {
 //------------------------------------------------------------------------------
+define('LOADERS_DIR', CORE_DIR . 'loaders' . DIRECTORY_SEPARATOR);
+//------------------------------------------------------------------------------
 require_once LOADERS_DIR . 'base.php';
 require_once LOADERS_DIR . 'shared.php';
 //------------------------------------------------------------------------------
@@ -10,6 +12,9 @@ require_once LOADERS_DIR . 'shared.php';
 class loader_handler extends handler {
 
 	protected function handle_request() {
+
+		if( config::$log_loader_request )
+			error_log(var_export($this->request_, true));
 
 		$infobase = new infobase;
 		$infobase->initialize();

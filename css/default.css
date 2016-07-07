@@ -137,9 +137,11 @@
 		width				: 20%;
 		height				: 100%;
 		float				: left;
+		background-color	: transparent;
 		background-size		: contain;
 		background-repeat	: no-repeat;
 		background-position	: center;
+		margin-right		: 3px;
 	}
 
 	div[pinfo]>div[pmid] {
@@ -152,7 +154,7 @@
 		width				: 29.5%;
 		height				: 100%;
 		float				: right;
-		text-align			: left;
+		text-align			: center;
 	}
 
 	div[pinfo]>div[pmid]>p[pname], div[pinfo]>div[pright]>p[pprice], div[pinfo]>div[pright]>p[pquantity] {
@@ -171,8 +173,9 @@
 	}
 
 	div[pinfo]>div[pmid]>div[pproperties] {
-		border				: 1px solid lightgray;
-		border-radius		: 3px;
+		padding				: 3px;
+		/*border				: 1px solid lightgray;
+		border-radius		: 3px;*/
 		box-shadow			: none;
 		color				: #001289;
 		width				: 100%;
@@ -204,7 +207,8 @@
 		background-size		: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
 		background-position	: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
 
-		-moz-column-count	: 2;
+		/*-moz-column-count	: 2;*/
+		-moz-column-gap		: 8px;
 		-moz-column-width	: auto;
 		-moz-column-rule	: thick inset blue;
 		-moz-column-fill	: auto;
@@ -228,7 +232,7 @@
 	}
 
 	div[pinfo]>div[pmid]>div[pproperties]>p[pproperty] {
-		width				: auto;
+		width				: 100%;
 		height				: auto;
 		float				: none;
 		white-space			: nowrap;
@@ -245,11 +249,74 @@
 	}
 
 	div[pinfo]>div[pmid]>div[pproperties]>p[pproperty]>span[pproperty_value] {
+		float				: left;
+		width				: auto;
+		text-align			: left;
+		text-overflow		: ellipsis;
+		font-stretch		: ultra-condensed;
+	}
+
+	div[pinfo]>div[pright]>p[pprice],div[pinfo]>div[pright]>p[pquantity] {
+		float				: none;
+		width				: auto;
+		text-align			: left;
+		text-overflow		: ellipsis;
+		font-stretch		: ultra-condensed;
+		font-family			: droid;
+	}
+
+	div[pinfo]>div[pright]>div[premainders] {
+		color				: black;
+		float				: none;
+		width				: 100%;
+		height				: auto;
+		font-size			: 22px;
+		font-weight			: bold;
+		text-transform		: uppercase;
+	}
+
+	div[pinfo]>div[pright]>p[premainders_head] {
+		color				: black;
+		float				: none;
+		width				: 100%;
+		height				: auto;
+		font-size			: 22px;
+		font-weight			: bold;
+		text-transform		: uppercase;
+	}
+
+	div[pinfo]>div[pright]>hr {
+		color				: gold;
+		width				: 100%;
+		height				: auto;
+		float				: none;
+	}
+
+	div[pinfo]>div[pright]>div[premainders]>p[premainder] {
+		width				: 100%;
+		height				: auto;
+		float				: left;
+		white-space			: nowrap;
+		text-align			: left;
+		vertical-align		: middle;
+	}
+
+	div[pinfo]>div[pright]>div[premainders]>p[premainder]>span[pshop_name] {
+		float				: left;
+		width				: auto;
+		text-align			: left;
+		text-overflow		: ellipsis;
+		font-stretch		: ultra-condensed;
+		padding-left		: 5%;
+	}
+
+	div[pinfo]>div[pright]>div[premainders]>p[premainder]>span[pshop_quantity] {
 		float				: right;
 		width				: auto;
 		text-align			: left;
 		text-overflow		: ellipsis;
 		font-stretch		: ultra-condensed;
+		padding-right		: 5%;
 	}
 
 	div[pitem] {
@@ -261,9 +328,11 @@
 		width				: 100%;
 		height				: 50%;
 		margin-bottom		: 3px;
+		background-color	: transparent;
 		background-size		: contain;
 		background-repeat	: no-repeat;
 		background-position	: center;
+		cursor				: pointer;
 	}
 
 	div[pitem]>p[pname] {
@@ -370,7 +439,7 @@
 	}
 
 	*[fadein] {
-		animation			: fadein 300ms cubic-bezier(1.0, 0, 0.05, 1.0);
+		animation			: fadein 300ms;
 	}
 
 }

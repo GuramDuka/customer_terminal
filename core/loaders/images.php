@@ -65,7 +65,7 @@ class images_loader extends objects_loader {
 
 						if( config::$images_format === 'jpg' ) {
 							$im->setImageCompression(\Imagick::COMPRESSION_JPEG);
-							$im->setImageCompressionQuality(85);
+							$im->setImageCompressionQuality(config::$images_compression_quality);
 						}
 						else if( substr(config::$images_format, 0, 3) === 'png' ) {
 							$im->setImageCompression(\Imagick::COMPRESSION_ZIP);

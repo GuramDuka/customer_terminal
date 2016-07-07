@@ -30,7 +30,7 @@ class pager_handler extends handler {
 
 		$category_table = 'products_' . uuid2table_name($category) . 'pages';
 
-		$st = $this->infobase_->prepare(<<<EOT
+		$sql = <<<EOT
 			SELECT
 				${order}_${direction}_uuid				AS uuid,
 				${order}_${direction}_code				AS code,
@@ -47,11 +47,27 @@ class pager_handler extends handler {
 			ORDER BY
 				pgnon
 EOT
-		);
+		;
 
+		$this->infobase_->dump_plan($sql);
+
+		$start_time_st = micro_time();
+
+		$st = $this->infobase_->prepare($sql);
 		$st->bindValue(':pgnon0', $pgno << 4);
 		$st->bindValue(':pgnon1', ($pgno << 4) + ((1 << 4) - 1));
+
 		$result = $st->execute();
+
+		if( config::$pager_timing ) {
+
+			$finish_time = micro_time();
+			$ellapsed_ms = bcsub($finish_time, $start_time_st);
+			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
+
+	    	error_log('page fetch, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+
+		}
 
 		$page = [];
 

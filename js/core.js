@@ -139,7 +139,7 @@ class Render {
 	static hide_cursor() {
 
 		// hide cursor
-		let cr = touch ? 'none' : 'pointer';
+		/*let cr = touch ? 'none' : 'pointer';
 
 		if( touch )
 			xpath_eval_single('//body').style.cursor = cr;
@@ -149,7 +149,7 @@ class Render {
 
 		for( let a of xpath_eval('//div[@pitem]/div[@pimg]') )
 			a.style.cursor = cr;
-
+		*/
 	}
 
 	assemble_page(new_paging_state, data) {
@@ -208,6 +208,16 @@ class Render {
 
 		let items = xpath_eval('div[@pitem]', element);
 
+		//let head = document.getElementsByTagName('head')[0];
+		//
+		//for( let a of items ) {
+		//	let i = parseInt(a.attributes.pitem.value, 10);
+		//	let lnk = document.createElement('link');
+		//	lnk.setAttribute('rel', 'prefetch');
+		//	lnk.setAttribute('href', products[i].img_url);
+		//	head.appendChild(lnk);
+		//}
+
 		for( let a of items ) {
 
 			let i = parseInt(a.attributes.pitem.value, 10);
@@ -232,7 +242,7 @@ class Render {
 
 			a.setAttribute('uuid', uuid);
 
-			xpath_eval_single('div[@pimg]'		, a).style['background-image'] = 'url(' + img_url + ')';
+			xpath_eval_single('div[@pimg]'		, a).style.backgroundImage = 'url(' + img_url + ')';
 			xpath_eval_single('p[@pname]'		, a).innerHTML	= name;
 			xpath_eval_single('p[@pprice]'		, a).innerHTML	= price;
 			xpath_eval_single('p[@pquantity]'	, a).innerHTML	= quantity;
@@ -278,19 +288,20 @@ class Render {
 	assemble_info(paging_state, data) {
 
 		let product = data.product;
-		let element = xpath_eval_single('//div[@pinfo]');
+		let pinfo_element = xpath_eval_single('//div[@pinfo]');
 
-		element.setAttribute('uuid', product.uuid);
+		pinfo_element.setAttribute('uuid', product.uuid);
 
-		let html = ''
-			+ '<div pimg style="background-image: url(' + product.img_url + ')"></div>'
-			+ '<div pmid>'
-			+ '<p pname>' + product.name + '[' + product.code + ']' + '</p>'
-			+ '<hr><p pproperties_head>Характеристики</p><hr>'
-			+ '<div pproperties>'
-		;
+		xpath_eval_single('div[@pimg]', pinfo_element).style.backgroundImage = 'url(' + product.img_url + ')';
+		xpath_eval_single('div[@pmid]/p[@pname]', pinfo_element).innerHTML = product.name + '[' + product.code + ']';
+
+		let coefficients = [ 0, 0 ];
+		let html = '';
 
 		for( let p of data.properties ) {
+
+			coefficients[0] = Math.max(coefficients[0], p.property_name.length);
+			coefficients[1] = Math.max(coefficients[1], p.value.toString().length);
 
 			html = html
 				+ '<p pproperty property_uuid="' + p.property_uuid + '" property_idx="' + p.property_idx + '" value_uuid="' + p.value_uuid + '" value_type="' + p.value_type + '">'
@@ -301,16 +312,43 @@ class Render {
 
 		}
 
-		html = html
-			+ '</div>'
-			+ '</div>'
-			+ '<div pright>'
-			+ '<p pprice>Цена: ' + Math.trunc(product.price) + '&nbsp;₽' + '</p>'
-			+ '<p pquantity>Остаток: ' + this.get_remainder(product) + this.get_reserve(product) + '</p>'
-			+ '</div>'
-		;
+		xpath_eval_single('div[@pmid]/div[@pproperties]', pinfo_element).innerHTML = html;
 
-		element.innerHTML = html;
+		// 13 rows -> 350px on my display debug
+		// x rows  <- y px  on target display
+		let y = sscanf(window.getComputedStyle(pinfo_element).height, '%u')[0];
+		let x = y * 13 / 350;
+		let e = xpath_eval_single('div[@pmid]/div[@pproperties]', pinfo_element);
+		e.style.MozColumnCount = Math.trunc(data.properties.length / x) + 1;
+
+		let proportions = distribute_proportionally(100, coefficients);
+		proportions[0] = sprintf('%.2f%%', proportions[0]);
+		proportions[1] = sprintf('%.2f%%', proportions[1]);
+
+		for( let e of xpath_eval('div[@pmid]/div[@pproperties]/p[@pproperty]/span[@pproperty_name]', pinfo_element) )
+			e.style.width = proportions[0];
+		for( let e of xpath_eval('div[@pmid]/div[@pproperties]/p[@pproperty]/span[@pproperty_value]', pinfo_element) )
+			e.style.width = proportions[1];
+
+		xpath_eval_single('div[@pright]/p[@pprice]', pinfo_element).innerHTML		= 'Цена&nbsp;&nbsp;&nbsp;:&nbsp;' + Math.trunc(product.price) + '&nbsp;₽';
+		xpath_eval_single('div[@pright]/p[@pquantity]', pinfo_element).innerHTML	= 'Остаток:&nbsp;' + this.get_remainder(product) + this.get_reserve(product);
+
+		html = '';
+
+		for( let p of data.remainders ) {
+
+			html = html
+				+ '<p premainder>'
+				+ '<span pshop_name shop_uuid="' + p.shop_uuid + '">' + p.shop_name + '</span>'
+				+ '<span pshop_quantity shop_uuid="' + p.shop_uuid + '">' + this.get_remainder(p) + this.get_reserve(p) + '</span>'
+				+ '</p>'
+			;
+
+		}
+
+		xpath_eval_single('div[@pright]/div[@premainders]', pinfo_element).innerHTML = html;
+
+		this.debug_ellapsed(1, paging_state.start_, data.ellapsed, 'PAGE: ');
 
 	}
 
@@ -439,20 +477,19 @@ class HtmlPageEvents extends HtmlPageState {
 		this.render_ = null;
 		this.events_ = [
 			'animationend',
-			/*'click',
-			'mousedown',
-			'mouseenter',
-			'mouseleave',
-			'mousemove',
-			'mouseout',
-			'mouseover',
-			'mouseup',*/
+			//'mousedown',
+			//'mouseenter',
+			//'mouseleave',
+			//'mousemove',
+			//'mouseout',
+			//'mouseover',
+			'mouseup',
 			'touchstart',
 			'touchend',
 			'touchcancel',
-			'touchmove',
-			'touchenter',
-			'touchleave'
+			//'touchmove',
+			//'touchenter',
+			//'touchleave'
 		];
 
 	}
@@ -465,19 +502,26 @@ class HtmlPageEvents extends HtmlPageState {
 		let render = this.render_;
 		let element = e.currentTarget;
 		let attrs = element.attributes;
-		let new_paging_state = Object.assign({}, state.paging_state_by_category_[state.category_]);
+		let new_paging_state;
 
 		switch( e.type ) {
 
 			case 'animationend'	:
+
 				if( attrs.fadein && attrs.fadein.value.isEmpty() ) {
 					element.removeAttribute('fadein');
 					element.setAttribute('fadein_rest', '');
 				}
 				break;
 
-			case 'click'		:
+			case 'mouseup'		:
+
+				if( e.button !== 0 )
+					break;
+
 			case 'touchend'		:
+
+				new_paging_state = Object.assign({}, state.paging_state_by_category_[state.category_]);
 
 				if( attrs.btn && attrs.prev_page ) {
 
@@ -619,10 +663,11 @@ class HtmlPageEvents extends HtmlPageState {
 
 	setup_events(elements, phase = true) {
 
-		for( let element of elements )
+		/*for( let element of elements )
 			console.log('setup events: ', element);
-		// xpath-to-select-multiple-tags
-		// //body/*[self::div or self::p or self::a]
+		 */
+			// xpath-to-select-multiple-tags
+			// //body/*[self::div or self::p or self::a]
 
 		for( let event of this.events_ )
 			for( let element of elements )
@@ -642,7 +687,7 @@ class HtmlPageManager extends HtmlPageEvents {
 
 		Render.hide_cursor();
 
-		this.setup_events(xpath_eval('//div[@btn and @back]'));
+		this.setup_events(xpath_eval('//div[@back]'));
 		this.setup_events(xpath_eval('//div[@plist_controls]/div[@prev_page or @next_page or @first_page or @last_page]'));
 		this.setup_events(xpath_eval('//div[@psort_controls]/div[@list_sort_order or @list_sort_direction]'));
 
@@ -654,7 +699,37 @@ class HtmlPageManager extends HtmlPageEvents {
 
 }
 //------------------------------------------------------------------------------
-let manager = new HtmlPageManager;
+let manager = null;
+let msg_source = null;
+//------------------------------------------------------------------------------
+function core() {
+
+	// https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
+	// SSE Server-Side Events
+	msg_source = new EventSource('message.php');
+
+	msg_source.onmessage = function (e) {
+  		//let new_element = document.createElement('li');
+		//new_element.innerHTML = 'message: ' + e.data;
+		//eventList.appendChild(new_element);
+		Render.debug(7, 'message: ' + e.data);
+	};
+
+	msg_source.addEventListener('ping', function (e) {
+		//let newElement = document.createElement("li");
+  		let obj = JSON.parse(e.data);
+  		//newElement.innerHTML = "ping at " + obj.time;
+		//eventList.appendChild(newElement);
+		Render.debug(8, 'ping at ' + obj.time);
+	}, false);
+
+	msg_source.onerror = function (e) {
+		console.log('EventSource failed.', e);
+	};
+
+	manager = new HtmlPageManager;
+
+}
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------

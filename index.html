@@ -9,11 +9,6 @@
 		<link rel="stylesheet" type="text/css" href="/resources/css/default.css" />
 		<link rel="stylesheet" type="text/css" href="/resources/css/debug.css" />
 
-		<script defer type="text/javascript" src="js/startup.js"></script>
-		<script defer type="text/javascript" src="js/core.js"></script>
-		<script defer type="text/javascript" src="js/prefetch.js"></script>
-		<script defer type="text/javascript" src="js/refresh.js"></script>
-
 		<style type="text/css">
 		</style>
 
@@ -43,6 +38,27 @@
 		<div plist fadein>
 		</div>
 		<div pinfo fadein>
+			<div pimg></div>
+			<div pmid>
+				<p pname></p>
+				<hr><p pproperties_head>Характеристики</p><hr>
+				<div pproperties>
+				</div>
+			</div>
+			<div pright>
+				<p pprice></p>
+				<p pquantity></p>
+				<div btn plus_one fadein="oneshot">
+					<img btn_ico src="/resources/assets/plus_button.ico">
+				</div>
+				<p pbuy_quantity>1</p>
+				<div btn minus_one fadein="oneshot">
+					<img btn_ico src="/resources/assets/minus_button.ico">
+				</div>
+				<hr><p premainders_head>Наличие в магазинах</p><hr>
+				<div premainders>
+				</div>
+			</div>
 		</div>
 		<div pcontrols>
 			<div psort_controls>
@@ -80,5 +96,12 @@
 			</div>
 			<p>Чтото внизу</p>
 		</div>
+		<script type="text/javascript" src="js/startup.js"></script>
+		<script type="text/javascript" src="js/core.js"></script>
+		<!--<script type="text/javascript" src="js/prefetch.js"></script>-->
+		<!--<script type="text/javascript" src="js/refresh.js"></script>-->
+		<script type="text/javascript">
+			document.addEventListener('DOMContentLoaded', core);
+		</script>
 	</body>
 </html>

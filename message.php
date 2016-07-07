@@ -2,32 +2,53 @@
 //------------------------------------------------------------------------------
 namespace { // global
 //------------------------------------------------------------------------------
-define('APP_DIR', realpath(__DIR__ . DIRECTORY_SEPARATOR . '..') . DIRECTORY_SEPARATOR);
+define('APP_DIR', realpath(__DIR__) . DIRECTORY_SEPARATOR);
 define('CORE_DIR', APP_DIR . 'core' . DIRECTORY_SEPARATOR);
 //------------------------------------------------------------------------------
 require_once CORE_DIR . 'startup.php';
+require_once CORE_DIR . 'except.php';
 require_once CORE_DIR . 'utils.php';
 require_once CORE_DIR . 'infobase.php';
 //------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+//------------------------------------------------------------------------------
 try {
+
+	$start_time = micro_time();
 
 	$infobase = new srv1c\infobase;
 	$infobase->set_create_if_not_exists(false);
 	$infobase->initialize();
 
-	$start_time = micro_time();
-	$infobase->exec('VACUUM');
-	$finish_time = micro_time();
-	$ellapsed_ms = bcsub($finish_time, $start_time);
+	//header('Content-Type: text/event-stream');
+	header("Content-Type: text/event-stream\n\n");
+	header('Cache-Control: no-cache');
 
-    error_log('SQLITE VACUUM, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+	$counter = rand(1, 10);
 
-	$start_time = micro_time();
-	$infobase->exec('ANALYZE');
-	$finish_time = micro_time();
-	$ellapsed_ms = bcsub($finish_time, $start_time);
+	while( true ) {
 
-    error_log('SQLITE ANAYLYZE, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+		// Every second, sent a "ping" event.
+  
+		echo "event: ping\n";
+		$curDate = date(DATE_ISO8601);
+		echo 'data: {"time": "' . $curDate . '"}';
+		echo "\n\n";
+  
+		// Send a simple message at random intervals.
+  
+		$counter--;
+  
+		if( !$counter ) {
+			echo 'data: This is a message at time ' . $curDate . "\n\n";
+			$counter = rand(1, 10);
+		}
+  
+		ob_flush();
+		flush();
+		sleep(1);
+
+	}
 
 }
 catch( Throwable $e ) {

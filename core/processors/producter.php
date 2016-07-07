@@ -123,7 +123,7 @@ EOT
 
 		$result = $st->execute();*/
 
-		$st = $infobase->prepare(<<<EOT
+		$sql = <<<EOT
 			SELECT
 				p.name										AS property_name,
 				r.property_uuid								AS property_uuid,
@@ -141,9 +141,15 @@ EOT
 			WHERE
 				r.object_uuid = :product_uuid
 EOT
-		);
+		;
 
+		$infobase->dump_plan($sql);
+
+		$start_time_st = micro_time();
+
+		$st = $infobase->prepare($sql);
 		$st->bindParam(':product_uuid', $product_uuid, SQLITE3_BLOB);
+
 		$result = $st->execute();
 
 		$properties = [];
@@ -151,6 +157,9 @@ EOT
 		while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
 
 			extract($r);
+
+			if( $property_name === 'Наименование портал' )
+				continue;
 
 			$properties[] = [
 				'property_uuid'	=> bin2uuid($property_uuid),
@@ -165,7 +174,17 @@ EOT
 
 		$this->response_['properties'] = $properties;
 
-		$st = $infobase->prepare(<<<EOT
+		if( config::$producter_timing ) {
+
+			$finish_time = micro_time();
+			$ellapsed_ms = bcsub($finish_time, $start_time_st);
+			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
+
+	    	error_log('product properties fetch, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+
+		}
+
+		$sql = <<<EOT
 			SELECT
 				a.uuid					AS uuid,
 				a.code					AS code,
@@ -188,8 +207,13 @@ EOT
 			WHERE
 				a.uuid = :product_uuid
 EOT
-		);
+		;
 
+		$infobase->dump_plan($sql);
+
+		$start_time_st = micro_time();
+
+		$st = $infobase->prepare($sql);
 		$st->bindParam(':product_uuid', $product_uuid, SQLITE3_BLOB);
 		$result = $st->execute();
 		$r = $result->fetchArray(SQLITE3_ASSOC);
@@ -210,6 +234,66 @@ EOT
 
 		}
 
+		if( config::$producter_timing ) {
+
+			$finish_time = micro_time();
+			$ellapsed_ms = bcsub($finish_time, $start_time_st);
+			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
+
+	    	error_log('product info fetch, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+
+		}
+
+		$sql = <<<EOT
+			SELECT
+				s.uuid					AS uuid,
+				s.name					AS name,
+				r.remainder_quantity	AS remainder,
+				r.reserve_quantity		AS reserve
+			FROM
+				system_remainders_registry AS r
+					INNER JOIN shops s
+					ON r.shop_uuid = s.uuid
+			WHERE
+				r.product_uuid = :product_uuid
+EOT
+		;
+
+		$infobase->dump_plan($sql);
+
+		$start_time_st = micro_time();
+
+		$st = $infobase->prepare($sql);
+		$st->bindParam(':product_uuid', $product_uuid, SQLITE3_BLOB);
+		$result = $st->execute();
+
+		$remainders = [];
+
+		while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
+
+			extract($r);
+
+			$remainders[] = [
+				'shop_uuid'	=> bin2uuid($uuid),
+				'shop_name'	=> htmlspecialchars($name, ENT_HTML5),
+				'remainder'	=> $remainder,
+				'reserve'	=> $reserve
+			];
+
+		}
+
+		$this->response_['remainders'] = $remainders;
+
+		if( config::$producter_timing ) {
+
+			$finish_time = micro_time();
+			$ellapsed_ms = bcsub($finish_time, $start_time_st);
+			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
+
+	    	error_log('product remainder fetch, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+
+		}
+
 		$infobase->exec('COMMIT TRANSACTION');
 
 		$finish_time = micro_time();
@@ -219,7 +303,7 @@ EOT
 		$this->response_['ellapsed'] = $ellapsed_s;
 
 		if( config::$log_timing )
-		    error_log('product properties list retrieved, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+		    error_log('product info retrieved, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
 
     }
 

@@ -4,6 +4,7 @@ namespace { // global
 //------------------------------------------------------------------------------
 define('APP_DIR', realpath(__DIR__) . DIRECTORY_SEPARATOR);
 define('CORE_DIR', APP_DIR . 'core' . DIRECTORY_SEPARATOR);
+define('LOADERS_DIR', CORE_DIR . 'loaders' . DIRECTORY_SEPARATOR);
 define('PROCESSORS_DIR', CORE_DIR . 'processors' . DIRECTORY_SEPARATOR);
 //------------------------------------------------------------------------------
 require_once CORE_DIR . 'startup.php';

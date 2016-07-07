@@ -42,8 +42,6 @@ function e_handler($errno, $errstr, $errfile, $errline, array $errcontext) {
 //------------------------------------------------------------------------------
 set_error_handler('e_handler', E_ALL /*E_WARNING | E_NOTICE*/);
 //------------------------------------------------------------------------------
-define('LOADERS_DIR', CORE_DIR . 'loaders' . DIRECTORY_SEPARATOR);
-//------------------------------------------------------------------------------
 require_once CORE_DIR . 'config.php';
 //------------------------------------------------------------------------------
 } // global namespace
