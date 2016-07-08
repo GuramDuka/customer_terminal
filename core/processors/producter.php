@@ -256,6 +256,9 @@ EOT
 					ON r.shop_uuid = s.uuid
 			WHERE
 				r.product_uuid = :product_uuid
+			ORDER BY
+				r.remainder_quantity DESC,
+				s.name
 EOT
 		;
 

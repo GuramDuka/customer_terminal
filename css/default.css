@@ -132,14 +132,14 @@
 		text-align			: center;
 	}
 
-	div[top]>div[cart_informer]>div[binfo] {
+	div[top]>div[cart_informer]>div[cinfo] {
 		float				: none;
 		width				: auto;
 		height				: auto;
 		margin-bottom		: 3px;
 	}
 
-	div[top]>div[cart_informer]>div[binfo]>span {
+	div[top]>div[cart_informer]>div[cinfo]>span {
 		width				: auto;
 		height				: auto;
 		float				: left;
@@ -150,7 +150,7 @@
 		text-decoration		: none;
 		text-transform		: uppercase;
 		font-family			: droid;
-		margin-left		: 3px;
+		margin-left			: 3px;
 	}
 
 	div[top]>div[cart_informer]>img[cart_state] {
@@ -172,7 +172,7 @@
 
 	div[top]>div[cart_informer]>div[btn][check]>img[btn_ico] {
 		/* fix: shift down */
-		margin-top			: -1.1%;
+		margin-top			: -2.1%;
 	}
 
 	div[top]>div[logo]>img {
@@ -235,7 +235,7 @@
 		text-align			: center;
 	}
 
-	div[pinfo]>div[pmid]>p[pname], div[pinfo]>div[pright]>p[pprice], div[pinfo]>div[pright]>p[pquantity] {
+	div[pinfo]>div[pmid]>p[pname], div[pinfo]>div[pright]>p[pprice], div[pinfo]>div[pright]>p[pquantity], div[pinfo]>div[pright]>p[pincart] {
 		width				: 100%;
 		height				: auto;
 		font-size			: 22px;
@@ -327,13 +327,14 @@
 		font-stretch		: ultra-condensed;
 	}
 
-	div[pinfo]>div[pright]>p[pprice], div[pinfo]>div[pright]>p[pquantity] {
+	div[pinfo]>div[pright]>p[pprice], div[pinfo]>div[pright]>p[pquantity], div[pinfo]>div[pright]>p[pincart] {
 		float				: none;
 		width				: auto;
 		text-align			: left;
 		text-overflow		: ellipsis;
 		font-stretch		: ultra-condensed;
 		font-family			: droid;
+		text-transform		: uppercase;
 	}
 
 	div[pinfo]>div[pright]>div[minus_one] {
@@ -372,6 +373,11 @@
 		margin-left			: 16px;
 		margin-top			: 8px;
 		margin-bottom		: 8px;
+	}
+
+	div[pinfo]>div[pright]>div[btn][buy]>img[btn_ico] {
+		/* fix: shift down */
+		margin-top			: -2.1%;
 	}
 
 	div[pinfo]>div[pright]>div[premainders] {

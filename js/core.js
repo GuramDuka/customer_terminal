@@ -9,6 +9,7 @@ class HtmlPageState {
 			category_				: null,
 			product_				: null,
 			products_				: {},
+			cart_edit_				: false,
 			pgno_					: 0,
 			pages_ 					: 0,
 			page_size_				: 0,
@@ -81,7 +82,8 @@ class HtmlPageState {
 			null : Object.assign({}, this.paging_state_template)
 		};
 
-		this.cart_			= null;
+		this.cart_			= [];
+		this.cart_by_uuid_	= {};
 
 		// render
 		this.start_ 		= 0;
@@ -120,7 +122,7 @@ class Render {
 
 	static debug(level, s = null) {
 
-		let element = xpath_eval_single('//div[@debug]');
+		let element = xpath_eval_single('html/body/div[@debug]');
 		let p = xpath_eval_single('p[@debug' + level + ']', element);
 
 		p.innerHTML = s;
@@ -143,7 +145,7 @@ class Render {
 		/*let cr = touch ? 'none' : 'pointer';
 
 		if( touch )
-			xpath_eval_single('//body').style.cursor = cr;
+			xpath_eval_single('html/body').style.cursor = cr;
 
 		for( let a of xpath_eval('//div[@btn or @btc]') )
 			a.style.cursor = cr;
@@ -158,7 +160,6 @@ class Render {
 		let render = this;
 		let state = render.state_;
 		let paging_state = new_paging_state;
-		let invisible = false;
 
 		paging_state.page_size_	= data.page_size;
 		paging_state.pages_		= data.pages;
@@ -170,7 +171,7 @@ class Render {
 			return;
 		}
 
-		let element = xpath_eval_single('//div[@plist]');
+		let element = xpath_eval_single('html/body/div[@plist]');
 
 		if( element.innerHTML.isEmpty() ) {
 
@@ -199,9 +200,7 @@ class Render {
 		}
 
 		let products = data.products;
-		let style = {
-			'visibility'	: invisible ? 'hidden' : 'visible'
-		};
+		let style = {};
 
 		let item_width = 99.0 / paging_state.page_size_;
 
@@ -237,14 +236,18 @@ class Render {
 				price		= Math.trunc(product.price) + '&nbsp;₽';
 				quantity	= this.get_remainder(product) + this.get_reserve(product);
 
-				style.visibility = 'visible';
+				a.setAttribute('uuid'		, uuid);
+				a.setAttribute('remainder'	, product.remainder);
+				a.setAttribute('reserve'	, product.reserve);
 
 			}
 			else {
-				style.visibility = 'hidden';
+
+				a.removeAttribute('uuid');
+				a.removeAttribute('remainder');
+				a.removeAttribute('reserve');
 			}
 
-			a.setAttribute('uuid', uuid);
 
 			xpath_eval_single('div[@pimg]'		, a).style.backgroundImage = 'url(' + img_url + ')';
 			xpath_eval_single('p[@pname]'		, a).innerHTML	= name;
@@ -259,9 +262,7 @@ class Render {
 
 		}
 
-		Render.debug(2, 'NPAG: ' + paging_state.pgno_);
-
-		let base = xpath_eval_single('//div[@plist_controls]');
+		let base = xpath_eval_single('html/body/div[@pcontrols]/div[@plist_controls]');
 
 		xpath_eval_single('div[@first_page]', base).style.display =
 			paging_state.pgno_ < 2 || paging_state.pages_ < 2  ? 'none' : 'inline-block';
@@ -274,9 +275,9 @@ class Render {
 		xpath_eval_single('div[@last_page]', base).style.display =
 			paging_state.pgno_ > paging_state.pages_ - 3 || paging_state.pages_ < 3 ? 'none' : 'inline-block';
 		if( paging_state.pages_ > 0 )
-			xpath_eval_single('//div[@plist_controls]/div[@last_page]/span[@btn_txt]').innerText = paging_state.pages_;
+			xpath_eval_single('html/body/div[@pcontrols]/div[@plist_controls]/div[@last_page]/span[@btn_txt]').innerText = paging_state.pages_;
 
-		base = xpath_eval_single('//div[@psort_controls]');
+		base = xpath_eval_single('html/body/div[@pcontrols]/div[@psort_controls]');
 
 		let order = state.orders_[paging_state.order_];
 		let direction = state.directions_[paging_state.direction_];
@@ -285,19 +286,18 @@ class Render {
 		xpath_eval_single('div[@list_sort_order]/img[@btn_ico]', base).src = order.ico[direction];
 		xpath_eval_single('div[@list_sort_direction]/img[@btn_ico]', base).src = order.order_icons[direction];
 
-		this.debug_ellapsed(1, paging_state.start_, data.ellapsed, 'PAGE: ');
-
 	}
-
 
 	static display_product_buy_quantity(quantity) {
 
-		xpath_eval_single('//div[@pinfo]/div[@pright]/p[@pbuy_quantity]').innerHTML = quantity;
+		xpath_eval_single('html/body/div[@pinfo]/div[@pright]/p[@pbuy_quantity]').innerHTML = quantity;
 
 	}
 
 	assemble_info(paging_state, data) {
 
+		let render = this;
+		let state = render.state_;
 		let product = data.product;
 		let pq = paging_state.products_[product.uuid];
 
@@ -320,7 +320,7 @@ class Render {
 		if( pq.buy_quantity > pq.remainder )
 			pq.buy_quantity = pq.remainder;
 
-		let pinfo_element = xpath_eval_single('//div[@pinfo]');
+		let pinfo_element = xpath_eval_single('html/body/div[@pinfo]');
 
 		pinfo_element.setAttribute('uuid', product.uuid);
 
@@ -362,10 +362,13 @@ class Render {
 		for( let e of xpath_eval('div[@pmid]/div[@pproperties]/p[@pproperty]/span[@pproperty_value]', pinfo_element) )
 			e.style.width = proportions[1];
 
-		xpath_eval_single('div[@pright]/p[@pprice]', pinfo_element).innerHTML		= 'Цена&nbsp;&nbsp;&nbsp;:&nbsp;' + Math.trunc(product.price) + '&nbsp;₽';
-		xpath_eval_single('div[@pright]/p[@pquantity]', pinfo_element).innerHTML	= 'Остаток:&nbsp;' + this.get_remainder(product) + this.get_reserve(product);
-		
-		Render.display_product_buy_quantity(paging_state.product_buy_quantity_);
+		xpath_eval_single('div[@pright]/p[@pprice]'		, pinfo_element).innerHTML	= 'Цена&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;' + Math.trunc(product.price) + '&nbsp;₽';
+		xpath_eval_single('div[@pright]/p[@pquantity]'	, pinfo_element).innerHTML	= 'Остаток&nbsp;:&nbsp;' + this.get_remainder(product) + this.get_reserve(product);
+
+		let in_cart = state.cart_by_uuid_[product.uuid];
+		xpath_eval_single('div[@pright]/p[@pincart]'	, pinfo_element).innerHTML	= in_cart ? 'Заказано:&nbsp;' + in_cart.buy_quantity : '';
+
+		Render.display_product_buy_quantity(pq.buy_quantity);
 
 		html = '';
 
@@ -382,7 +385,43 @@ class Render {
 
 		xpath_eval_single('div[@pright]/div[@premainders]', pinfo_element).innerHTML = html;
 
-		this.debug_ellapsed(1, paging_state.start_, data.ellapsed, 'PAGE: ');
+	}
+
+	assemble_cart(paging_state, data) {
+
+		let state = this.state_;
+
+	}
+
+	assemble_cart_informer(paging_state, data = null) {
+
+		let state = this.state_;
+		let cart = data ? data.cart : state.cart_;
+		let pcrin = xpath_eval_single('html/body/div[@top]/div[@cart_informer]');
+
+		if( cart.length > 0 ) {
+	
+			let ccount = 0;
+			let csum = 0;
+
+			for( let e of cart ) {
+				ccount	+= e.buy_quantity;
+				csum	+= e.buy_quantity * e.price;
+			}
+
+			let cinfo = xpath_eval_single('div[@cinfo]', pcrin);
+
+			xpath_eval_single('span[@ccount]'	, cinfo).innerText = 'В корзине: ' + ccount + ' товар' + (ccount == 1 ? '' : ccount <= 4 ? 'а' : 'ов');
+			xpath_eval_single('span[@csum]'		, cinfo).innerHTML = 'На сумму : ' + csum + '&nbsp;₽';
+
+			pcrin.style.display = 'inline-block';
+
+		}
+		else {
+
+			pcrin.style.display = 'none';
+
+		}
 
 	}
 
@@ -393,15 +432,24 @@ class Render {
 		Render.debug(1);
 		Render.debug(2);
 
-		new_paging_state.start_ = microtime();
-
-		let plist = xpath_eval_single('//div[@plist]');
-		let pinfo = xpath_eval_single('//div[@pinfo]');
-		let backb = xpath_eval_single('//div[@btn and @back]');
-		let pctrl = xpath_eval_single('//div[@pcontrols]');
+		let start = microtime();
+		let ellapsed = 0;
+		let plist = xpath_eval_single('html/body/div[@plist]');
+		let pinfo = xpath_eval_single('html/body/div[@pinfo]');
+		let backb = xpath_eval_single('html/body/div[@btn and @back]');
+		let pctrl = xpath_eval_single('html/body/div[@pcontrols]');
+		let pcart = xpath_eval_single('html/body/div[@pcart]');
+		let pcrin = xpath_eval_single('html/body/div[@top]/div[@cart_informer]');
 		let request = {};
 
-		if( new_paging_state.product_ === null ) {
+		if( new_paging_state.cart_edit_ ) {
+
+			pcart.style.display = 'inline-block';
+
+			//this.assemble_cart(new_paging_state, post_json_sync('proxy.php', request));
+
+		}
+		else if( new_paging_state.product_ === null ) {
 
 			request.module		= 'pager';
 			request.handler		= 'pager';
@@ -410,12 +458,17 @@ class Render {
 			request.direction	= state.directions_[new_paging_state.direction_];
 			request.pgno		= new_paging_state.pgno_;
 
-			this.assemble_page(new_paging_state, post_json_sync('proxy.php', request));
+			let data = post_json_sync('proxy.php', request);
+			ellapsed = data.ellapsed;
+
+			this.assemble_page(new_paging_state, data);
+			this.assemble_cart_informer(new_paging_state);
 
 			pctrl.style.display = 'inline-block';
 			plist.style.display = 'inline-block';
 			pinfo.style.display = 'none';
 			backb.style.display = 'none';
+			pcart.style.display = 'none';
 
 		}
 		else {
@@ -424,8 +477,13 @@ class Render {
 			request.handler		= 'producter';
 			request.product		= new_paging_state.product_;
 
-			this.assemble_info(new_paging_state, post_json_sync('proxy.php', request));
+			let data = post_json_sync('proxy.php', request);
+			ellapsed = data.ellapsed;
 
+			this.assemble_info(new_paging_state, data);
+			this.assemble_cart_informer(new_paging_state);
+
+			pcart.style.display = 'none';
 			pctrl.style.display = 'none';
 			plist.style.display = 'none';
 			pinfo.style.display = 'inline-block';
@@ -439,25 +497,50 @@ class Render {
 			e.setAttribute('fadein', '');
 		}
 
+		this.debug_ellapsed(1, start, ellapsed, 'PAGE: ');
+
 	}
 
-	assemble_cart_informer(paging_state, cart) {
-	}
+	rewrite_cart_informer(new_paging_state) {
 
-	rewrite_cart_informer(new_paging_state, buy_quantity) {
+		Render.debug(2);
+
+		let start = microtime();
+		let render = this;
+		let state = render.state_;
+
+		let pq = new_paging_state.products_[new_paging_state.product_];
 
 		let request = {
 			'module'		: 'cart',
-			'handler'		: 'cart',
-			'buy_product'	: new_paging_state.product_,
-			'buy_quantity'	: buy_quantity
+			'handler'		: 'cart'
 		};
+
+		if( new_paging_state.product_ && pq ) {
+
+			let cart_entity = state.cart_by_uuid_[new_paging_state.product_];
+
+			request.buy_product		= new_paging_state.product_;
+			request.buy_quantity	= pq.buy_quantity + (cart_entity ? cart_entity.buy_quantity : 0);
+
+			if( request.buy_quantity > pq.remainder )
+				request.buy_quantity = pq.remainder;
+
+		}
 
 		let data = post_json_sync('proxy.php', request);
 
-		this.assemble_cart_informer(new_paging_state, cart);
+		data.cart_by_uuid = {};
 
-		return data.cart;
+		for( let e of data.cart )
+			data.cart_by_uuid[e.uuid] = e;
+
+		this.assemble_cart_informer(new_paging_state, data);
+
+		state.cart_ = data.cart;
+		state.cart_by_uuid_ = data.cart_by_uuid;
+
+		this.debug_ellapsed(2, start, data.ellapsed, 'PCIN: ');
 
 	}
 
@@ -494,23 +577,28 @@ class Render {
 		// set events for new a[@btc] elements
 		state.setup_events(xpath_eval('div[@btc]', element));
 
-		render.rewrite_page(state.paging_state_by_category_[state.category_]);
+		let paging_state = state.paging_state_by_category_[state.category_];
+
+		render.rewrite_page(paging_state);
+		render.rewrite_cart_informer(paging_state);
+
 		render.debug_ellapsed(0, start, data.ellapsed, 'CATG: ');
 
 	}
 
 	rewrite_category() {
 
+		Render.debug(0);
+
 		let start = microtime();
 		let state = this.state_;
-		let element = xpath_eval_single('//div[@categories]');
+		let element = xpath_eval_single('html/body/div[@categories]');
 		let request = {
 			'module'	: 'categorer',
 			'handler'	: 'categorer',
 			'parent'	: state.category_
 		};
 
-		Render.debug(0);
 
 		this.categories_data_ready(start, element, post_json_sync('proxy.php', request));
 
@@ -638,7 +726,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 					// switch off blinking current category
 					if( state.category_ !== null )
-						xpath_eval_single('//div[@categories]/div[@btc and @uuid=\'' + state.category_ + '\']').removeAttribute('blink');
+						xpath_eval_single('html/body/div[@categories]/div[@btc and @uuid=\'' + state.category_ + '\']').removeAttribute('blink');
 
 					state.category_ = new_category;
 
@@ -694,10 +782,9 @@ class HtmlPageEvents extends HtmlPageState {
 
 					if( attrs.buy ) {
 
-						let cart = render.rewrite_cart_informer(new_paging_state);
+						render.rewrite_cart_informer(new_paging_state);
 						// success rewrite page, save new state
 						state.paging_state_by_category_[state.category_] = new_paging_state;
-						state.cart_ = cart;
 
 					}
 					else if( attrs.plus_one ) {
@@ -779,10 +866,10 @@ class HtmlPageManager extends HtmlPageEvents {
 
 		Render.hide_cursor();
 
-		this.setup_events(xpath_eval('//div[@back]'));
-		this.setup_events(xpath_eval('//div[@plist_controls]/div[@prev_page or @next_page or @first_page or @last_page]'));
-		this.setup_events(xpath_eval('//div[@psort_controls]/div[@list_sort_order or @list_sort_direction]'));
-		this.setup_events(xpath_eval('//div[@pinfo]/div[@pright]/div[@buy or @plus_one or @minus_one]'));
+		this.setup_events(xpath_eval('html/body/div[@back]'));
+		this.setup_events(xpath_eval('html/body/div[@pcontrols]/div[@plist_controls]/div[@prev_page or @next_page or @first_page or @last_page]'));
+		this.setup_events(xpath_eval('html/body/div[@pcontrols]/div[@psort_controls]/div[@list_sort_order or @list_sort_direction]'));
+		this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pright]/div[@buy or @plus_one or @minus_one]'));
 
 		this.render_ = new Render;
 		this.render_.state = this;

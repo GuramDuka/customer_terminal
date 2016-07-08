@@ -30,14 +30,24 @@ class cart_handler extends handler {
 
 			$buy_product_uuid = uuid2bin($buy_product);
 
-			$sql = 'REPLACE INTO cart (uuid, quantity) VALUES (:uuid, :quantity)';
+			$sql = <<<'EOT'
+				REPLACE INTO cart (product_uuid, quantity) VALUES (:uuid, :quantity)
+				/*SELECT
+					c.product_uuid			AS product_uuid,
+					c.quantity + :quantity	AS quantity
+				FROM
+					cart AS c
+				WHERE
+					c.product_uuid = :uuid*/
+EOT
+			;
 
-			$this->infobase_->dump_plan($sql);
+			//$this->infobase_->dump_plan($sql);
 
 			$start_time_st = micro_time();
 
 			$st = $this->infobase_->prepare($sql);
-			$st->bindValue(':uuid'		, $buy_product_uuid);
+			$st->bindValue(':uuid'		, $buy_product_uuid, SQLITE3_BLOB);
 			$st->bindValue(':quantity'	, $buy_quantity);
 			$st->execute();
 
@@ -55,19 +65,17 @@ class cart_handler extends handler {
 
 		$sql = <<<EOT
 			SELECT
-				b.uuid					AS uuid,
+				a.uuid					AS uuid,
 				b.quantity				AS buy_quantity,
 				a.code					AS code,
 				a.name					AS name,
-				a.base_image_uuid		AS base_image_uuid,
+				i.uuid					AS base_image_uuid,
 				i.ext					AS base_image_ext,
 				q.quantity				AS remainder,
 				p.price					AS price,
 				COALESCE(r.quantity, 0)	AS reserve
 			FROM
-				cart AS b
-					INNER JOIN products AS a
-					ON b.uuid = a.uuid
+					products AS a
 					INNER JOIN images AS i
 					ON a.base_image_uuid = i.uuid
 					INNER JOIN prices_registry AS p
@@ -76,6 +84,10 @@ class cart_handler extends handler {
 					ON a.uuid = q.product_uuid
 					LEFT JOIN reserves_registry AS r
 					ON a.uuid = r.product_uuid
+          			INNER JOIN cart AS b
+          			ON a.uuid = b.product_uuid
+     		WHERE
+				a.uuid IN (select product_uuid FROM cart)
 			ORDER BY
 				a.name
 EOT
@@ -95,7 +107,7 @@ EOT
 
 			$cart[] = [
 				'uuid'			=> bin2uuid($uuid),
-				'buy_quantity'	=> $quantity,
+				'buy_quantity'	=> $buy_quantity,
 				'code'			=> $code,
 				'name'			=> htmlspecialchars($name, ENT_HTML5),
 				'price'			=> $price,
