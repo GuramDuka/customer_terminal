@@ -59,16 +59,6 @@ EOT
 
 		$result = $st->execute();
 
-		if( config::$pager_timing ) {
-
-			$finish_time = micro_time();
-			$ellapsed_ms = bcsub($finish_time, $start_time_st);
-			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
-
-	    	error_log('page fetch, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
-
-		}
-
 		$page = [];
 
 		while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
@@ -88,6 +78,16 @@ EOT
 		}
 
 		$this->response_['products'] = $page;
+
+		if( config::$pager_timing ) {
+
+			$finish_time = micro_time();
+			$ellapsed_ms = bcsub($finish_time, $start_time_st);
+			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
+
+	    	error_log('page fetch, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+
+		}
 
 		$r = $this->infobase_->query("SELECT max(pgnon) FROM ${category_table}");
 		list($pgnon) = $r->fetchArray(SQLITE3_NUM);

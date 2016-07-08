@@ -2,7 +2,8 @@
 //------------------------------------------------------------------------------
 namespace { // global
 //------------------------------------------------------------------------------
-define('APP_DIR', realpath(__DIR__) . DIRECTORY_SEPARATOR);
+define('APP_DIR', realpath(__DIR__ . DIRECTORY_SEPARATOR
+	. '..' . DIRECTORY_SEPARATOR . '..') . DIRECTORY_SEPARATOR);
 define('CORE_DIR', APP_DIR . 'core' . DIRECTORY_SEPARATOR);
 //------------------------------------------------------------------------------
 require_once CORE_DIR . 'startup.php';
@@ -16,17 +17,23 @@ try {
 
 	$start_time = micro_time();
 
-	$infobase = new srv1c\infobase;
-	$infobase->set_create_if_not_exists(false);
-	$infobase->initialize();
+	$infobase = null;
 
-	//header('Content-Type: text/event-stream');
-	header("Content-Type: text/event-stream\n\n");
+	header('Content-Type: text/event-stream');
 	header('Cache-Control: no-cache');
+	header('Connection: keep-alive');
 
 	$counter = rand(1, 10);
 
 	while( true ) {
+
+		if( $infobase === null ) {
+
+			$infobase = new srv1c\infobase;
+			$infobase->set_create_if_not_exists(false);
+			$infobase->initialize();
+
+		}
 
 		// Every second, sent a "ping" event.
   

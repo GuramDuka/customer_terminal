@@ -21,9 +21,10 @@ class config extends \config {
 	public static $rewrite_pages_timing							= false;
 	public static $pager_timing									= true;
 	public static $producter_timing								= true;
+	public static $cart_timing									= true;
 	public static $log_timing									= true;
 	public static $page_size									= 6;
-	public static $convert_images								= true;
+	public static $convert_images								= false;
 	public static $images_format								= 'jpg';
 	public static $images_interlace								= true;
 	public static $images_compression_quality					= 85;

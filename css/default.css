@@ -5,6 +5,18 @@
 
 @media screen, print {
 
+	/* disable text selection */
+	* {
+		z-index				: 100;
+		-webkit-touch-callout: none;	/* iOS Safari */
+		-webkit-user-select	: none;		/* Chrome/Safari/Opera */
+		-o-user-select		: none;
+		-khtml-user-select	: none;		/* Konqueror */
+		-moz-user-select	: none;		/* Firefox */
+		-ms-user-select		: none;		/* Internet Explorer/Edge */
+		user-select			: none;		/* Non-prefixed version, currently not supported by any browser */
+	}
+
 	body {
 		background-color	: white;
 		border				: solid 0px black;
@@ -84,20 +96,86 @@
 		margin-bottom		: 3px;
 	}
 
-	div[mag] {
+	div[top]>div[mag] {
 		width				: auto;
 		height				: inherit;
 		text-align			: left;
 		float				: left;
 	}
 
-	div[logo] {
-		width				: auto;
+	div[top]>div[logo] {
+		width				: 17.5%;
 		height				: 100%;
-		margin-right		: 8px;
+		background-color	: transparent;
+		background-size		: contain;
+		background-repeat	: no-repeat;
+		background-position	: center;
+		background-image	: url(/resources/assets/logo.jpg)/*, linear-gradient(transparent, gold)*/;
 	}
 
-	div[logo]>img {
+	div[top]>div[cart_informer] {
+		float				: right;
+		width				: 31%;
+		height				: 92%;
+		margin-top			: 1px;
+		margin-right		: 1px;
+		border				: 3px solid lightgray;
+		border-radius		: 5px;
+		box-shadow			: none;
+		background			:
+								radial-gradient(rgba(155, 155, 155, .2) 15%, transparent 16%) 0 0,
+								radial-gradient(rgba(155, 155, 155, .2) 15%, transparent 16%) 8px 8px,
+								radial-gradient(rgba(255, 255, 255, .1) 15%, transparent 20%) 0 1px,
+								radial-gradient(rgba(255, 255, 255, .1) 15%, transparent 20%) 8px 9px;
+		background-color	: rgba(255, 200, 0, .5);
+		background-size		: 16px 16px;
+		text-align			: center;
+	}
+
+	div[top]>div[cart_informer]>div[binfo] {
+		float				: none;
+		width				: auto;
+		height				: auto;
+		margin-bottom		: 3px;
+	}
+
+	div[top]>div[cart_informer]>div[binfo]>span {
+		width				: auto;
+		height				: auto;
+		float				: left;
+		font-size			: 28px;
+		font-weight			: bolder;
+		text-overflow		: ellipsis;
+		font-stretch		: ultra-condensed;
+		text-decoration		: none;
+		text-transform		: uppercase;
+		font-family			: droid;
+		margin-left		: 3px;
+	}
+
+	div[top]>div[cart_informer]>img[cart_state] {
+		width				: auto;
+		height				: auto;
+		margin-top			: 3px;
+		margin-left			: 12px;
+	}
+
+	div[top]>div[cart_informer]>div[btn][cart], div[top]>div[cart_informer]>div[btn][check] {
+		float				: right;
+		margin-right		: 3px;
+	}
+
+	div[top]>div[cart_informer]>div[btn][cart]>img[btn_ico] {
+		/* fix: shift down */
+		margin-top			: -1.1%;
+	}
+
+	div[top]>div[cart_informer]>div[btn][check]>img[btn_ico] {
+		/* fix: shift down */
+		margin-top			: -1.1%;
+	}
+
+	div[top]>div[logo]>img {
 		height				: 100%;
 	}
 
@@ -163,13 +241,6 @@
 		font-size			: 22px;
 		font-weight			: bolder;
 		float				: none;
-	}
-
-	div[pinfo]>div[pright]>p[pprice], div[pinfo]>div[pright]>p[pquantity] {
-		font-stretch		: ultra-condensed;
-		text-overflow		: ellipsis;
-		text-decoration		: none;
-		text-transform		: uppercase;
 	}
 
 	div[pinfo]>div[pmid]>div[pproperties] {
@@ -256,13 +327,51 @@
 		font-stretch		: ultra-condensed;
 	}
 
-	div[pinfo]>div[pright]>p[pprice],div[pinfo]>div[pright]>p[pquantity] {
+	div[pinfo]>div[pright]>p[pprice], div[pinfo]>div[pright]>p[pquantity] {
 		float				: none;
 		width				: auto;
 		text-align			: left;
 		text-overflow		: ellipsis;
 		font-stretch		: ultra-condensed;
 		font-family			: droid;
+	}
+
+	div[pinfo]>div[pright]>div[minus_one] {
+		float				: left;
+		width				: auto;
+		margin-top			: 8px;
+		margin-bottom		: 8px;
+	}
+
+	div[pinfo]>div[pright]>p[pbuy_quantity] {
+		float				: left;
+		width				: auto;
+		text-align			: left;
+		text-overflow		: ellipsis;
+		font-stretch		: ultra-condensed;
+		font-size			: 32px;
+		font-weight			: bold;
+		text-transform		: uppercase;
+		font-family			: droid;
+		margin-left			: 8px;
+		margin-right		: 8px;
+		margin-top			: 8px;
+		margin-bottom		: 8px;
+	}
+
+	div[pinfo]>div[pright]>div[plus_one] {
+		float				: left;
+		width				: auto;
+		margin-top			: 8px;
+		margin-bottom		: 8px;
+	}
+
+	div[pinfo]>div[pright]>div[buy] {
+		float				: left;
+		width				: auto;
+		margin-left			: 16px;
+		margin-top			: 8px;
+		margin-bottom		: 8px;
 	}
 
 	div[pinfo]>div[pright]>div[premainders] {
@@ -319,11 +428,16 @@
 		padding-right		: 5%;
 	}
 
-	div[pitem] {
+	div[plist]>div[pitem]>div[btn][buy]>img[btn_ico] {
+		/* fix: shift up */
+		margin-top			: -8.1%;
+	}
+
+	div[plist]>div[pitem] {
 		height				: 99%;
 	}
 
-	div[pitem]>div[pimg] {
+	div[plist]>div[pitem]>div[pimg] {
 		float				: none;
 		width				: 100%;
 		height				: 50%;
@@ -335,14 +449,14 @@
 		cursor				: pointer;
 	}
 
-	div[pitem]>p[pname] {
+	div[plist]>div[pitem]>p[pname] {
 		float				: none;
 		overflow			: hidden;
 		height				: 19%;
 		margin-bottom		: 3px;
 	}
 
-	div[pitem]>p[pprice], div[pitem]>p[pquantity] {
+	div[plist]>div[pitem]>p[pprice], div[plist]>div[pitem]>p[pquantity] {
 		float				: none;
 		overflow			: hidden;
 		margin-bottom		: 3px;
@@ -380,30 +494,22 @@
 		margin-right		: 3px;
 	}
 
-	div[bottom] {
-		height				: 200px;
-	}
-
 	div[mount] {
+		float				: none;
+		background-color	: transparent;
+		background-size		: contain;
+		background-repeat	: no-repeat;
+		background-position	: center;
+		background-image	:
+								url(/resources/assets/mount.png),
+								linear-gradient(transparent, gold);
+								/*linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet),*/
+		position			: fixed;
+		top					: calc(100% - 142px);
+		left				: 0%;
 		width				: 100%;
-		height				: 50%;
-	}
-
-	div[mount]>img {
-		width				: 100%;
-		height				: 100%;
-	}
-
-	/* disable text selection */
-	* {
-		-webkit-touch-callout: none; /* iOS Safari */
-		-webkit-user-select: none;   /* Chrome/Safari/Opera */
-		-o-user-select: none;
-		-khtml-user-select: none;    /* Konqueror */
-		-moz-user-select: none;      /* Firefox */
-		-ms-user-select: none;       /* Internet Explorer/Edge */
-		user-select: none;           /* Non-prefixed version, currently
-                                  not supported by any browser */
+		height				: 145px;
+		z-index				: 1;
 	}
 
 	p[debug] {
@@ -439,7 +545,7 @@
 	}
 
 	*[fadein] {
-		animation			: fadein 300ms;
+		animation			: fadein 200ms;
 	}
 
 }

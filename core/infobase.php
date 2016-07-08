@@ -29,14 +29,15 @@ class infobase extends \SQLite3 {
 
 		if( $new_ib ) {
 			$this->exec('PRAGMA page_size = 4096');
-			$this->exec('PRAGMA cache_size = -131072'); // 524288
 			$this->exec('PRAGMA count_changes = OFF');
 			$this->exec('PRAGMA synchronous = NORMAL');
 			$this->exec('PRAGMA journal_mode = WAL');
 			$this->exec('PRAGMA temp_store = MEMORY');
-			$this->exec('PRAGMA auto_vacuum = NONE');
 			$this->exec('PRAGMA default_cache_size = -131072');
 		}
+
+		$this->exec('PRAGMA cache_size = -131072'); // 524288
+		$this->exec('PRAGMA auto_vacuum = NONE');
 
 		$this->busyTimeout(180000);
 
@@ -414,6 +415,14 @@ EOT
 		$this->create_unique_indexes_on_registry('system_remainders_registry', $dimensions);
 
 		$this->exec($this->create_table_products_pages('products_pages'));
+
+		$this->exec(<<<'EOT'
+			CREATE TABLE IF NOT EXISTS cart (
+				product_uuid	BLOB PRIMARY KEY ON CONFLICT REPLACE,
+				quantity		NUMERIC
+			) WITHOUT ROWID
+EOT
+		);
 
 	}
 

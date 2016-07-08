@@ -6,13 +6,14 @@ class HtmlPageState {
 	get paging_state_template() {
 
 		return {
-			category_	: null,
-			product_	: null,
-			pgno_		: 0,
-			pages_ 		: 0,
-			page_size_	: 0,
-			order_		: 1,
-			direction_	: 0
+			category_				: null,
+			product_				: null,
+			products_				: {},
+			pgno_					: 0,
+			pages_ 					: 0,
+			page_size_				: 0,
+			order_					: 1,
+			direction_				: 0
 		};
 
 	}
@@ -21,9 +22,9 @@ class HtmlPageState {
 
 		// paging
 
-		this.directions_ = [ 'asc', 'desc' ];
+		this.directions_	= [ 'asc', 'desc' ];
 
-		this.orders_ = [
+		this.orders_		= [
 			{
 				name		: 'code',
 				display		: 'Код',
@@ -80,10 +81,10 @@ class HtmlPageState {
 			null : Object.assign({}, this.paging_state_template)
 		};
 
+		this.cart_			= null;
+
 		// render
 		this.start_ 		= 0;
-		this.wait_images_	= false;
-		this.request_		= null;
 
 	}
 
@@ -183,7 +184,10 @@ class Render {
 					+ '<p pname></p>'
 					+ '<p pprice></p>'
 					+ '<p pquantity></p>'
-					+ '<div btn buy>КУПИТЬ</div>'
+					+ '<div btn buy>'
+					+ '<img btn_ico src="/resources/assets/cart/cart_put.ico">'
+					//+ '<span btn_txt>КУПИТЬ</span>'
+					+ '</div>'
 					+ '</div>';
 				;
 
@@ -285,9 +289,37 @@ class Render {
 
 	}
 
+
+	static display_product_buy_quantity(quantity) {
+
+		xpath_eval_single('//div[@pinfo]/div[@pright]/p[@pbuy_quantity]').innerHTML = quantity;
+
+	}
+
 	assemble_info(paging_state, data) {
 
 		let product = data.product;
+		let pq = paging_state.products_[product.uuid];
+
+		if( pq ) {
+
+			pq.remainder = product.remainder;
+
+		}
+		else {
+
+			pq = {
+				'remainder'		: product.remainder,
+				'buy_quantity'	: 1
+			};
+
+			paging_state.products_[product.uuid] = pq;
+
+		}
+
+		if( pq.buy_quantity > pq.remainder )
+			pq.buy_quantity = pq.remainder;
+
 		let pinfo_element = xpath_eval_single('//div[@pinfo]');
 
 		pinfo_element.setAttribute('uuid', product.uuid);
@@ -332,6 +364,8 @@ class Render {
 
 		xpath_eval_single('div[@pright]/p[@pprice]', pinfo_element).innerHTML		= 'Цена&nbsp;&nbsp;&nbsp;:&nbsp;' + Math.trunc(product.price) + '&nbsp;₽';
 		xpath_eval_single('div[@pright]/p[@pquantity]', pinfo_element).innerHTML	= 'Остаток:&nbsp;' + this.get_remainder(product) + this.get_reserve(product);
+		
+		Render.display_product_buy_quantity(paging_state.product_buy_quantity_);
 
 		html = '';
 
@@ -407,6 +441,26 @@ class Render {
 
 	}
 
+	assemble_cart_informer(paging_state, cart) {
+	}
+
+	rewrite_cart_informer(new_paging_state, buy_quantity) {
+
+		let request = {
+			'module'		: 'cart',
+			'handler'		: 'cart',
+			'buy_product'	: new_paging_state.product_,
+			'buy_quantity'	: buy_quantity
+		};
+
+		let data = post_json_sync('proxy.php', request);
+
+		this.assemble_cart_informer(new_paging_state, cart);
+
+		return data.cart;
+
+	}
+
 	categories_data_ready(start, element, data) {
 
 		let render = this;
@@ -458,9 +512,7 @@ class Render {
 
 		Render.debug(0);
 
-		let data = post_json_sync('proxy.php', request);
-		
-		this.categories_data_ready(start, element, data);
+		this.categories_data_ready(start, element, post_json_sync('proxy.php', request));
 
 	}
 
@@ -619,6 +671,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 					// switch view to product info
 					new_paging_state.product_ = element.parentNode.attributes.uuid.value;
+					new_paging_state.product_buy_quantity_ = 1;
 
 					render.rewrite_page(new_paging_state);
 					// success rewrite page, save new state
@@ -632,6 +685,45 @@ class HtmlPageEvents extends HtmlPageState {
 					render.rewrite_page(new_paging_state);
 					// success rewrite page, save new state
 					state.paging_state_by_category_[state.category_] = new_paging_state;
+
+				}
+				else if( element.parentNode.attributes.pright
+					&& element.parentNode.parentNode.attributes.pinfo ) {
+
+					let pq = new_paging_state.products_[new_paging_state.product_];
+
+					if( attrs.buy ) {
+
+						let cart = render.rewrite_cart_informer(new_paging_state);
+						// success rewrite page, save new state
+						state.paging_state_by_category_[state.category_] = new_paging_state;
+						state.cart_ = cart;
+
+					}
+					else if( attrs.plus_one ) {
+						
+						if( pq.buy_quantity < pq.remainder ) {
+
+							pq.buy_quantity++;
+
+							Render.display_product_buy_quantity(pq.buy_quantity);
+							state.paging_state_by_category_[state.category_] = new_paging_state;
+
+						}
+
+					}
+					else if( attrs.minus_one ) {
+
+						if( pq.buy_quantity > 1 ) {
+
+							pq.buy_quantity--;
+
+							Render.display_product_buy_quantity(pq.buy_quantity);
+							state.paging_state_by_category_[state.category_] = new_paging_state;
+
+						}
+
+					}
 
 				}
 				break;
@@ -690,6 +782,7 @@ class HtmlPageManager extends HtmlPageEvents {
 		this.setup_events(xpath_eval('//div[@back]'));
 		this.setup_events(xpath_eval('//div[@plist_controls]/div[@prev_page or @next_page or @first_page or @last_page]'));
 		this.setup_events(xpath_eval('//div[@psort_controls]/div[@list_sort_order or @list_sort_direction]'));
+		this.setup_events(xpath_eval('//div[@pinfo]/div[@pright]/div[@buy or @plus_one or @minus_one]'));
 
 		this.render_ = new Render;
 		this.render_.state = this;
@@ -703,8 +796,11 @@ let manager = null;
 let msg_source = null;
 //------------------------------------------------------------------------------
 function core() {
-
+/*
 	// https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
+	// http://www.html5rocks.com/en/tutorials/eventsource/basics/
+	// http://stackoverflow.com/questions/9070995/html5-server-sent-events-prototyping-ambiguous-error-and-repeated-polling
+	// http://stackoverflow.com/questions/14202191/broadcasting-messages-with-server-sent-events
 	// SSE Server-Side Events
 	msg_source = new EventSource('message.php');
 
@@ -713,6 +809,22 @@ function core() {
 		//new_element.innerHTML = 'message: ' + e.data;
 		//eventList.appendChild(new_element);
 		Render.debug(7, 'message: ' + e.data);
+
+switch (mgs_source.readyState) {
+  case EventSource.CONNECTING:
+    // do something
+    break;
+  case EventSource.OPEN:
+    // do something
+    break;
+  case EventSource.CLOSED:
+    // do something
+    break;
+  default:
+    // this never happens
+    break;
+}
+
 	};
 
 	msg_source.addEventListener('ping', function (e) {
@@ -726,7 +838,7 @@ function core() {
 	msg_source.onerror = function (e) {
 		console.log('EventSource failed.', e);
 	};
-
+*/
 	manager = new HtmlPageManager;
 
 }

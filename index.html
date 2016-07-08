@@ -22,11 +22,24 @@
 			<p debug8></p><p debug9></p>
 		</div>
 		<div top>
-			<div logo>
-				<img alt="" src="/resources/assets/logo.jpg">
-			</div>
+			<div logo></div>
 			<div mag>
 				<p>Ваш магазин:<br>г. Липецк<br>ул. Ударников, д. 97</p>
+			</div>
+			<div cart_informer>
+				<div binfo>
+					<span>В корзине: 0 товаров</span>
+					<span>На сумму : 100&nbsp;₽</span>
+				</div>
+				<img cart_state src="/resources/assets/cart/cart.ico">
+				<div btn check>
+					<img btn_ico src="/resources/assets/cheque.ico">
+					<span btn_txt>ПРЕЧЕК</span>
+				</div>
+				<div btn cart>
+					<img btn_ico src="/resources/assets/cart/cart_edit.ico">
+					<span btn_txt>РЕДАКТИРОВАТЬ</span>
+				</div>
 			</div>
 		</div>
 		<div categories>
@@ -48,12 +61,16 @@
 			<div pright>
 				<p pprice></p>
 				<p pquantity></p>
-				<div btn plus_one fadein="oneshot">
-					<img btn_ico src="/resources/assets/plus_button.ico">
+				<div btn minus_one fadein="oneshot">
+					<img btn_ico src="/resources/assets/minus.ico">
 				</div>
 				<p pbuy_quantity>1</p>
-				<div btn minus_one fadein="oneshot">
-					<img btn_ico src="/resources/assets/minus_button.ico">
+				<div btn plus_one fadein="oneshot">
+					<img btn_ico src="/resources/assets/plus.ico">
+				</div>
+				<div btn buy>
+					<img btn_ico src="/resources/assets/cart/cart_put.ico">
+					<span btn_txt>КУПИТЬ</span>
 				</div>
 				<hr><p premainders_head>Наличие в магазинах</p><hr>
 				<div premainders>
@@ -76,26 +93,21 @@
 					<img btn_ico_condensed src="/resources/assets/arrows/arrow_left.ico">
 				</div>
 				<div btn prev_page fadein="oneshot">
-					<span btn_txt>3</span>
+					<span btn_txt></span>
 					<img btn_ico src="/resources/assets/arrows/arrow_left.ico">
 				</div>
 				<div btn next_page fadein="oneshot">
 					<img btn_ico src="/resources/assets/arrows/arrow_right.ico">
-					<span btn_txt>4</span>
+					<span btn_txt></span>
 				</div>
 				<div btn last_page fadein="oneshot">
 					<img btn_ico_condensed src="/resources/assets/arrows/arrow_right.ico">
 					<img btn_ico_condensed src="/resources/assets/arrows/arrow_right.ico">
-					<span btn_txt>56</span>
+					<span btn_txt></span>
 				</div>
 			</div>
 		</div>
-		<div bottom>
-			<div mount>
-				<img alt="" src="/resources/assets/mount.png">
-			</div>
-			<p>Чтото внизу</p>
-		</div>
+		<div mount></div>
 		<script type="text/javascript" src="js/startup.js"></script>
 		<script type="text/javascript" src="js/core.js"></script>
 		<!--<script type="text/javascript" src="js/prefetch.js"></script>-->
