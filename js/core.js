@@ -6,10 +6,6 @@ class HtmlPageState {
 	get paging_state_template() {
 
 		return {
-			category_				: null,
-			product_				: null,
-			products_				: {},
-			cart_edit_				: false,
 			pgno_					: 0,
 			pages_ 					: 0,
 			page_size_				: 0,
@@ -76,17 +72,21 @@ class HtmlPageState {
 			}
 		];
 
-		this.category_		= null;
-
-		this.paging_state_by_category_ = {
-			null : Object.assign({}, this.paging_state_template)
+		this.page_state_	= {
+			category_					: null,
+			paging_state_by_category_	: {
+				null : Object.assign({}, this.paging_state_template)
+			},
+			product_					: null,
+			cart_edit_					: false,
+			cart_pgno_					: 0,
+			cart_						: [],
+			cart_by_uuid_				: {}
 		};
 
-		this.cart_			= [];
-		this.cart_by_uuid_	= {};
-
 		// render
-		this.start_ 		= 0;
+		this.start_ 		= microtime();
+		this.ellapsed_		= 0;
 
 	}
 
@@ -130,12 +130,13 @@ class Render {
 
 	}
 
-	debug_ellapsed(level, start, http_ellapsed, prefix = '') {
+	debug_ellapsed(level, prefix = '') {
 
+		let state = this.state_;
 		let finish = microtime();
-		let ellapsed = finish - start;
+		let ellapsed = (finish - state.start_) + state.ellapsed_;
 
-		Render.debug(level, prefix + ellapsed_time_string(ellapsed) + ', ' + http_ellapsed);
+		Render.debug(level, prefix + ellapsed_time_string(ellapsed));
 
 	}
 
@@ -155,30 +156,29 @@ class Render {
 		*/
 	}
 
-	assemble_page(new_paging_state, data) {
+	assemble_page(new_page_state, data) {
 
-		let render = this;
-		let state = render.state_;
-		let paging_state = new_paging_state;
+		let state = this.state_;
+		let new_paging_state = new_page_state.paging_state_by_category_[new_page_state.category_];
 
-		paging_state.page_size_	= data.page_size;
-		paging_state.pages_		= data.pages;
+		new_paging_state.page_size_	= data.page_size;
+		new_paging_state.pages_		= data.pages;
 
 		// if pages changed suddenly
-		if( paging_state.pgno_ >= paging_state.pages_ ) {
-			paging_state.pgno_ = paging_state.pages_ > 0 ? paging_state.pages_ - 1 : 0;
-			render.rewrite_page();
+		if( new_paging_state.pgno_ >= new_paging_state.pages_ ) {
+			new_paging_state.pgno_ = new_paging_state.pages_ > 0 ? new_paging_state.pages_ - 1 : 0;
+			this.rewrite_page(new_page_state);
 			return;
 		}
 
-		let element = xpath_eval_single('html/body/div[@plist]');
+		let element = xpath_eval_single('html/body/div[@plist]/div[@ptable]');
 
 		if( element.innerHTML.isEmpty() ) {
 
 			// create products page list and install events
 			let html = '';
 
-			for( let i = 0; i < paging_state.page_size_; i++ )
+			for( let i = 0; i < new_paging_state.page_size_; i++ )
 				html +=
 					'<div pitem="' + i + '" fadein>'
 					+ '<div pimg></div>'
@@ -194,32 +194,22 @@ class Render {
 
 			element.innerHTML = html;
 
-			this.state_.setup_events(xpath_eval('div[@pitem]', element), false);
-			this.state_.setup_events(xpath_eval('div[@pitem]/div[@pimg]', element));
+			state.setup_events(xpath_eval('div[@pitem]/div[@pimg]', element));
+			state.setup_events(xpath_eval('div[@pitem]/div[@btn]', element));
 
 		}
 
 		let products = data.products;
 		let style = {};
 
-		let item_width = 99.0 / paging_state.page_size_;
+		let item_width = 99.0 / new_paging_state.page_size_;
 
-		if( paging_state.item_width_ !== item_width ) {
+		if( new_paging_state.item_width_ !== item_width ) {
 			style.width = sprintf('%.5f', item_width) + '%';
-			paging_state.item_width_ = item_width;
+			new_paging_state.item_width_ = item_width;
 		}
 
 		let items = xpath_eval('div[@pitem]', element);
-
-		//let head = document.getElementsByTagName('head')[0];
-		//
-		//for( let a of items ) {
-		//	let i = parseInt(a.attributes.pitem.value, 10);
-		//	let lnk = document.createElement('link');
-		//	lnk.setAttribute('rel', 'prefetch');
-		//	lnk.setAttribute('href', products[i].img_url);
-		//	head.appendChild(lnk);
-		//}
 
 		for( let a of items ) {
 
@@ -231,10 +221,12 @@ class Render {
 				let product = products[i];
 
 				uuid		= product.uuid;
-				name		= product.name + '[' + product.code + ']';
+				name		= product.name + ' [' + product.code + ']';
 				img_url 	= product.img_url;
 				price		= Math.trunc(product.price) + '&nbsp;₽';
 				quantity	= this.get_remainder(product) + this.get_reserve(product);
+
+				style.visibility = 'visible';
 
 				a.setAttribute('uuid'		, uuid);
 				a.setAttribute('remainder'	, product.remainder);
@@ -242,6 +234,8 @@ class Render {
 
 			}
 			else {
+
+				style.visibility = 'hidden';
 
 				a.removeAttribute('uuid');
 				a.removeAttribute('remainder');
@@ -254,7 +248,7 @@ class Render {
 			xpath_eval_single('p[@pprice]'		, a).innerHTML	= price;
 			xpath_eval_single('p[@pquantity]'	, a).innerHTML	= quantity;
 
-			style.float = i + 1 < paging_state.page_size_ ? 'left' : 'right';
+			style.float = i + 1 < new_paging_state.page_size_ ? 'left' : 'right';
 
 			for( let key in	style )
 				if( a.style[key] !== style[key] )
@@ -262,25 +256,25 @@ class Render {
 
 		}
 
-		let base = xpath_eval_single('html/body/div[@pcontrols]/div[@plist_controls]');
+		let base = xpath_eval_single('html/body/div[@plist]/div[@pcontrols]/div[@plist_controls]');
 
 		xpath_eval_single('div[@first_page]', base).style.display =
-			paging_state.pgno_ < 2 || paging_state.pages_ < 2  ? 'none' : 'inline-block';
+			new_paging_state.pgno_ < 2 || new_paging_state.pages_ < 2  ? 'none' : 'inline-block';
 		xpath_eval_single('div[@prev_page]', base).style.display =
-			paging_state.pgno_ === 0 || paging_state.pages_ < 2 ? 'none' : 'inline-block';
-		xpath_eval_single('div[@prev_page]/span[@btn_txt]', base).innerText = (paging_state.pgno_ + 1) - 1;
+			new_paging_state.pgno_ === 0 || new_paging_state.pages_ < 2 ? 'none' : 'inline-block';
+		xpath_eval_single('div[@prev_page]/span[@btn_txt]', base).innerText = (new_paging_state.pgno_ + 1) - 1;
 		xpath_eval_single('div[@next_page]', base).style.display =
-			paging_state.pgno_ > paging_state.pages_ - 2 || paging_state.pages_ < 2 ? 'none' : 'inline-block';
-		xpath_eval_single('div[@next_page]/span[@btn_txt]', base).innerText = (paging_state.pgno_ + 1) + 1;
+			new_paging_state.pgno_ > new_paging_state.pages_ - 2 || new_paging_state.pages_ < 2 ? 'none' : 'inline-block';
+		xpath_eval_single('div[@next_page]/span[@btn_txt]', base).innerText = (new_paging_state.pgno_ + 1) + 1;
 		xpath_eval_single('div[@last_page]', base).style.display =
-			paging_state.pgno_ > paging_state.pages_ - 3 || paging_state.pages_ < 3 ? 'none' : 'inline-block';
-		if( paging_state.pages_ > 0 )
-			xpath_eval_single('html/body/div[@pcontrols]/div[@plist_controls]/div[@last_page]/span[@btn_txt]').innerText = paging_state.pages_;
+			new_paging_state.pgno_ > new_paging_state.pages_ - 3 || new_paging_state.pages_ < 3 ? 'none' : 'inline-block';
+		if( new_paging_state.pages_ > 0 )
+			xpath_eval_single('html/body/div[@plist]/div[@pcontrols]/div[@plist_controls]/div[@last_page]/span[@btn_txt]').innerText = new_paging_state.pages_;
 
-		base = xpath_eval_single('html/body/div[@pcontrols]/div[@psort_controls]');
+		base = xpath_eval_single('html/body/div[@plist]/div[@pcontrols]/div[@psort_controls]');
 
-		let order = state.orders_[paging_state.order_];
-		let direction = state.directions_[paging_state.direction_];
+		let order = state.orders_[new_paging_state.order_];
+		let direction = state.directions_[new_paging_state.direction_];
 
 		xpath_eval_single('div[@list_sort_order]/span[@btn_txt]', base).innerText = '';//order.display;
 		xpath_eval_single('div[@list_sort_order]/img[@btn_ico]', base).src = order.ico[direction];
@@ -288,44 +282,22 @@ class Render {
 
 	}
 
-	static display_product_buy_quantity(quantity) {
+	assemble_info(new_page_state, data) {
 
-		xpath_eval_single('html/body/div[@pinfo]/div[@pright]/p[@pbuy_quantity]').innerHTML = quantity;
-
-	}
-
-	assemble_info(paging_state, data) {
-
-		let render = this;
-		let state = render.state_;
+		let state = this.state_;
 		let product = data.product;
-		let pq = paging_state.products_[product.uuid];
-
-		if( pq ) {
-
-			pq.remainder = product.remainder;
-
-		}
-		else {
-
-			pq = {
-				'remainder'		: product.remainder,
-				'buy_quantity'	: 1
-			};
-
-			paging_state.products_[product.uuid] = pq;
-
-		}
-
-		if( pq.buy_quantity > pq.remainder )
-			pq.buy_quantity = pq.remainder;
-
 		let pinfo_element = xpath_eval_single('html/body/div[@pinfo]');
+		let pbuy_quantity = xpath_eval_single('div[@pright]/p[@pbuy_quantity]', pinfo_element);
+		let cart_entity = new_page_state.cart_by_uuid_[product.uuid];
 
-		pinfo_element.setAttribute('uuid', product.uuid);
+		pbuy_quantity.innerText = cart_entity ? cart_entity.buy_quantity : '-';
+
+		pinfo_element.setAttribute('uuid'		, product.uuid);
+		pinfo_element.setAttribute('remainder'	, product.remainder);
+		pinfo_element.setAttribute('reserve'	, product.reserve);
 
 		xpath_eval_single('div[@pimg]', pinfo_element).style.backgroundImage = 'url(' + product.img_url + ')';
-		xpath_eval_single('div[@pmid]/p[@pname]', pinfo_element).innerHTML = product.name + '[' + product.code + ']';
+		xpath_eval_single('div[@pmid]/p[@pname]', pinfo_element).innerHTML = product.name + ' [' + product.code + ']';
 
 		let coefficients = [ 0, 0 ];
 		let html = '';
@@ -348,7 +320,7 @@ class Render {
 
 		// 13 rows -> 350px on my display debug
 		// x rows  <- y px  on target display
-		let y = sscanf(window.getComputedStyle(pinfo_element).height, '%u')[0];
+		let y = sscanf(getComputedStyle(pinfo_element).height, '%u')[0];
 		let x = y * 13 / 350;
 		let e = xpath_eval_single('div[@pmid]/div[@pproperties]', pinfo_element);
 		e.style.MozColumnCount = Math.trunc(data.properties.length / x) + 1;
@@ -364,11 +336,7 @@ class Render {
 
 		xpath_eval_single('div[@pright]/p[@pprice]'		, pinfo_element).innerHTML	= 'Цена&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;' + Math.trunc(product.price) + '&nbsp;₽';
 		xpath_eval_single('div[@pright]/p[@pquantity]'	, pinfo_element).innerHTML	= 'Остаток&nbsp;:&nbsp;' + this.get_remainder(product) + this.get_reserve(product);
-
-		let in_cart = state.cart_by_uuid_[product.uuid];
-		xpath_eval_single('div[@pright]/p[@pincart]'	, pinfo_element).innerHTML	= in_cart ? 'Заказано:&nbsp;' + in_cart.buy_quantity : '';
-
-		Render.display_product_buy_quantity(pq.buy_quantity);
+		xpath_eval_single('div[@pright]/p[@pincart]'	, pinfo_element).innerHTML	= cart_entity ? 'Заказано:&nbsp;' + cart_entity.buy_quantity : '';
 
 		html = '';
 
@@ -387,16 +355,10 @@ class Render {
 
 	}
 
-	assemble_cart(paging_state, data) {
+	assemble_cart_informer(new_page_state) {
 
 		let state = this.state_;
-
-	}
-
-	assemble_cart_informer(paging_state, data = null) {
-
-		let state = this.state_;
-		let cart = data ? data.cart : state.cart_;
+		let cart = new_page_state.cart_;
 		let pcrin = xpath_eval_single('html/body/div[@top]/div[@cart_informer]');
 
 		if( cart.length > 0 ) {
@@ -425,46 +387,224 @@ class Render {
 
 	}
 
-	rewrite_page(new_paging_state) {
+	assemble_cart(new_page_state, data) {
+
+		let state = this.state_;
+		let pcrin = xpath_eval_single('html/body/div[@top]/div[@cart_informer]/div[@btn and @cart]');
+		let element = xpath_eval_single('html/body/div[@pcart]/div[@ptable]');
+		let cart = new_page_state.cart_;
+		let page_size = new_page_state.cart_page_size_;
+
+		if( !page_size ) {
+			//let height = sscanf(getComputedStyle(element).height, '%u')[0];
+			//let line_height = sscanf(getComputedStyle(pcrin).height, '%u')[0];
+			//new_page_state.cart_page_size_ = page_size = Math.trunc(height / line_height);
+			new_page_state.cart_page_size_ = page_size = 9;
+		}
+
+		let pages = cart.length / page_size + (cart.length % page_size !== 0 ? 1 : 0);
+
+		if( element.innerHTML.isEmpty() ) {
+
+			let html = '';
+
+			for( let i = 0; i < page_size; i++ )
+				html = html
+					+ '<div pitem="' + i + '">'
+					+ '<span pno></span>'
+					+ '<div pimg></div>'
+					+ '<span pname></span>'
+					+ '<span pprice></span>'
+					+ '<span psum></span>'
+					+ '<div btn buy>'
+					+ '<img btn_ico src="/resources/assets/cart/cart_edit.ico">'
+					+ '<span btn_txt>ИЗМЕНИТЬ</span>'
+					+ '</div>'
+					+ '<div btn plus_one fadein="oneshot">'
+					+ '<img btn_ico src="/resources/assets/plus.ico">'
+					+ '</div>'
+					+ '<span pbuy_quantity></span>'
+					+ '<div btn minus_one fadein="oneshot">'
+					+ '<img btn_ico src="/resources/assets/minus.ico">'
+					+ '</div>'
+					+ '</div>'
+				;
+
+			element.innerHTML = html;
+
+			state.setup_events(xpath_eval('div[@pitem]/div[@btn]', element));
+
+		}
+
+		let items = xpath_eval('div[@pitem]', element);
+		let buy_quantity_one = true;
+
+		for( let a of items ) {
+
+			let i = parseInt(a.attributes.pitem.value, 10);
+
+			if( i < cart.length ) {
+
+				let n = i + new_page_state.cart_pgno_ * page_size;
+				let e = cart[n];
+
+				xpath_eval_single('span[@pno]'				, a).innerHTML				= n + 1;
+				xpath_eval_single('div[@pimg]'				, a).style.backgroundImage	= 'url(' + e.img_url + ')';
+				xpath_eval_single('span[@pname]'			, a).innerHTML				= e.name + ' [' + e.code + ']';
+				xpath_eval_single('span[@pprice]'			, a).innerHTML				= Math.trunc(e.price) + '&nbsp;₽';
+				xpath_eval_single('span[@psum]'				, a).innerHTML				= Math.trunc(e.price) * e.buy_quantity + '&nbsp;₽';
+				xpath_eval_single('span[@pbuy_quantity]'	, a).innerText				= e.buy_quantity;
+
+				if( e.buy_quantity > 1 )
+					buy_quantity_one = false;
+
+				a.setAttribute('uuid'		, e.uuid);
+				a.setAttribute('remainder'	, e.remainder);
+				a.setAttribute('reserve'	, e.reserve);
+
+				a.style.visibility = 'visible';
+
+			}
+			else {
+
+				a.style.visibility = 'hidden';
+
+			}
+
+		}
+
+		xpath_eval_single('div[@pcontrols]/div[@btn and @prev_page]', element.parentNode).style.display =
+			new_page_state.cart_pgno_ > 0 ? 'inline-block' : 'none';
+		xpath_eval_single('div[@pcontrols]/div[@btn and @next_page]', element.parentNode).style.display =
+			new_page_state.cart_pgno_ + 1 < pages ? 'inline-block' : 'none';
+
+		for( let a of xpath_eval('div[@pitem]/span[@psum]', element) )
+			a.style.display = buy_quantity_one ? 'none' : 'inline-block';
+
+	}
+
+	rewrite_info(new_page_state = null) {
 
 		let state = this.state_;
 
-		Render.debug(1);
-		Render.debug(2);
+		if( new_page_state === null )
+			new_page_state = state.page_state_;
 
-		let start = microtime();
-		let ellapsed = 0;
+		let request = {
+			'module'	: 'producter',
+			'handler'	: 'producter',
+			'product'	: new_page_state.product_
+		};
+
+		let data = post_json_sync('proxy.php', request);
+		state.ellapsed_ += data.ellapsed;
+
+		this.assemble_info(new_page_state, data);
+
+	}
+
+	rewrite_page(new_page_state = null) {
+
+		let state = this.state_;
+
+		if( new_page_state === null )
+			new_page_state = state.page_state_;
+
+		let new_paging_state = new_page_state.paging_state_by_category_[new_page_state.category_];
+		let request = {
+			'module'			: 'pager',
+			'handler'			: 'pager',
+			'category'			: new_page_state.category_,
+			'order'				: state.orders_[new_paging_state.order_].name,
+			'direction'			: state.directions_[new_paging_state.direction_],
+			'pgno'				: new_paging_state.pgno_
+		};
+
+		let data = post_json_sync('proxy.php', request);
+		state.ellapsed_ += data.ellapsed;
+
+		this.assemble_page(new_page_state, data);
+
+	}
+
+	rewrite_cart(new_page_state = null, product = null, quantity = null) {
+
+		let state = this.state_;
+
+		if( new_page_state === null )
+			new_page_state = state.page_state_;
+
+		let request = {
+			'module'		: 'carter',
+			'handler'		: 'carter'
+		};
+
+		for( let e of new_page_state.cart_ ) {
+
+			if( !e.modified )
+				continue;
+
+			if( !request.products )
+				request.products = [];
+
+			request.products.push({
+				'uuid'		: e.uuid,
+				'quantity'	: e.buy_quantity
+			});
+
+		}
+
+		if( product !== null && quantity !== null ) {
+
+			if( !request.products )
+				request.products = [];
+
+			request.products.push({
+				'uuid'		: product,
+				'quantity'	: quantity
+			});
+
+		}
+
+		let data = post_json_sync('proxy.php', request);
+		state.ellapsed_ += data.ellapsed;
+
+		data.cart_by_uuid = {};
+
+		for( let e of data.cart )
+			data.cart_by_uuid[e.uuid] = e;
+
+		new_page_state.cart_ = data.cart;
+		new_page_state.cart_by_uuid_ = data.cart_by_uuid;
+
+		this.assemble_cart_informer(new_page_state, data);
+		this.assemble_cart(new_page_state, data);
+
+	}
+
+	show_new_page_state(new_page_state = null) {
+
+		let state = this.state_;
+
+		if( new_page_state === null )
+			new_page_state = state.page_state_;
+
 		let plist = xpath_eval_single('html/body/div[@plist]');
 		let pinfo = xpath_eval_single('html/body/div[@pinfo]');
 		let backb = xpath_eval_single('html/body/div[@btn and @back]');
-		let pctrl = xpath_eval_single('html/body/div[@pcontrols]');
 		let pcart = xpath_eval_single('html/body/div[@pcart]');
 		let pcrin = xpath_eval_single('html/body/div[@top]/div[@cart_informer]');
-		let request = {};
 
-		if( new_paging_state.cart_edit_ ) {
+		if( new_page_state.cart_edit_ ) {
 
+			plist.style.display = 'none';
+			pinfo.style.display = 'none';
+			backb.style.display = 'inline-block';
 			pcart.style.display = 'inline-block';
 
-			//this.assemble_cart(new_paging_state, post_json_sync('proxy.php', request));
-
 		}
-		else if( new_paging_state.product_ === null ) {
+		else if( new_page_state.product_ === null ) {
 
-			request.module		= 'pager';
-			request.handler		= 'pager';
-			request.category	= new_paging_state.category_;
-			request.order		= state.orders_[new_paging_state.order_].name;
-			request.direction	= state.directions_[new_paging_state.direction_];
-			request.pgno		= new_paging_state.pgno_;
-
-			let data = post_json_sync('proxy.php', request);
-			ellapsed = data.ellapsed;
-
-			this.assemble_page(new_paging_state, data);
-			this.assemble_cart_informer(new_paging_state);
-
-			pctrl.style.display = 'inline-block';
 			plist.style.display = 'inline-block';
 			pinfo.style.display = 'none';
 			backb.style.display = 'none';
@@ -473,18 +613,7 @@ class Render {
 		}
 		else {
 
-			request.module		= 'producter';
-			request.handler		= 'producter';
-			request.product		= new_paging_state.product_;
-
-			let data = post_json_sync('proxy.php', request);
-			ellapsed = data.ellapsed;
-
-			this.assemble_info(new_paging_state, data);
-			this.assemble_cart_informer(new_paging_state);
-
 			pcart.style.display = 'none';
-			pctrl.style.display = 'none';
 			plist.style.display = 'none';
 			pinfo.style.display = 'inline-block';
 			backb.style.display = 'inline-block';
@@ -497,76 +626,42 @@ class Render {
 			e.setAttribute('fadein', '');
 		}
 
-		this.debug_ellapsed(1, start, ellapsed, 'PAGE: ');
-
 	}
 
-	rewrite_cart_informer(new_paging_state) {
+	rewrite_category(new_page_state = null) {
 
-		Render.debug(2);
+		let state = this.state_;
 
-		let start = microtime();
-		let render = this;
-		let state = render.state_;
+		if( new_page_state === null )
+			new_page_state = state.page_state_;
 
-		let pq = new_paging_state.products_[new_paging_state.product_];
-
+		let element = xpath_eval_single('html/body/div[@categories]');
 		let request = {
-			'module'		: 'cart',
-			'handler'		: 'cart'
+			'module'	: 'categorer',
+			'handler'	: 'categorer',
+			'parent'	: new_page_state.category_
 		};
 
-		if( new_paging_state.product_ && pq ) {
-
-			let cart_entity = state.cart_by_uuid_[new_paging_state.product_];
-
-			request.buy_product		= new_paging_state.product_;
-			request.buy_quantity	= pq.buy_quantity + (cart_entity ? cart_entity.buy_quantity : 0);
-
-			if( request.buy_quantity > pq.remainder )
-				request.buy_quantity = pq.remainder;
-
-		}
-
 		let data = post_json_sync('proxy.php', request);
-
-		data.cart_by_uuid = {};
-
-		for( let e of data.cart )
-			data.cart_by_uuid[e.uuid] = e;
-
-		this.assemble_cart_informer(new_paging_state, data);
-
-		state.cart_ = data.cart;
-		state.cart_by_uuid_ = data.cart_by_uuid;
-
-		this.debug_ellapsed(2, start, data.ellapsed, 'PCIN: ');
-
-	}
-
-	categories_data_ready(start, element, data) {
-
-		let render = this;
-		let state = render.state_;
 		let categories = data.categories;
 		let html = '';
 
 		for( let i = 0; i < categories.length; i++ ) {
 
 			let c = categories[i];
-			let paging_state = state.paging_state_by_category_[c.uuid];
+			let new_paging_state = new_page_state.paging_state_by_category_[c.uuid];
 
-			if( !paging_state ) {
+			if( !new_paging_state ) {
 
-				paging_state = Object.assign({}, state.paging_state_template);
-				paging_state.category_ = c.uuid;
-				state.paging_state_by_category_[c.uuid] = paging_state;
+				new_paging_state = Object.assign({}, state.paging_state_template);
+				new_paging_state.category_ = c.uuid;
+				new_page_state.paging_state_by_category_[c.uuid] = new_paging_state;
 
 			}
 
 			html +=
 				'<div btc uuid="' + c.uuid + '"'
-					+ (c.uuid === state.category_ ? ' blink' : '')
+					+ (c.uuid === new_page_state.category_ ? ' blink' : '')
 				+ '>' + c.name + '</div>'
 			;
 
@@ -576,31 +671,6 @@ class Render {
 
 		// set events for new a[@btc] elements
 		state.setup_events(xpath_eval('div[@btc]', element));
-
-		let paging_state = state.paging_state_by_category_[state.category_];
-
-		render.rewrite_page(paging_state);
-		render.rewrite_cart_informer(paging_state);
-
-		render.debug_ellapsed(0, start, data.ellapsed, 'CATG: ');
-
-	}
-
-	rewrite_category() {
-
-		Render.debug(0);
-
-		let start = microtime();
-		let state = this.state_;
-		let element = xpath_eval_single('html/body/div[@categories]');
-		let request = {
-			'module'	: 'categorer',
-			'handler'	: 'categorer',
-			'parent'	: state.category_
-		};
-
-
-		this.categories_data_ready(start, element, post_json_sync('proxy.php', request));
 
 	}
 
@@ -638,11 +708,20 @@ class HtmlPageEvents extends HtmlPageState {
 
 		let touchobj, startx, dist;
 
-		let state = this;
-		let render = this.render_;
-		let element = e.currentTarget;
-		let attrs = element.attributes;
-		let new_paging_state;
+		let state		= this;
+		let render		= this.render_;
+		let element		= e.currentTarget;
+		let attrs		= element.attributes;
+		let new_page_state, new_paging_state;
+
+		this.start_		= microtime();
+		this.ellapsed_	= 0;
+
+		let get_new_state = function () {
+			new_page_state				= Object.assign({}, state.page_state_);
+			new_page_state.modified_	= false;
+			new_paging_state			= new_page_state.paging_state_by_category_[new_page_state.category_];
+		};
 
 		switch( e.type ) {
 
@@ -661,156 +740,318 @@ class HtmlPageEvents extends HtmlPageState {
 
 			case 'touchend'		:
 
-				new_paging_state = Object.assign({}, state.paging_state_by_category_[state.category_]);
+				if( attrs.btn && attrs.prev_page
+					&& element.parentNode.attributes.plist_controls
+					&& element.parentNode.parentNode.attributes.pcontrols
+					&& element.parentNode.parentNode.parentNode.attributes.plist ) {
 
-				if( attrs.btn && attrs.prev_page ) {
+					get_new_state();
 
 					if( new_paging_state.pgno_ > 0 ) {
+
 						new_paging_state.pgno_--;
 						new_paging_state.product_ = null;
-						render.rewrite_page(new_paging_state);
-						// success rewrite page, save new state
-						state.paging_state_by_category_[state.category_] = new_paging_state;
+						new_page_state.modified_ = true;
+
+						render.rewrite_page(new_page_state);
+
 					}
 
 				}
-				else if( attrs.btn && attrs.next_page ) {
+				else if( attrs.btn && attrs.next_page
+					&& element.parentNode.attributes.plist_controls
+					&& element.parentNode.parentNode.attributes.pcontrols
+					&& element.parentNode.parentNode.parentNode.attributes.plist ) {
+
+					get_new_state();
 
 					if( new_paging_state.pgno_ + 1 < new_paging_state.pages_ ) {
+
 						new_paging_state.pgno_++;
 						new_paging_state.product_ = null;
-						render.rewrite_page(new_paging_state);
-						// success rewrite page, save new state
-						state.paging_state_by_category_[state.category_] = new_paging_state;
+						new_page_state.modified_ = true;
+
+						render.rewrite_page(new_page_state);
+
 					}
 
 				}
-				else if( attrs.btn && attrs.first_page ) {
+				else if( attrs.btn && attrs.first_page
+					&& element.parentNode.attributes.plist_controls
+					&& element.parentNode.parentNode.attributes.pcontrols
+					&& element.parentNode.parentNode.parentNode.attributes.plist ) {
+
+					get_new_state();
 
 					if( new_paging_state.pgno_ != 0 ) {
+
 						new_paging_state.pgno_ = 0;
 						new_paging_state.product_ = null;
-						render.rewrite_page(new_paging_state);
-						// success rewrite page, save new state
-						state.paging_state_by_category_[state.category_] = new_paging_state;
+						new_page_state.modified_ = true;
+
+						render.rewrite_page(new_page_state);
+
 					}
 
 				}
-				else if( attrs.btn && attrs.last_page ) {
+				else if( attrs.btn && attrs.last_page
+					&& element.parentNode.attributes.plist_controls
+					&& element.parentNode.parentNode.attributes.pcontrols
+					&& element.parentNode.parentNode.parentNode.attributes.plist ) {
+
+					get_new_state();
 
 					let newpgno = new_paging_state.pages_ > 0 ? new_paging_state.pages_ - 1 : 0;
 
 					if( newpgno != new_paging_state.pgno_ ) {
+
 						new_paging_state.pgno_ = newpgno;
 						new_paging_state.product_ = null;
-						render.rewrite_page(new_paging_state);
-						// success rewrite page, save new state
-						state.paging_state_by_category_[state.category_] = new_paging_state;
+						new_page_state.modified_ = true;
+
+						render.rewrite_page(new_page_state);
+
 					}
 
 				}
 				else if( attrs.btc ) {
 
-					// categories buttons
-					let new_category = state.category_ !== attrs.uuid.value ? attrs.uuid.value : null;
-					new_paging_state = Object.assign({}, state.paging_state_by_category_[new_category]);
+					get_new_state();
 
-					new_paging_state.product_ = null;
-					render.rewrite_page(new_paging_state);
-					// success rewrite page, save new state
-					state.paging_state_by_category_[new_category] = new_paging_state;
+					// categories buttons
+					let cur_category = state.page_state_.category_;
+					let new_category = state.page_state_.category_ !== attrs.uuid.value ? attrs.uuid.value : null;
+
+					get_new_state();
+
+					new_page_state.category_ = new_category;
+					new_page_state.product_ = null;
+					new_page_state.modified_ = true;
+
+					render.rewrite_page(new_page_state);
 
 					// switch on blinking new category
-					if( new_category !== state.category_ )
+					if( cur_category !== new_category )
 						element.setAttribute('blink', '');
 
 					// switch off blinking current category
-					if( state.category_ !== null )
-						xpath_eval_single('html/body/div[@categories]/div[@btc and @uuid=\'' + state.category_ + '\']').removeAttribute('blink');
-
-					state.category_ = new_category;
+					if( cur_category !== null )
+						xpath_eval_single('html/body/div[@categories]/div[@btc and @uuid=\'' + cur_category + '\']').removeAttribute('blink');
 
 				}
-				else if( attrs.btn && attrs.list_sort_order ) {
+				else if( attrs.btn && attrs.list_sort_order
+					&& element.parentNode.attributes.psort_controls
+					&& element.parentNode.parentNode.attributes.pcontrols
+					&& element.parentNode.parentNode.parentNode.attributes.plist ) {
+
+					get_new_state();
 
 					if( ++new_paging_state.order_ >= state.orders_.length )
 						new_paging_state.order_ = 0;
 
-					new_paging_state.product_ = null;
-					render.rewrite_page(new_paging_state);
-					// success rewrite page, save new state
-					state.paging_state_by_category_[state.category_] = new_paging_state;
+					new_page_state.product_ = null;
+					new_page_state.modified_ = true;
+
+					render.rewrite_page(new_page_state);
 
 				}
-				else if( attrs.btn && attrs.list_sort_direction ) {
+				else if( attrs.btn && attrs.list_sort_direction
+					&& element.parentNode.attributes.psort_controls
+					&& element.parentNode.parentNode.attributes.pcontrols
+					&& element.parentNode.parentNode.parentNode.attributes.plist ) {
+
+					get_new_state();
 
 					if( ++new_paging_state.direction_ >= state.directions_.length )
 						new_paging_state.direction_ = 0;
 
-					new_paging_state.product_ = null;
-					render.rewrite_page(new_paging_state);
-					// success rewrite page, save new state
-					state.paging_state_by_category_[state.category_] = new_paging_state;
+					new_page_state.product_ = null;
+					new_page_state.modified_ = true;
+
+					render.rewrite_page(new_page_state);
 
 				}
 				else if( attrs.pimg
 					&& element.parentNode.attributes.pitem
-					&& element.parentNode.parentNode.attributes.plist ) {
+					&& element.parentNode.parentNode.attributes.ptable
+					&& element.parentNode.parentNode.parentNode.attributes.plist ) {
+
+					get_new_state();
 
 					// switch view to product info
-					new_paging_state.product_ = element.parentNode.attributes.uuid.value;
-					new_paging_state.product_buy_quantity_ = 1;
+					new_page_state.product_ = element.parentNode.attributes.uuid.value;
+					new_page_state.modified_ = true;
 
-					render.rewrite_page(new_paging_state);
-					// success rewrite page, save new state
-					state.paging_state_by_category_[state.category_] = new_paging_state;
+					render.rewrite_info(new_page_state);
+					render.show_new_page_state(new_page_state);
 
 				}
 				else if( attrs.btn && attrs.back ) {
 
-					new_paging_state.product_ = null;
+					get_new_state();
 
-					render.rewrite_page(new_paging_state);
-					// success rewrite page, save new state
-					state.paging_state_by_category_[state.category_] = new_paging_state;
+					if( new_page_state.cart_edit_ ) {
+						// switch back from cart
+						new_page_state.cart_edit_ = false;
+					}
+					else {
+						// switch back from product info
+						new_page_state.product_ = null;
+					}
+
+					new_page_state.modified_ = true;
+
+					render.rewrite_page(new_page_state);
+					render.show_new_page_state(new_page_state);
+
+				}
+				else if( attrs.pimg
+					&& element.parentNode.attributes.pinfo ) {
+
+					// switch on product image large view
+					let largeimg = xpath_eval_single('html/body/div[@plargeimg]');
+
+					largeimg.style.backgroundImage = element.style.backgroundImage;
+					largeimg.style.display = 'inline-block';
+
+				}
+				else if( attrs.plargeimg ) {
+
+					// switch off product image large view
+					let largeimg = xpath_eval_single('html/body/div[@plargeimg]');
+
+					largeimg.style.display = 'none';
+
+				}
+				else if( element.parentNode.attributes.pitem
+					&& element.parentNode.parentNode.attributes.ptable
+					&& element.parentNode.parentNode.parentNode.attributes.pcart) {
+
+					// change cart
+					get_new_state();
+
+					let product = element.parentNode.attributes.uuid.value;
+
+					if( attrs.buy ) {
+
+						new_page_state.modified_ = true;
+						render.rewrite_cart(new_page_state);
+
+					}
+					else if( attrs.plus_one || attrs.minus_one ) {
+
+						let pbuy_quantity_element = xpath_eval_single('span[@pbuy_quantity]', element.parentNode);
+						let q = parseInt(pbuy_quantity_element.innerText, 10);
+						let cart_entity = new_page_state.cart_by_uuid_[product];
+
+						if( attrs.plus_one && q < cart_entity.remainder ) {
+
+							cart_entity.buy_quantity = q + 1;
+							cart_entity.modified = true;
+							new_page_state.modified_ = true;
+
+						}
+						else if( attrs.minus_one && q > 0 ) {
+
+							cart_entity.buy_quantity = q - 1;
+							cart_entity.modified = true;
+							new_page_state.modified_ = true;
+
+						}
+
+						if( new_page_state.modified_ )
+							render.rewrite_cart(new_page_state);
+
+					}
 
 				}
 				else if( element.parentNode.attributes.pright
 					&& element.parentNode.parentNode.attributes.pinfo ) {
 
-					let pq = new_paging_state.products_[new_paging_state.product_];
+					get_new_state();
+
+					let product = element.parentNode.parentNode.attributes.uuid.value;
+					let remainder = parseInt(element.parentNode.parentNode.attributes.remainder.value, 10);
 
 					if( attrs.buy ) {
 
-						render.rewrite_cart_informer(new_paging_state);
-						// success rewrite page, save new state
-						state.paging_state_by_category_[state.category_] = new_paging_state;
+						new_page_state.modified_ = true;
+						render.rewrite_info(new_page_state);
 
 					}
-					else if( attrs.plus_one ) {
-						
-						if( pq.buy_quantity < pq.remainder ) {
+					else if( attrs.plus_one || attrs.minus_one ) {
 
-							pq.buy_quantity++;
+						let pbuy_quantity_element = xpath_eval_single('p[@pbuy_quantity]', element.parentNode);
+						let q = parseInt(pbuy_quantity_element.innerText, 10);
 
-							Render.display_product_buy_quantity(pq.buy_quantity);
-							state.paging_state_by_category_[state.category_] = new_paging_state;
+						if( Number.isNaN(q) )
+							q = 0;
+
+						if( attrs.plus_one && q < remainder ) {
+
+							q = q + 1;
+							new_page_state.modified_ = true;
+
+						}
+						else if( attrs.minus_one && q > 0 ) {
+
+							q = q - 1;
+							new_page_state.modified_ = true;
+
+						}
+
+						if( new_page_state.modified_ ) {
+
+							render.rewrite_cart(new_page_state, product, q);
+							render.rewrite_info(new_page_state);
 
 						}
 
 					}
-					else if( attrs.minus_one ) {
 
-						if( pq.buy_quantity > 1 ) {
+				}
+				else if( attrs.buy
+					&& element.parentNode.attributes.pitem
+					&& element.parentNode.parentNode.attributes.ptable
+					&& element.parentNode.parentNode.parentNode.attributes.plist ) {
 
-							pq.buy_quantity--;
+					get_new_state();
 
-							Render.display_product_buy_quantity(pq.buy_quantity);
-							state.paging_state_by_category_[state.category_] = new_paging_state;
+					new_page_state.modified_ = true;
 
-						}
+					render.rewrite_cart(new_page_state, element.parentNode.attributes.uuid.value, 1);
+
+				}
+				else if( attrs.btn && attrs.drop
+					&& element.parentNode.attributes.cart_informer ) {
+
+					get_new_state();
+
+					for( let e of new_page_state.cart_ ) {
+
+						e.buy_quantity = 0;
+						e.modified = true;
 
 					}
+
+					new_page_state.modified_ = true;
+
+					render.rewrite_cart(new_page_state);
+
+					if( new_page_state.product_ !== null )
+						render.rewrite_info(new_page_state);
+
+				}
+				else if( attrs.btn && attrs.cart
+					&& element.parentNode.attributes.cart_informer ) {
+
+					get_new_state();
+
+					new_page_state.cart_edit_ = true;
+					new_page_state.modified_ = true;
+
+					render.rewrite_cart(new_page_state);
+					render.show_new_page_state(new_page_state);
 
 				}
 				break;
@@ -833,6 +1074,16 @@ class HtmlPageEvents extends HtmlPageState {
 
 			case 'touchleave'	:
 				break;
+
+		}
+
+		// success rewrite page, save new state
+		if( new_page_state && new_page_state.modified_ ) {
+
+			new_page_state.paging_state_by_category_[new_page_state.category_] = new_paging_state;
+			this.page_state_ = new_page_state;
+
+			render.debug_ellapsed(0, 'PAGE: ');
 
 		}
 
@@ -866,14 +1117,21 @@ class HtmlPageManager extends HtmlPageEvents {
 
 		Render.hide_cursor();
 
-		this.setup_events(xpath_eval('html/body/div[@back]'));
-		this.setup_events(xpath_eval('html/body/div[@pcontrols]/div[@plist_controls]/div[@prev_page or @next_page or @first_page or @last_page]'));
-		this.setup_events(xpath_eval('html/body/div[@pcontrols]/div[@psort_controls]/div[@list_sort_order or @list_sort_direction]'));
-		this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pright]/div[@buy or @plus_one or @minus_one]'));
+		this.setup_events(xpath_eval('html/body/div[@btn]'));
+		this.setup_events(xpath_eval('html/body/div[@plist]/div[@pcontrols]/div[@plist_controls or @psort_controls]/div[@btn]'));
+		this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pright]/div[@btn]'));
+		this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pimg]'));
+		this.setup_events(xpath_eval('html/body/div[@plargeimg]'));
+		this.setup_events(xpath_eval('html/body/div[@top]/div[@cart_informer]/div[@btn]'));
+		this.setup_events(xpath_eval('html/body/div[@top]/div[@cart]/div[@pcontrols]/div[@btn]'));
 
 		this.render_ = new Render;
 		this.render_.state = this;
 		this.render_.rewrite_category();
+		this.render_.rewrite_page();
+		this.render_.rewrite_cart();
+		this.render_.show_new_page_state();
+		this.render_.debug_ellapsed(0, 'BOOT: ');
 
 	}
 

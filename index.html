@@ -7,7 +7,7 @@
 
 		<link rel="shortcut icon" href="/resources/assets/favicon.ico" />
 		<link rel="stylesheet" type="text/css" href="/resources/css/default.css" />
-		<link rel="stylesheet" type="text/css" href="/resources/css/debug.css" />
+		<!--<link rel="stylesheet" type="text/css" href="/resources/css/debug.css" />-->
 
 		<style type="text/css">
 		</style>
@@ -31,14 +31,17 @@
 					<span ccount></span>
 					<span csum></span>
 				</div>
-				<img cart_state src="/resources/assets/cart/cart.ico">
 				<div btn check>
 					<img btn_ico src="/resources/assets/cheque.ico">
 					<span btn_txt>ПРЕЧЕК</span>
 				</div>
 				<div btn cart>
 					<img btn_ico src="/resources/assets/cart/cart_edit.ico">
-					<span btn_txt>РЕДАКТИРОВАТЬ</span>
+					<span btn_txt>ИЗМЕНИТЬ</span>
+				</div>
+				<div btn drop>
+					<img btn_ico src="/resources/assets/cart/cart_delete.ico">
+					<span btn_txt>ОЧИСТИТЬ</span>
 				</div>
 			</div>
 		</div>
@@ -46,9 +49,41 @@
 		</div>
 		<div btn back fadein="oneshot">
 			<img btn_ico src="/resources/assets/arrows/arrow_undo.ico">
-			<span btn_txt>Назад</span>
+			<span btn_txt>НАЗАД</span>
 		</div>
 		<div plist fadein>
+			<div ptable>
+			</div>
+			<div pcontrols>
+				<div psort_controls>
+					<div btn list_sort_order fadein="oneshot">
+						<span btn_txt></span>
+						<img btn_ico src="">
+					</div>
+					<div btn list_sort_direction fadein="oneshot">
+						<img btn_ico src="">
+					</div>
+				</div>
+				<div plist_controls>
+					<div btn first_page fadein="oneshot">
+						<img btn_ico_condensed src="/resources/assets/arrows/arrow_left.ico">
+						<img btn_ico_condensed src="/resources/assets/arrows/arrow_left.ico">
+					</div>
+					<div btn prev_page fadein="oneshot">
+						<span btn_txt></span>
+						<img btn_ico src="/resources/assets/arrows/arrow_left.ico">
+					</div>
+					<div btn next_page fadein="oneshot">
+						<img btn_ico src="/resources/assets/arrows/arrow_right.ico">
+						<span btn_txt></span>
+					</div>
+					<div btn last_page fadein="oneshot">
+						<img btn_ico_condensed src="/resources/assets/arrows/arrow_right.ico">
+						<img btn_ico_condensed src="/resources/assets/arrows/arrow_right.ico">
+						<span btn_txt></span>
+					</div>
+				</div>
+			</div>
 		</div>
 		<div pinfo fadein>
 			<div pimg></div>
@@ -65,7 +100,7 @@
 				<div btn minus_one fadein="oneshot">
 					<img btn_ico src="/resources/assets/minus.ico">
 				</div>
-				<p pbuy_quantity>1</p>
+				<p pbuy_quantity></p>
 				<div btn plus_one fadein="oneshot">
 					<img btn_ico src="/resources/assets/plus.ico">
 				</div>
@@ -78,27 +113,12 @@
 				</div>
 			</div>
 		</div>
+		<div plargeimg fadein>
+		</div>
 		<div pcart fadein>
 			<div ptable>
 			</div>
 			<div pcontrols>
-			</div>
-		</div>
-		<div pcontrols>
-			<div psort_controls>
-				<div btn list_sort_order fadein="oneshot">
-					<span btn_txt></span>
-					<img btn_ico src="">
-				</div>
-				<div btn list_sort_direction fadein="oneshot">
-					<img btn_ico src="">
-				</div>
-			</div>
-			<div plist_controls>
-				<div btn first_page fadein="oneshot">
-					<img btn_ico_condensed src="/resources/assets/arrows/arrow_left.ico">
-					<img btn_ico_condensed src="/resources/assets/arrows/arrow_left.ico">
-				</div>
 				<div btn prev_page fadein="oneshot">
 					<span btn_txt></span>
 					<img btn_ico src="/resources/assets/arrows/arrow_left.ico">
@@ -107,20 +127,34 @@
 					<img btn_ico src="/resources/assets/arrows/arrow_right.ico">
 					<span btn_txt></span>
 				</div>
-				<div btn last_page fadein="oneshot">
-					<img btn_ico_condensed src="/resources/assets/arrows/arrow_right.ico">
-					<img btn_ico_condensed src="/resources/assets/arrows/arrow_right.ico">
-					<span btn_txt></span>
-				</div>
 			</div>
 		</div>
 		<div mount></div>
+
 		<script type="text/javascript" src="js/startup.js"></script>
 		<script type="text/javascript" src="js/core.js"></script>
+
 		<!--<script type="text/javascript" src="js/prefetch.js"></script>-->
 		<!--<script type="text/javascript" src="js/refresh.js"></script>-->
+
 		<script type="text/javascript">
+
+			let browser = get_browser();
+
+			if( navigator.userAgent.match(/altair$/i) ) {
+
+				let lnk = document.createElement('link');
+       			lnk.setAttribute('rel', 'stylesheet');
+       			lnk.setAttribute('type', 'text/css');
+       			lnk.setAttribute('href', '/resources/css/debug.css');
+
+				let head = document.getElementsByTagName('head')[0];
+				head.appendChild(lnk);
+
+			}
+
 			document.addEventListener('DOMContentLoaded', core);
+
 		</script>
 	</body>
 </html>

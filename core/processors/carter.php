@@ -10,7 +10,7 @@ require_once LOADERS_DIR . 'shared.php';
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------
-class cart_handler extends handler {
+class carter_handler extends handler {
 
 	protected $infobase_;
 
@@ -26,30 +26,54 @@ class cart_handler extends handler {
 
 		$this->infobase_->exec('BEGIN TRANSACTION');
 
-		if( @$buy_product !== null ) {
-
-			$buy_product_uuid = uuid2bin($buy_product);
-
-			$sql = <<<'EOT'
-				REPLACE INTO cart (product_uuid, quantity) VALUES (:uuid, :quantity)
-				/*SELECT
-					c.product_uuid			AS product_uuid,
-					c.quantity + :quantity	AS quantity
-				FROM
-					cart AS c
-				WHERE
-					c.product_uuid = :uuid*/
-EOT
-			;
-
-			//$this->infobase_->dump_plan($sql);
+		if( @$products !== null && count($products) > 0 ) {
 
 			$start_time_st = micro_time();
 
-			$st = $this->infobase_->prepare($sql);
-			$st->bindValue(':uuid'		, $buy_product_uuid, SQLITE3_BLOB);
-			$st->bindValue(':quantity'	, $buy_quantity);
-			$st->execute();
+			foreach( $products as $product ) {
+
+				extract(get_object_vars($product));
+
+				$product_uuid = uuid2bin($uuid);
+
+				$sql = <<<'EOT'
+					REPLACE INTO cart (product_uuid, quantity) VALUES (:uuid, :quantity)
+EOT
+				;
+
+				$st = $this->infobase_->prepare($sql);
+				$st->bindValue(':uuid'		, $product_uuid, SQLITE3_BLOB);
+				$st->bindValue(':quantity'	, $quantity);
+				$st->execute();
+
+			}
+
+			$sql = <<<'EOT'
+				REPLACE INTO cart
+				SELECT
+					c.product_uuid,
+					q.quantity
+				FROM
+					cart AS c
+					INNER JOIN remainders_registry AS q
+					ON c.product_uuid = q.product_uuid
+				WHERE
+					c.quantity > q.quantity
+EOT
+			;
+
+			$this->infobase_->dump_plan($sql);
+
+			$this->infobase_->exec($sql);
+
+			$sql = <<<'EOT'
+				DELETE FROM cart WHERE quantity <= 0 OR quantity IS NULL
+EOT
+			;
+
+			$this->infobase_->dump_plan($sql);
+
+			$this->infobase_->exec($sql);
 
 			if( config::$cart_timing ) {
 
@@ -134,9 +158,8 @@ EOT
 
 		$finish_time = micro_time();
 		$ellapsed_ms = bcsub($finish_time, $start_time);
-		$ellapsed_s = ellapsed_time_string($ellapsed_ms);
 
-		$this->response_['ellapsed'] = $ellapsed_s;
+		$this->response_['ellapsed'] = $ellapsed_ms;
 
 		if( config::$log_timing )
 		    error_log('cart retrieved, ellapsed: ' . ellapsed_time_string($ellapsed_ms));

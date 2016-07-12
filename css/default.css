@@ -1,6 +1,6 @@
 @font-face {
-	font-family	: "helvetica";
-	src			: url(/resources/assets/helvetic.ttf);
+	font-family	: "droid";
+	src			: url(/resources/assets/droid.ttf);
 }
 
 @media screen, print {
@@ -17,7 +17,7 @@
 		user-select			: none;		/* Non-prefixed version, currently not supported by any browser */
 	}
 
-	body {
+	html > body {
 		background-color	: white;
 		border				: solid 0px black;
 		margin				: 0mm;
@@ -33,6 +33,15 @@
 		width				: 100%;
 		float				: left;
 		overflow			: hidden;
+	}
+
+	html > body > div[plist], html > body > div[pinfo], html > body > div[pcart] {
+		height				: 685px;
+	}
+
+	html > body > div[top] {
+		height				: 120px;
+		padding-bottom		: 3px;
 	}
 
 	div[btn], div[btc] {
@@ -77,8 +86,6 @@
 		height				: 32px;
 		float				: none;
 		vertical-align		: middle;
-		/* fix: shift up */
-		margin-top			: -5.1%;
 	}
 
 	img[btn_ico_condensed] {
@@ -91,19 +98,14 @@
 		height				: auto;
 	}
 
-	div[top] {
-		height				: 120px;
-		margin-bottom		: 3px;
-	}
-
-	div[top]>div[mag] {
+	html > body > div[top] > div[mag] {
 		width				: auto;
 		height				: inherit;
 		text-align			: left;
 		float				: left;
 	}
 
-	div[top]>div[logo] {
+	html > body > div[top] > div[logo] {
 		width				: 17.5%;
 		height				: 100%;
 		background-color	: transparent;
@@ -113,9 +115,9 @@
 		background-image	: url(/resources/assets/logo.jpg)/*, linear-gradient(transparent, gold)*/;
 	}
 
-	div[top]>div[cart_informer] {
+	html > body > div[top] > div[cart_informer] {
 		float				: right;
-		width				: 31%;
+		width				: 35%;
 		height				: 92%;
 		margin-top			: 1px;
 		margin-right		: 1px;
@@ -132,14 +134,14 @@
 		text-align			: center;
 	}
 
-	div[top]>div[cart_informer]>div[cinfo] {
+	html > body > div[top] > div[cart_informer] > div[cinfo] {
 		float				: none;
 		width				: auto;
 		height				: auto;
 		margin-bottom		: 3px;
 	}
 
-	div[top]>div[cart_informer]>div[cinfo]>span {
+	html > body > div[top] > div[cart_informer] > div[cinfo] > span {
 		width				: auto;
 		height				: auto;
 		float				: left;
@@ -153,33 +155,33 @@
 		margin-left			: 3px;
 	}
 
-	div[top]>div[cart_informer]>img[cart_state] {
-		width				: auto;
-		height				: auto;
-		margin-top			: 3px;
-		margin-left			: 12px;
-	}
-
-	div[top]>div[cart_informer]>div[btn][cart], div[top]>div[cart_informer]>div[btn][check] {
+	html > body > div[top] > div[cart_informer] > div[btn][drop],
+	html > body > div[top] > div[cart_informer] > div[btn][cart],
+	html > body > div[top] > div[cart_informer] > div[btn][check] {
 		float				: right;
 		margin-right		: 3px;
 	}
 
-	div[top]>div[cart_informer]>div[btn][cart]>img[btn_ico] {
-		/* fix: shift down */
-		margin-top			: -1.1%;
-	}
-
-	div[top]>div[cart_informer]>div[btn][check]>img[btn_ico] {
+	html > body > div[top] > div[cart_informer] > div[btn][drop] > img[btn_ico] {
 		/* fix: shift down */
 		margin-top			: -2.1%;
 	}
 
-	div[top]>div[logo]>img {
+	html > body > div[top] > div[cart_informer] > div[btn][cart] > img[btn_ico] {
+		/* fix: shift down */
+		margin-top			: -1.1%;
+	}
+
+	html > body > div[top] > div[cart_informer] > div[btn][check] > img[btn_ico] {
+		/* fix: shift down */
+		margin-top			: -2.1%;
+	}
+
+	html > body > div[top] > div[logo] > img {
 		height				: 100%;
 	}
 
-	div[categories] {
+	html > body > div[categories] {
 		float				: left;
 		height				: auto;
 		margin-bottom		: 3px;
@@ -187,31 +189,29 @@
 		width				: auto;
 	}
 
-	div[categories]>div[btc] {
+	html > body > div[categories] > div[btc] {
 		margin-left			: 3px;
 	}
 
-	div[btn][back] {
+	html > body > div[btn][back] {
 		float				: right;
 		width				: auto;
 		margin-right		: 3px;
 	}
 
-	div[btn][back]>img[btn_ico] {
+	html > body > div[btn][back] > img[btn_ico] {
 		transform			: scaleY(-1); /* flip horizontally */
+		/* fix: shift up */
+		margin-top			: -4.1%;
 	}
 
-	div[plist], div[pinfo] {
-		height				: 650px;
-	}
-
-	div[pinfo] {
+	html > body > div[pinfo] {
 		width				: 100%;
 		display				: none;
 		text-align			: center;
 	}
 
-	div[pinfo]>div[pimg] {
+	html > body > div[pinfo] > div[pimg] {
 		width				: 20%;
 		height				: 100%;
 		float				: left;
@@ -220,22 +220,26 @@
 		background-repeat	: no-repeat;
 		background-position	: center;
 		margin-right		: 3px;
+		cursor				: pointer;
 	}
 
-	div[pinfo]>div[pmid] {
+	html > body > div[pinfo] > div[pmid] {
 		width				: 50%;
 		height				: 100%;
 		float				: left;
 	}
 
-	div[pinfo]>div[pright] {
+	html > body > div[pinfo] > div[pright] {
 		width				: 29.5%;
 		height				: 100%;
 		float				: right;
 		text-align			: center;
 	}
 
-	div[pinfo]>div[pmid]>p[pname], div[pinfo]>div[pright]>p[pprice], div[pinfo]>div[pright]>p[pquantity], div[pinfo]>div[pright]>p[pincart] {
+	html > body > div[pinfo] > div[pmid] > p[pname],
+	html > body > div[pinfo] > div[pright] > p[pprice],
+	html > body > div[pinfo] > div[pright] > p[pquantity],
+	html > body > div[pinfo] > div[pright] > p[pincart] {
 		width				: 100%;
 		height				: auto;
 		font-size			: 22px;
@@ -243,16 +247,13 @@
 		float				: none;
 	}
 
-	div[pinfo]>div[pmid]>div[pproperties] {
+	html > body > div[pinfo] > div[pmid] > div[pproperties] {
 		padding				: 3px;
-		/*border				: 1px solid lightgray;
-		border-radius		: 3px;*/
 		box-shadow			: none;
 		color				: #001289;
 		width				: 100%;
 		height				: 75%;
 		overflow			: auto;
-		/*font-family			: droid;*/
 		font-size			: 16px;
 		font-weight			: bold;
 		font-stretch		: ultra-condensed;
@@ -285,7 +286,7 @@
 		-moz-column-fill	: auto;
 	}
 
-	div[pinfo]>div[pmid]>p[pproperties_head] {
+	html > body > div[pinfo] > div[pmid] > p[pproperties_head] {
 		color				: black;
 		float				: none;
 		width				: 100%;
@@ -295,14 +296,14 @@
 		text-transform		: uppercase;
 	}
 
-	div[pinfo]>div[pmid]>hr {
+	html > body > div[pinfo] > div[pmid] > hr {
 		color				: gold;
 		width				: 100%;
 		height				: auto;
 		float				: none;
 	}
 
-	div[pinfo]>div[pmid]>div[pproperties]>p[pproperty] {
+	html > body > div[pinfo] > div[pmid] > div[pproperties] > p[pproperty] {
 		width				: 100%;
 		height				: auto;
 		float				: none;
@@ -311,7 +312,7 @@
 		vertical-align		: middle;
 	}
 
-	div[pinfo]>div[pmid]>div[pproperties]>p[pproperty]>span[pproperty_name] {
+	html > body > div[pinfo] > div[pmid] > div[pproperties] > p[pproperty] > span[pproperty_name] {
 		float				: left;
 		width				: auto;
 		text-align			: left;
@@ -319,7 +320,7 @@
 		font-stretch		: ultra-condensed;
 	}
 
-	div[pinfo]>div[pmid]>div[pproperties]>p[pproperty]>span[pproperty_value] {
+	html > body > div[pinfo] > div[pmid] > div[pproperties] > p[pproperty] > span[pproperty_value] {
 		float				: left;
 		width				: auto;
 		text-align			: left;
@@ -327,7 +328,9 @@
 		font-stretch		: ultra-condensed;
 	}
 
-	div[pinfo]>div[pright]>p[pprice], div[pinfo]>div[pright]>p[pquantity], div[pinfo]>div[pright]>p[pincart] {
+	html > body > div[pinfo] > div[pright] > p[pprice],
+	html > body > div[pinfo] > div[pright] > p[pquantity],
+	html > body > div[pinfo] > div[pright] > p[pincart] {
 		float				: none;
 		width				: auto;
 		text-align			: left;
@@ -337,14 +340,14 @@
 		text-transform		: uppercase;
 	}
 
-	div[pinfo]>div[pright]>div[minus_one] {
+	html > body > div[pinfo] > div[pright] > div[minus_one] {
 		float				: left;
 		width				: auto;
 		margin-top			: 8px;
 		margin-bottom		: 8px;
 	}
 
-	div[pinfo]>div[pright]>p[pbuy_quantity] {
+	html > body > div[pinfo] > div[pright] > p[pbuy_quantity] {
 		float				: left;
 		width				: auto;
 		text-align			: left;
@@ -360,27 +363,34 @@
 		margin-bottom		: 8px;
 	}
 
-	div[pinfo]>div[pright]>div[plus_one] {
+	html > body > div[pinfo] > div[pright] > div[plus_one] {
 		float				: left;
 		width				: auto;
 		margin-top			: 8px;
 		margin-bottom		: 8px;
 	}
 
-	div[pinfo]>div[pright]>div[buy] {
+	html > body > div[pinfo] > div[pright] > div[plus_one] > img[btn_ico],
+	html > body > div[pinfo] > div[pright] > div[minus_one] > img[btn_ico] {
+		/* fix: shift up */
+		margin-top			: -6.1%;
+	}
+
+	html > body > div[pinfo] > div[pright] > div[buy] {
 		float				: left;
 		width				: auto;
 		margin-left			: 16px;
 		margin-top			: 8px;
 		margin-bottom		: 8px;
+		display				: none;
 	}
 
-	div[pinfo]>div[pright]>div[btn][buy]>img[btn_ico] {
+	html > body > div[pinfo] > div[pright] > div[btn][buy] > img[btn_ico] {
 		/* fix: shift down */
 		margin-top			: -2.1%;
 	}
 
-	div[pinfo]>div[pright]>div[premainders] {
+	html > body > div[pinfo] > div[pright] > div[premainders] {
 		color				: black;
 		float				: none;
 		width				: 100%;
@@ -390,7 +400,7 @@
 		text-transform		: uppercase;
 	}
 
-	div[pinfo]>div[pright]>p[premainders_head] {
+	html > body > div[pinfo] > div[pright] > p[premainders_head] {
 		color				: black;
 		float				: none;
 		width				: 100%;
@@ -400,14 +410,14 @@
 		text-transform		: uppercase;
 	}
 
-	div[pinfo]>div[pright]>hr {
+	html > body > div[pinfo] > div[pright] > hr {
 		color				: gold;
 		width				: 100%;
 		height				: auto;
 		float				: none;
 	}
 
-	div[pinfo]>div[pright]>div[premainders]>p[premainder] {
+	html > body > div[pinfo] > div[pright] > div[premainders] > p[premainder] {
 		width				: 100%;
 		height				: auto;
 		float				: left;
@@ -416,7 +426,7 @@
 		vertical-align		: middle;
 	}
 
-	div[pinfo]>div[pright]>div[premainders]>p[premainder]>span[pshop_name] {
+	html > body > div[pinfo] > div[pright] > div[premainders] > p[premainder] > span[pshop_name] {
 		float				: left;
 		width				: auto;
 		text-align			: left;
@@ -425,7 +435,7 @@
 		padding-left		: 5%;
 	}
 
-	div[pinfo]>div[pright]>div[premainders]>p[premainder]>span[pshop_quantity] {
+	html > body > div[pinfo] > div[pright] > div[premainders] > p[premainder] > span[pshop_quantity] {
 		float				: right;
 		width				: auto;
 		text-align			: left;
@@ -434,16 +444,38 @@
 		padding-right		: 5%;
 	}
 
-	div[plist]>div[pitem]>div[btn][buy]>img[btn_ico] {
+	html > body > div[plargeimg] {
+		z-index				: 1000;
+		position			: fixed;
+		top					: 2.5%;
+		left				: 2.5%;
+		width				: 95%;
+		height				: 95%;
+		float				: none;
+		border				: 3px solid #dfba3c;
+		border-radius		: 7px;
+		box-shadow			: none;
+		background-color	: white;
+		background-size		: contain;
+		background-repeat	: no-repeat;
+		background-position	: center;
+		display				: none;
+	}
+
+	html > body > div[plist] > div[ptable] {
+		height				: 90.5%;
+	}
+
+	html > body > div[plist] > div[ptable] > div[pitem] {
+		height				: 100%;
+	}
+
+	html > body > div[plist] > div[ptable] > div[pitem] > div[btn][buy] > img[btn_ico] {
 		/* fix: shift up */
 		margin-top			: -8.1%;
 	}
 
-	div[plist]>div[pitem] {
-		height				: 99%;
-	}
-
-	div[plist]>div[pitem]>div[pimg] {
+	html > body > div[plist] > div[ptable] > div[pitem] > div[pimg] {
 		float				: none;
 		width				: 100%;
 		height				: 50%;
@@ -455,14 +487,15 @@
 		cursor				: pointer;
 	}
 
-	div[plist]>div[pitem]>p[pname] {
+	html > body > div[plist] > div[ptable] > div[pitem] > p[pname] {
 		float				: none;
 		overflow			: hidden;
 		height				: 19%;
 		margin-bottom		: 3px;
 	}
 
-	div[plist]>div[pitem]>p[pprice], div[plist]>div[pitem]>p[pquantity] {
+	html > body > div[plist] > div[ptable] > div[pitem] > p[pprice],
+	html > body > div[plist] > div[ptable] > div[pitem] > p[pquantity] {
 		float				: none;
 		overflow			: hidden;
 		margin-bottom		: 3px;
@@ -470,37 +503,155 @@
 		font-weight			: bold;
 	}
 
-	div[pcontrols] {
+	html > body > div[plist] > div[pcontrols] {
 		float				: none;
 		vertical-align		: middle;
 	}
 
-	div[psort_controls] {
+	html > body > div[plist] > div[pcontrols] > div[psort_controls] {
 		width				: 30%;
 		float				: left;
 		text-align			: left;
 	}
 
-	div[list_sort_order], div[list_sort_direction] {
+	html > body > div[plist] > div[pcontrols] > div[psort_controls] > div[list_sort_order],
+	html > body > div[plist] > div[pcontrols] > div[psort_controls] > div[list_sort_direction] {
 		margin-left			: 3px;
 	}
 
-	/* strange bug, fixed */
-	div[list_sort_order]>img[btn_ico] {
-		margin-top			: -1.2%;
+	html > body > div[plist] > div[pcontrols] > div[psort_controls] > div[list_sort_order] > img[btn_ico],
+	html > body > div[plist] > div[pcontrols] > div[psort_controls] > div[list_sort_direction] > img[btn_ico] {
+		/* fix: shift up */
+		margin-top			: -4.5%;
 	}
 
-	div[plist_controls] {
+	html > body > div[plist] > div[pcontrols] > div[plist_controls] {
 		width				: 69%;
 		float				: right;
 		text-align			: right;
 	}
 
-	div[first_page], div[prev_page], div[next_page], div[last_page] {
+	html > body > div[plist] > div[pcontrols] > div[plist_controls] > div[first_page],
+	html > body > div[plist] > div[pcontrols] > div[plist_controls] > div[prev_page],
+	html > body > div[plist] > div[pcontrols] > div[plist_controls] > div[next_page],
+	html > body > div[plist] > div[pcontrols] > div[plist_controls] > div[last_page] {
 		margin-right		: 3px;
 	}
 
-	div[mount] {
+	html > body > div[plist] > div[pcontrols] > div[plist_controls] > div[btn] > img[btn_ico],
+	html > body > div[plist] > div[pcontrols] > div[plist_controls] > div[btn] > img[btn_ico_condensed] {
+		/* fix: shift up */
+		margin-top			: -5.1%;
+	}
+
+	html > body > div[pcart] {
+		width				: 100%;
+		display				: none;
+		text-align			: center;
+	}
+
+	html > body > div[pcart] > div[ptable] {
+		width				: 100%;
+		height				: 90.5%;
+	}
+
+	html > body > div[pcart] > div[ptable] > div[pitem] {
+		width				: 100%;
+		height				: 37px;
+		float				: none;
+		text-align			: left;
+		margin-bottom		: 2px;
+		white-space			: nowrap;
+		vertical-align		: middle;
+	}
+
+	html > body > div[pcart] > div[ptable] > div[pitem] > div[pimg] {
+		width				: 2%;
+		height				: 100%;
+		float				: left;
+		background-color	: transparent;
+		background-size		: contain;
+		background-repeat	: no-repeat;
+		background-position	: center;
+	}
+
+	html > body > div[pcart] > div[ptable] > div[pitem] > span {
+		float				: left;
+		text-overflow		: ellipsis;
+		font-stretch		: ultra-condensed;
+		font-size			: 25px;
+		font-weight			: bold;
+		text-decoration		: none;
+		text-transform		: uppercase;
+		height				: 100%;
+		white-space			: nowrap;
+	}
+
+	html > body > div[pcart] > div[ptable] > div[pitem] > span[pno] {
+		width				: 2%;
+		text-align			: right;
+	}
+
+	html > body > div[pcart] > div[ptable] > div[pitem] > span[pname] {
+		width				: 57%;
+		text-align			: left;
+	}
+
+	html > body > div[pcart] > div[ptable] > div[pitem] > span[pprice] {
+		width				: 8%;
+		text-align			: right;
+	}
+
+	html > body > div[pcart] > div[ptable] > div[pitem] > span[psum] {
+		width				: 8%;
+		text-align			: right;
+	}
+
+	html > body > div[pcart] > div[ptable] > div[pitem] > div[btn][minus_one] {
+		float				: right;
+		margin-left			: 3px;
+		margin-right		: 3px;
+	}
+
+	html > body > div[pcart] > div[ptable] > div[pitem] > span[pbuy_quantity] {
+		float				: right;
+		width				: 3%;
+		text-align			: center;
+	}
+
+	html > body > div[pcart] > div[ptable] > div[pitem] > div[btn][plus_one] {
+		float				: right;
+		margin-right		: 3px;
+	}
+
+	html > body > div[pcart] > div[ptable] > div[pitem] > div[btn][plus_one] > img[btn_ico],
+	html > body > div[pcart] > div[ptable] > div[pitem] > div[btn][minus_one] > img[btn_ico] {
+		/* fix: shift up */
+		margin-top			: -6.1%;
+	}
+
+	html > body > div[pcart] > div[ptable] > div[pitem] > div[btn][buy] {
+		float				: right;
+		margin-right		: 3px;
+		display				: none;
+	}
+
+	html > body > div[pcart] > div[pcontrols] {
+		width				: 100%;
+	}
+
+	html > body > div[pcart] > div[pcontrols] > div[btn][prev_page],
+	html > body > div[pcart] > div[pcontrols] > div[btn][next_page] {
+		float				: left;
+		margin-left			: 3px;
+	}
+
+	html > body > div[pcart] > div[pcontrols] > div[btn] > img[btn_ico] {
+		/* fix: shift up */
+		margin-top			: -5.1%;
+	}
+
+	html > body > div[mount] {
 		float				: none;
 		background-color	: transparent;
 		background-size		: contain;
@@ -518,7 +669,7 @@
 		z-index				: 1;
 	}
 
-	p[debug] {
+	html > body > p[debug] {
 		display				: none;
 	}
 
@@ -552,6 +703,24 @@
 
 	*[fadein] {
 		animation			: fadein 200ms;
+	}
+
+	html > body > div[debug] {
+		width				: 25% !important;
+		display				: block;
+		font-family			: droid;
+		font-size			: 8pt;
+		position			: fixed;
+		top					: 0.3%;
+		left				: 39%;
+		background			: darksalmon;
+		color				: darkgreen;
+		border				: solid 1px black;
+		text-align			: left;
+	}
+
+	html > body > div[debug] > p {
+		display				: none;
 	}
 
 }

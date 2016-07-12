@@ -28,16 +28,21 @@ class infobase extends \SQLite3 {
 		$this->enableExceptions(true);
 
 		if( $new_ib ) {
-			$this->exec('PRAGMA page_size = 4096');
+
+			$pgsz = config::$sqlite_page_size;
+
+			$this->exec("PRAGMA page_size = ${pgsz}");
 			$this->exec('PRAGMA count_changes = OFF');
-			$this->exec('PRAGMA synchronous = NORMAL');
 			$this->exec('PRAGMA journal_mode = WAL');
-			$this->exec('PRAGMA temp_store = MEMORY');
-			$this->exec('PRAGMA default_cache_size = -131072');
+			$this->exec('PRAGMA auto_vacuum = NONE');
+
 		}
 
-		$this->exec('PRAGMA cache_size = -131072'); // 524288
-		$this->exec('PRAGMA auto_vacuum = NONE');
+		$cachesz = config::$sqlite_cache_size;
+
+		$this->exec("PRAGMA cache_size = -${cachesz}");
+		$this->exec('PRAGMA synchronous = NORMAL');
+		$this->exec('PRAGMA temp_store = MEMORY');
 
 		$this->busyTimeout(180000);
 

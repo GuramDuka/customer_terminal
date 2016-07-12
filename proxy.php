@@ -29,8 +29,8 @@ class proxy_handler extends srv1c\handler {
 			'producter' => [
 				'producter'		=> true
 			],
-			'cart' => [
-				'cart'		=> true
+			'carter' => [
+				'carter'		=> true
 			]
 		];
 

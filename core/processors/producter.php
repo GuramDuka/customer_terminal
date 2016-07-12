@@ -301,9 +301,8 @@ EOT
 
 		$finish_time = micro_time();
 		$ellapsed_ms = bcsub($finish_time, $start_time);
-		$ellapsed_s = ellapsed_time_string($ellapsed_ms);
 
-		$this->response_['ellapsed'] = $ellapsed_s;
+		$this->response_['ellapsed'] = $ellapsed_ms;
 
 		if( config::$log_timing )
 		    error_log('product info retrieved, ellapsed: ' . ellapsed_time_string($ellapsed_ms));

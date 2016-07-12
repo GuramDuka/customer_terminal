@@ -16,6 +16,8 @@ namespace srv1c {
 //------------------------------------------------------------------------------
 class config extends \config {
 
+	public static $sqlite_page_size								= 4096;
+	public static $sqlite_cache_size							= 262144;  // 131072, 262144, 524288
 	public static $log_loader_request							= false;
 	public static $explain										= false;
 	public static $rewrite_pages_timing							= false;
