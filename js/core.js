@@ -81,7 +81,9 @@ class HtmlPageState {
 			cart_edit_					: false,
 			cart_pgno_					: 0,
 			cart_						: [],
-			cart_by_uuid_				: {}
+			cart_by_uuid_				: {},
+			cart_page_size_				: 0,
+			cart_pages_					: 0
 		};
 
 		// render
@@ -393,22 +395,25 @@ class Render {
 		let pcrin = xpath_eval_single('html/body/div[@top]/div[@cart_informer]/div[@btn and @cart]');
 		let element = xpath_eval_single('html/body/div[@pcart]/div[@ptable]');
 		let cart = new_page_state.cart_;
-		let page_size = new_page_state.cart_page_size_;
 
-		if( !page_size ) {
+		if( !new_page_state.cart_page_size_ ) {
 			//let height = sscanf(getComputedStyle(element).height, '%u')[0];
 			//let line_height = sscanf(getComputedStyle(pcrin).height, '%u')[0];
 			//new_page_state.cart_page_size_ = page_size = Math.trunc(height / line_height);
-			new_page_state.cart_page_size_ = page_size = 9;
+			new_page_state.cart_page_size_ = 9;
 		}
 
-		let pages = cart.length / page_size + (cart.length % page_size !== 0 ? 1 : 0);
+		new_page_state.cart_pages_ = Math.trunc(cart.length / new_page_state.cart_page_size_) + (cart.length % new_page_state.cart_page_size_ !== 0 ? 1 : 0);
+
+		// if pages changed suddenly
+		if( new_page_state.cart_pgno_ >= new_page_state.cart_pages_ )
+			new_page_state.cart_pgno_ = new_page_state.cart_pages_ > 0 ? new_page_state.cart_pages_ - 1 : 0;
 
 		if( element.innerHTML.isEmpty() ) {
 
 			let html = '';
 
-			for( let i = 0; i < page_size; i++ )
+			for( let i = 0; i < new_page_state.cart_page_size_; i++ )
 				html = html
 					+ '<div pitem="' + i + '">'
 					+ '<span pno></span>'
@@ -442,10 +447,10 @@ class Render {
 		for( let a of items ) {
 
 			let i = parseInt(a.attributes.pitem.value, 10);
+			let n = i + new_page_state.cart_pgno_ * new_page_state.cart_page_size_;
 
-			if( i < cart.length ) {
+			if( n < cart.length ) {
 
-				let n = i + new_page_state.cart_pgno_ * page_size;
 				let e = cart[n];
 
 				xpath_eval_single('span[@pno]'				, a).innerHTML				= n + 1;
@@ -476,7 +481,7 @@ class Render {
 		xpath_eval_single('div[@pcontrols]/div[@btn and @prev_page]', element.parentNode).style.display =
 			new_page_state.cart_pgno_ > 0 ? 'inline-block' : 'none';
 		xpath_eval_single('div[@pcontrols]/div[@btn and @next_page]', element.parentNode).style.display =
-			new_page_state.cart_pgno_ + 1 < pages ? 'inline-block' : 'none';
+			new_page_state.cart_pgno_ + 1 < new_page_state.cart_pages_ ? 'inline-block' : 'none';
 
 		for( let a of xpath_eval('div[@pitem]/span[@psum]', element) )
 			a.style.display = buy_quantity_one ? 'none' : 'inline-block';
@@ -923,6 +928,28 @@ class HtmlPageEvents extends HtmlPageState {
 					largeimg.style.display = 'none';
 
 				}
+				else if( element.parentNode.attributes.pcontrols
+					&& element.parentNode.parentNode.attributes.pcart) {
+
+					get_new_state();
+
+					if( attrs.prev_page && new_page_state.cart_pgno_ > 0 ) {
+
+						new_page_state.cart_pgno_--;
+						new_page_state.modified_ = true;
+
+					}
+					else if( attrs.next_page && new_page_state.cart_pgno_ + 1 < new_page_state.cart_pages_ ) {
+
+						new_page_state.cart_pgno_++;
+						new_page_state.modified_ = true;
+
+					}
+
+					if( new_page_state.modified_ )
+						render.rewrite_cart(new_page_state);
+
+				}
 				else if( element.parentNode.attributes.pitem
 					&& element.parentNode.parentNode.attributes.ptable
 					&& element.parentNode.parentNode.parentNode.attributes.pcart) {
@@ -1123,7 +1150,7 @@ class HtmlPageManager extends HtmlPageEvents {
 		this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pimg]'));
 		this.setup_events(xpath_eval('html/body/div[@plargeimg]'));
 		this.setup_events(xpath_eval('html/body/div[@top]/div[@cart_informer]/div[@btn]'));
-		this.setup_events(xpath_eval('html/body/div[@top]/div[@cart]/div[@pcontrols]/div[@btn]'));
+		this.setup_events(xpath_eval('html/body/div[@pcart]/div[@pcontrols]/div[@btn]'));
 
 		this.render_ = new Render;
 		this.render_.state = this;
