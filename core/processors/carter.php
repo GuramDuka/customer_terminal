@@ -14,6 +14,164 @@ class carter_handler extends handler {
 
 	protected $infobase_;
 
+	protected function fetch_cart() {
+
+		$sql = <<<EOT
+			SELECT
+				a.uuid					AS uuid,
+				b.quantity				AS buy_quantity,
+				a.code					AS code,
+				a.name					AS name,
+				i.uuid					AS base_image_uuid,
+				i.ext					AS base_image_ext,
+				q.quantity				AS remainder,
+				p.price					AS price,
+				COALESCE(r.quantity, 0)	AS reserve
+			FROM
+					products AS a
+					INNER JOIN images AS i
+					ON a.base_image_uuid = i.uuid
+					INNER JOIN prices_registry AS p
+					ON a.uuid = p.product_uuid
+					INNER JOIN remainders_registry AS q
+					ON a.uuid = q.product_uuid
+					LEFT JOIN reserves_registry AS r
+					ON a.uuid = r.product_uuid
+          			INNER JOIN cart AS b
+          			ON a.uuid = b.product_uuid
+     		WHERE
+				a.uuid IN (select product_uuid FROM cart)
+			ORDER BY
+				a.name
+EOT
+		;
+
+		$this->infobase_->dump_plan($sql);
+
+		$result = $this->infobase_->query($sql);
+
+		$cart = [];
+
+		while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
+
+			extract($r);
+
+			$cart[] = [
+				'uuid'			=> bin2uuid($uuid),
+				'buy_quantity'	=> $buy_quantity,
+				'code'			=> $code,
+				'name'			=> htmlspecialchars($name, ENT_HTML5),
+				'price'			=> $price,
+				'remainder'		=> $remainder,
+				'reserve'		=> $reserve,
+				'img_url'		=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext), ENT_HTML5)
+			];
+
+		}
+
+		return $cart;
+
+	}
+
+	protected function handle_order(&$order) {
+
+		$constants = [ 'exchange_node' => null, 'exchange_url' => null, 'exchange_user' => null, 'exchange_pass' => null ];
+		extract($constants);
+
+		$in = '\'' . implode('\', \'', array_keys($constants)) . '\'';
+
+		$sql = <<<EOT
+			SELECT
+				name							AS name,
+				COALESCE(value_uuid, value_s)	AS value
+			FROM
+				constants
+			WHERE
+				name IN (${in})
+EOT
+		;
+
+		$this->infobase_->dump_plan($sql);
+
+		$result = $this->infobase_->query($sql);
+
+		while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
+
+			extract($r);
+			$$name = $value;
+
+		}
+
+		$order_request = [ 'exchange_node' => bin2uuid($exchange_node) ];
+		$order_products = [];
+
+		foreach( $order AS $e ) {
+
+			extract(get_object_vars($e));
+
+			$order_products[] = [
+				'product'	=> $uuid,
+				'quantity'	=> $quantity
+			];
+
+		}
+
+		$order_request['order'] = $order_products;
+
+		$ch = curl_init();
+
+		\runtime_exception::throw_false($ch);
+
+		if( strtolower((substr($exchange_url, 0, 5)) === 'https') ) {
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+		}
+
+		curl_setopt($ch, CURLOPT_HTTPHEADER			, [
+			'Content-Type: application/json; charset=utf-8',
+			'Cache-Control: no-store, no-cache, must-revalidate, max-age=0',
+			'Accept: */*',
+			//'Accept: application/json; charset=utf-8',
+			//'Accept: text/html, application/xhtml+xml, application/xml; q=0.9,*/*; q=0.8',
+			'Accept-Encoding: gzip, deflate'
+		]);
+
+		curl_setopt($ch, CURLOPT_USERPWD			, "$exchange_user:$exchange_pass");
+		curl_setopt($ch, CURLOPT_HTTPAUTH			, CURLAUTH_BASIC);
+		curl_setopt($ch, CURLOPT_FAILONERROR		, true);
+		curl_setopt($ch, CURLOPT_URL				, $exchange_url);
+		curl_setopt($ch, CURLOPT_REFERER			, $exchange_url);
+		curl_setopt($ch, CURLOPT_VERBOSE			, true);
+		curl_setopt($ch, CURLOPT_POST				, true);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION		, true);
+		curl_setopt($ch, CURLOPT_POSTFIELDS			, json_encode($order_request, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+		//curl_setopt($ch, CURLOPT_USERAGENT		, "Mozilla/4.0 (Windows; U; Windows NT 5.0; En; rv:1.8.0.2) Gecko/20070306 Firefox/1.0.0.4");
+		curl_setopt($ch, CURLOPT_HEADER				, true);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER		, true);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT		, 15);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS	, 15000);
+		curl_setopt($ch, CURLOPT_TIMEOUT			, 30);
+		curl_setopt($ch, CURLOPT_TIMEOUT_MS			, 30000);
+		//curl_setopt($ch, CURLOPT_COOKIEJAR		, TMP_DIR . 'cookie.txt');		// get auth
+ 		//curl_setopt($ch, CURLOPT_COOKIEFILE		, TMP_DIR . 'cookie.txt');		// use auth
+
+		$response = curl_exec($ch);
+
+		\curl_exception::throw_curl_error($ch);
+
+		curl_close($ch);			
+
+		error_log(var_export($response, true));
+
+		// if CURLOPT_FAILONERROR === true && http_code !== 200 then curl library automatical set curl_error to nonzero
+		// and this check not needed
+		//if( $curl_info['http_code'] !== 200 )
+		//	throw new \runtime_exception(var_export($curl_info, true) . "\n" . $response, $curl_info['http_code']);
+
+		$this->response_['order'] = json_decode($response, false, 512, JSON_BIGINT_AS_STRING);
+
+	}
+
 	protected function handle_request() {
 
 		$start_time = micro_time();
@@ -25,6 +183,9 @@ class carter_handler extends handler {
 		extract(get_object_vars($this->request_));
 
 		$this->infobase_->exec('BEGIN TRANSACTION');
+
+		if( @$order !== null )
+			$this->handle_order($order);
 
 		if( @$products !== null && count($products) > 0 ) {
 
@@ -87,62 +248,9 @@ EOT
 
 		}
 
-		$sql = <<<EOT
-			SELECT
-				a.uuid					AS uuid,
-				b.quantity				AS buy_quantity,
-				a.code					AS code,
-				a.name					AS name,
-				i.uuid					AS base_image_uuid,
-				i.ext					AS base_image_ext,
-				q.quantity				AS remainder,
-				p.price					AS price,
-				COALESCE(r.quantity, 0)	AS reserve
-			FROM
-					products AS a
-					INNER JOIN images AS i
-					ON a.base_image_uuid = i.uuid
-					INNER JOIN prices_registry AS p
-					ON a.uuid = p.product_uuid
-					INNER JOIN remainders_registry AS q
-					ON a.uuid = q.product_uuid
-					LEFT JOIN reserves_registry AS r
-					ON a.uuid = r.product_uuid
-          			INNER JOIN cart AS b
-          			ON a.uuid = b.product_uuid
-     		WHERE
-				a.uuid IN (select product_uuid FROM cart)
-			ORDER BY
-				a.name
-EOT
-		;
-
-		$this->infobase_->dump_plan($sql);
-
 		$start_time_st = micro_time();
 
-		$result = $this->infobase_->query($sql);
-
-		$cart = [];
-
-		while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
-
-			extract($r);
-
-			$cart[] = [
-				'uuid'			=> bin2uuid($uuid),
-				'buy_quantity'	=> $buy_quantity,
-				'code'			=> $code,
-				'name'			=> htmlspecialchars($name, ENT_HTML5),
-				'price'			=> $price,
-				'remainder'		=> $remainder,
-				'reserve'		=> $reserve,
-				'img_url'		=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext), ENT_HTML5)
-			];
-
-		}
-
-		$this->response_['cart'] = $cart;
+		$this->response_['cart'] = $this->fetch_cart();
 
 		if( config::$cart_timing ) {
 

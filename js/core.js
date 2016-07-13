@@ -138,7 +138,7 @@ class Render {
 		let finish = microtime();
 		let ellapsed = (finish - state.start_) + state.ellapsed_;
 
-		Render.debug(level, prefix + ellapsed_time_string(ellapsed));
+		Render.debug(level, prefix + '<font>' + ellapsed_time_string(ellapsed) + '</font>');
 
 	}
 
@@ -400,7 +400,7 @@ class Render {
 			//let height = sscanf(getComputedStyle(element).height, '%u')[0];
 			//let line_height = sscanf(getComputedStyle(pcrin).height, '%u')[0];
 			//new_page_state.cart_page_size_ = page_size = Math.trunc(height / line_height);
-			new_page_state.cart_page_size_ = 9;
+			new_page_state.cart_page_size_ = navigator.userAgent.match(/altair$/i) ? 9 : Math.trunc(9 * 690 / 390);
 		}
 
 		new_page_state.cart_pages_ = Math.trunc(cart.length / new_page_state.cart_page_size_) + (cart.length % new_page_state.cart_page_size_ !== 0 ? 1 : 0);
@@ -1081,6 +1081,49 @@ class HtmlPageEvents extends HtmlPageState {
 					render.show_new_page_state(new_page_state);
 
 				}
+				else if( attrs.btn && attrs.check
+					&& element.parentNode.attributes.cart_informer ) {
+
+					get_new_state();
+
+					let request = {
+						'module'	: 'carter',
+						'handler'	: 'carter',
+						'order'		: []
+					};
+
+					for( let e of new_page_state.cart_ ) {
+
+						request.order.push({
+							'uuid'		: e.uuid,
+							'quantity'	: e.buy_quantity
+						});
+
+						e.buy_quantity = 0;
+
+					}
+
+					let data = post_json_sync('proxy.php', request);
+					state.ellapsed_ += data.ellapsed;
+
+					/*data.order.uuid
+					data.order.number
+					data.order.date
+					data.order.barcode
+					data.order.barcode_eangnivc
+
+					print them
+					*/
+
+					render.rewrite_cart(new_page_state);
+
+					new_page_state.cart_edit_ = false;
+					new_page_state.product_ = null;
+					new_page_state.modified_ = true;
+
+					render.show_new_page_state(new_page_state);
+
+				}
 				break;
 
 			case 'touchstart'	:
@@ -1110,7 +1153,7 @@ class HtmlPageEvents extends HtmlPageState {
 			new_page_state.paging_state_by_category_[new_page_state.category_] = new_paging_state;
 			this.page_state_ = new_page_state;
 
-			render.debug_ellapsed(0, 'PAGE: ');
+			render.debug_ellapsed(0, 'PAGE:&nbsp;');
 
 		}
 
@@ -1158,7 +1201,7 @@ class HtmlPageManager extends HtmlPageEvents {
 		this.render_.rewrite_page();
 		this.render_.rewrite_cart();
 		this.render_.show_new_page_state();
-		this.render_.debug_ellapsed(0, 'BOOT: ');
+		this.render_.debug_ellapsed(0, 'BOOT:&nbsp;');
 
 	}
 

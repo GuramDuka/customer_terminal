@@ -59,6 +59,39 @@ class invalid_json_exception extends runtime_exception {
 
 };
 //------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+//------------------------------------------------------------------------------
+class curl_exception extends runtime_exception {
+
+	public static function throw_curl_error(&$ch) {
+
+		$err = curl_errno($ch);
+
+		if( $err ) {
+
+			$emsg = curl_error($ch);
+			$curl_info = curl_getinfo($ch);
+
+			$constants = get_defined_constants(true);
+			$errors = [];
+
+			foreach( $constants['curl'] as $name => $value )
+			    if( !strncmp($name, 'CURLE_', 6) )
+			        $errors[$value] = $name;
+
+			$msg = $emsg . ', ' . $errors[$err];
+
+			if( config::$debug )
+				$msg .= "\n" . var_export($curl_info, true);
+
+   			throw new curl_exception($msg, $err);
+
+		}
+
+	}
+
+};
+//------------------------------------------------------------------------------
 } // global namespace
 //------------------------------------------------------------------------------
 ?>
