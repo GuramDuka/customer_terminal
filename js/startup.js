@@ -132,15 +132,15 @@ HTMLElement.prototype.fadeout = function (display = 'none') {
 
 };
 //------------------------------------------------------------------------------
-HTMLElement.prototype.fade = function (v) {
+HTMLElement.prototype.fade = function (v, display = 'none') {
 
 	if( this.fade_state === v )
 		return;
 
 	if( v )
-		this.fadein();
+		this.fadein(display);
 	else
-		this.fadeout();
+		this.fadeout(display);
 
 };
 //------------------------------------------------------------------------------

@@ -143,8 +143,8 @@
 
 	html > body > div[top] > div[cart_informer] {
 		float				: right;
-		width				: 35%;
-		height				: 92%;
+		width				: 45%;
+		height				: 96%;
 		margin-top			: 1px;
 		margin-right		: 1px;
 		border				: 3px solid lightgray;
@@ -685,7 +685,7 @@
 								linear-gradient(transparent, gold);
 								/*linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet),*/
 		position			: fixed;
-		top					: calc(100% - 142px);
+		top					: calc(100% - 128px);
 		left				: 0%;
 		width				: 100%;
 		height				: 145px;
@@ -719,7 +719,7 @@
 	}
 
 	html > body > div[debug] {
-		width				: 25% !important;
+		width				: 15% !important;
 		display				: block;
 		font-family			: "droid";
 		font-weight			: bold;

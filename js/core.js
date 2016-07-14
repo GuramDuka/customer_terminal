@@ -1,7 +1,6 @@
 //------------------------------------------------------------------------------
 let manager = null;
 let msg_source = null;
-let idle = null;
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------
@@ -367,13 +366,6 @@ class Render {
 			xpath_eval_single('span[@ccount]'	, cinfo).innerText = 'В корзине: ' + ccount + ' товар' + (ccount == 1 ? '' : ccount <= 4 ? 'а' : 'ов');
 			xpath_eval_single('span[@csum]'		, cinfo).innerHTML = 'На сумму : ' + csum + '&nbsp;₽';
 
-			pcrin.fadein();
-
-		}
-		else {
-
-			pcrin.fadeout();
-
 		}
 
 	}
@@ -585,6 +577,7 @@ class Render {
 
 	show_new_page_state(new_page_state = null) {
 
+		let zero = new_page_state === null;
 		let state = this.state_;
 		let cur_state = state.page_state_;
 
@@ -597,28 +590,50 @@ class Render {
 		let pcart = xpath_eval_single('html/body/div[@pcart]');
 		let pcrin = xpath_eval_single('html/body/div[@top]/div[@cart_informer]');
 
+		if( (new_page_state.cart_.length > 0 && cur_state.cart_.length === 0) || zero )
+			pcrin.fadein();
+
+		if( new_page_state.cart_.length === 0 && cur_state.cart_.length > 0 )
+			pcrin.fadeout();
+
+		let view = new_page_state.cart_edit_ !== cur_state.cart_edit_
+				|| new_page_state.product_ !== cur_state.product_;
+
 		if( new_page_state.cart_edit_ ) {
 
-			plist.fadeout();
-			pinfo.fadeout();
-			backb.fadein();
-			pcart.fadein();
+			if( view ) {
+
+				plist.fadeout();
+				pinfo.fadeout();
+				backb.fadein();
+				pcart.fadein();
+
+			}
 
 		}
 		else if( new_page_state.product_ === null ) {
 
 			plist.fadein();
-			pinfo.fadeout();
-			backb.fadeout();
-			pcart.fadeout();
+
+			if( view ) {
+
+				pinfo.fadeout();
+				backb.fadeout();
+				pcart.fadeout();
+
+			}
 
 		}
 		else {
 
-			pcart.fadeout();
-			plist.fadeout();
-			pinfo.fadein();
-			backb.fadein();
+			if( view ) {
+
+				pcart.fadeout();
+				plist.fadeout();
+				pinfo.fadein();
+				backb.fadein();
+
+			}
 
 		}
 
@@ -1117,6 +1132,11 @@ class HtmlPageEvents extends HtmlPageState {
 						e.innerHTML = 'Недостаточное количество товара для заказа, Ваш заказ изменён, проверьте пожалуйста и попробуйте ещё раз';
 						e.fadein();
 
+						let idle = new Idle();
+						idle.onAway = function () { e.fadeout('inline-block'); idle.stop(); };
+						idle.setAwayTimeout(3000);
+						idle.start();
+
 						new_page_state.cart_edit_ = true;
 						new_page_state.product_ = null;
 						new_page_state.modified_ = true;
@@ -1344,26 +1364,5 @@ switch (mgs_source.readyState) {
 */
 	manager = new HtmlPageManager;
 
-	idle = new Idle();
-
-	idle.onAway = function() {
-
-		console.log(new Date().toTimeString() + ": away");
-
-		xpath_eval_single('html/body/div[@alert]').fadeout('inline-block');
-
-	};
-
-	idle.onAwayBack = function() {
-
-		console.log(new Date().toTimeString() + ": back");
-
-	};
-
-	idle.setAwayTimeout(15000);
-	idle.start();
-
 }
-//------------------------------------------------------------------------------
-////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------
