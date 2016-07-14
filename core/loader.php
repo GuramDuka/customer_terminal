@@ -40,7 +40,7 @@ class loader_handler extends handler {
 
 		foreach( $loaders as $loader_name ) {
 
-			$objects = @$this->request_->{$loader_name};
+			$objects = @$this->request_[$loader_name];
 
 			if( $objects === null || count($objects) === 0 )
 				continue;
@@ -55,8 +55,7 @@ class loader_handler extends handler {
 
 		}
 
-		if( @$this->request_->rewrite_pages !== null
-			&& $this->request_->rewrite_pages ) {
+		if( @$this->request_['rewrite_pages'] ) {
 
 			require_once LOADERS_DIR . 'pages_writer.php';
 

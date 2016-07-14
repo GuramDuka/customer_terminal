@@ -35,7 +35,7 @@ class categories_registry_loader extends objects_loader {
 			foreach( $all_fields as $field )
 				$$field = null;
 
-			extract(get_object_vars($object));
+			extract($object);
 
 			// may be nulls on erase
 			foreach( $fields_uuid as $field )
@@ -94,7 +94,7 @@ EOT
 				foreach( $fields as $field )
 					$$field = null;
 
-				extract(get_object_vars($record));
+				extract($record);
 
 				foreach( $fields_uuid as $field )
 					$$field = uuid2bin(@$$field);

@@ -70,7 +70,7 @@ EOT
 			foreach( $all_fields as $field )
 				$$field = null;
 
-			extract(get_object_vars($object));
+			extract($object);
 
 			foreach( $fields_uuid as $field )
 				$$field = uuid2bin(@$$field);
@@ -181,7 +181,7 @@ EOT
 					foreach( $all_fields as $field )
 						$$field = null;
 
-					extract(get_object_vars($record));
+					extract($record);
 
 					foreach( $fields_uuid as $field )
 						$$field = uuid2bin(@$$field);

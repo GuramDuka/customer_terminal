@@ -22,7 +22,7 @@ class categorer_handler extends handler {
 		$this->infobase_->set_create_if_not_exists(false);
 		$this->infobase_->initialize();
 
-		extract(get_object_vars($this->request_));
+		extract($this->request_);
 
 		$parent_uuid = uuid2bin($parent);
 		$category_table = 'products_' . uuid2table_name($parent_uuid) . 'pages';

@@ -35,7 +35,7 @@ abstract class handler {
 
 			\runtime_exception::throw_false($json);
 
-			$this->request_ = json_decode($json, false, 512, JSON_BIGINT_AS_STRING);
+			$this->request_ = json_decode($json, true, 512, JSON_BIGINT_AS_STRING);
 			\invalid_json_exception::throw_json_error();
 
 			// release memory

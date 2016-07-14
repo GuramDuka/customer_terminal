@@ -1,4 +1,8 @@
 //------------------------------------------------------------------------------
+let manager = null;
+let msg_source = null;
+let idle = null;
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------
 class HtmlPageState {
@@ -74,9 +78,7 @@ class HtmlPageState {
 
 		this.page_state_	= {
 			category_					: null,
-			paging_state_by_category_	: {
-				null : Object.assign({}, this.paging_state_template)
-			},
+			paging_state_by_category_	: { null : this.paging_state_template },
 			product_					: null,
 			cart_edit_					: false,
 			cart_pgno_					: 0,
@@ -162,17 +164,6 @@ class Render {
 
 		let state = this.state_;
 		let new_paging_state = new_page_state.paging_state_by_category_[new_page_state.category_];
-
-		new_paging_state.page_size_	= data.page_size;
-		new_paging_state.pages_		= data.pages;
-
-		// if pages changed suddenly
-		if( new_paging_state.pgno_ >= new_paging_state.pages_ ) {
-			new_paging_state.pgno_ = new_paging_state.pages_ > 0 ? new_paging_state.pages_ - 1 : 0;
-			this.rewrite_page(new_page_state);
-			return;
-		}
-
 		let element = xpath_eval_single('html/body/div[@plist]/div[@ptable]');
 
 		if( element.innerHTML.isEmpty() ) {
@@ -182,7 +173,7 @@ class Render {
 
 			for( let i = 0; i < new_paging_state.page_size_; i++ )
 				html +=
-					'<div pitem="' + i + '" fadein>'
+					'<div pitem="' + i + '">'
 					+ '<div pimg></div>'
 					+ '<p pname></p>'
 					+ '<p pprice></p>'
@@ -258,22 +249,20 @@ class Render {
 
 		}
 
-		let base = xpath_eval_single('html/body/div[@plist]/div[@pcontrols]/div[@plist_controls]');
+		let pctrl = xpath_eval_single('html/body/div[@plist]/div[@pcontrols]');
+		let base = xpath_eval_single('div[@plist_controls]', pctrl);
 
-		xpath_eval_single('div[@first_page]', base).style.display =
-			new_paging_state.pgno_ < 2 || new_paging_state.pages_ < 2  ? 'none' : 'inline-block';
-		xpath_eval_single('div[@prev_page]', base).style.display =
-			new_paging_state.pgno_ === 0 || new_paging_state.pages_ < 2 ? 'none' : 'inline-block';
+		xpath_eval_single('div[@first_page]', base).fade(new_paging_state.pgno_ < 2 || new_paging_state.pages_ < 2  ? false : true);
+		xpath_eval_single('div[@prev_page]', base).fade(new_paging_state.pgno_ === 0 || new_paging_state.pages_ < 2 ? false : true);
 		xpath_eval_single('div[@prev_page]/span[@btn_txt]', base).innerText = (new_paging_state.pgno_ + 1) - 1;
-		xpath_eval_single('div[@next_page]', base).style.display =
-			new_paging_state.pgno_ > new_paging_state.pages_ - 2 || new_paging_state.pages_ < 2 ? 'none' : 'inline-block';
+		xpath_eval_single('div[@next_page]', base).fade(new_paging_state.pgno_ > new_paging_state.pages_ - 2 || new_paging_state.pages_ < 2 ? false : true);
 		xpath_eval_single('div[@next_page]/span[@btn_txt]', base).innerText = (new_paging_state.pgno_ + 1) + 1;
-		xpath_eval_single('div[@last_page]', base).style.display =
-			new_paging_state.pgno_ > new_paging_state.pages_ - 3 || new_paging_state.pages_ < 3 ? 'none' : 'inline-block';
-		if( new_paging_state.pages_ > 0 )
-			xpath_eval_single('html/body/div[@plist]/div[@pcontrols]/div[@plist_controls]/div[@last_page]/span[@btn_txt]').innerText = new_paging_state.pages_;
+		xpath_eval_single('div[@last_page]', base).fade(new_paging_state.pgno_ > new_paging_state.pages_ - 3 || new_paging_state.pages_ < 3 ? false : true);
 
-		base = xpath_eval_single('html/body/div[@plist]/div[@pcontrols]/div[@psort_controls]');
+		if( new_paging_state.pages_ > 0 )
+			xpath_eval_single('div[@last_page]/span[@btn_txt]', base).innerText = new_paging_state.pages_;
+
+		base = xpath_eval_single('div[@psort_controls]', pctrl);
 
 		let order = state.orders_[new_paging_state.order_];
 		let direction = state.directions_[new_paging_state.direction_];
@@ -301,7 +290,7 @@ class Render {
 		xpath_eval_single('div[@pimg]', pinfo_element).style.backgroundImage = 'url(' + product.img_url + ')';
 		xpath_eval_single('div[@pmid]/p[@pname]', pinfo_element).innerHTML = product.name + ' [' + product.code + ']';
 
-		let coefficients = [ 0, 0 ];
+		let coefficients = [ 1, 1 ];
 		let html = '';
 
 		for( let p of data.properties ) {
@@ -378,12 +367,12 @@ class Render {
 			xpath_eval_single('span[@ccount]'	, cinfo).innerText = 'В корзине: ' + ccount + ' товар' + (ccount == 1 ? '' : ccount <= 4 ? 'а' : 'ов');
 			xpath_eval_single('span[@csum]'		, cinfo).innerHTML = 'На сумму : ' + csum + '&nbsp;₽';
 
-			pcrin.style.display = 'inline-block';
+			pcrin.fadein();
 
 		}
 		else {
 
-			pcrin.style.display = 'none';
+			pcrin.fadeout();
 
 		}
 
@@ -425,11 +414,11 @@ class Render {
 					+ '<img btn_ico src="/resources/assets/cart/cart_edit.ico">'
 					+ '<span btn_txt>ИЗМЕНИТЬ</span>'
 					+ '</div>'
-					+ '<div btn plus_one fadein="oneshot">'
+					+ '<div btn plus_one>'
 					+ '<img btn_ico src="/resources/assets/plus.ico">'
 					+ '</div>'
 					+ '<span pbuy_quantity></span>'
-					+ '<div btn minus_one fadein="oneshot">'
+					+ '<div btn minus_one>'
 					+ '<img btn_ico src="/resources/assets/minus.ico">'
 					+ '</div>'
 					+ '</div>'
@@ -437,6 +426,7 @@ class Render {
 
 			element.innerHTML = html;
 
+			state.setup_animation_events(xpath_eval('//*[@fadein or @fadeout]', element));
 			state.setup_events(xpath_eval('div[@pitem]/div[@btn]', element));
 
 		}
@@ -478,13 +468,11 @@ class Render {
 
 		}
 
-		xpath_eval_single('div[@pcontrols]/div[@btn and @prev_page]', element.parentNode).style.display =
-			new_page_state.cart_pgno_ > 0 ? 'inline-block' : 'none';
-		xpath_eval_single('div[@pcontrols]/div[@btn and @next_page]', element.parentNode).style.display =
-			new_page_state.cart_pgno_ + 1 < new_page_state.cart_pages_ ? 'inline-block' : 'none';
+		xpath_eval_single('div[@pcontrols]/div[@btn and @prev_page]', element.parentNode).fade(new_page_state.cart_pgno_ > 0);
+		xpath_eval_single('div[@pcontrols]/div[@btn and @next_page]', element.parentNode).fade(new_page_state.cart_pgno_ + 1 < new_page_state.cart_pages_);
 
 		for( let a of xpath_eval('div[@pitem]/span[@psum]', element) )
-			a.style.display = buy_quantity_one ? 'none' : 'inline-block';
+			a.fade(!buy_quantity_one);
 
 	}
 
@@ -527,6 +515,16 @@ class Render {
 
 		let data = post_json_sync('proxy.php', request);
 		state.ellapsed_ += data.ellapsed;
+
+		new_paging_state.page_size_	= data.page_size;
+		new_paging_state.pages_		= data.pages;
+
+		// if pages changed suddenly
+		if( new_paging_state.pgno_ >= new_paging_state.pages_ ) {
+			new_paging_state.pgno_ = new_paging_state.pages_ > 0 ? new_paging_state.pages_ - 1 : 0;
+			this.rewrite_page(new_page_state);
+			return;
+		}
 
 		this.assemble_page(new_page_state, data);
 
@@ -574,13 +572,11 @@ class Render {
 		let data = post_json_sync('proxy.php', request);
 		state.ellapsed_ += data.ellapsed;
 
-		data.cart_by_uuid = {};
+		new_page_state.cart_ = data.cart;
+		new_page_state.cart_by_uuid_ = {};
 
 		for( let e of data.cart )
-			data.cart_by_uuid[e.uuid] = e;
-
-		new_page_state.cart_ = data.cart;
-		new_page_state.cart_by_uuid_ = data.cart_by_uuid;
+			new_page_state.cart_by_uuid_[e.uuid] = e;
 
 		this.assemble_cart_informer(new_page_state, data);
 		this.assemble_cart(new_page_state, data);
@@ -590,9 +586,10 @@ class Render {
 	show_new_page_state(new_page_state = null) {
 
 		let state = this.state_;
+		let cur_state = state.page_state_;
 
 		if( new_page_state === null )
-			new_page_state = state.page_state_;
+			new_page_state = cur_state;
 
 		let plist = xpath_eval_single('html/body/div[@plist]');
 		let pinfo = xpath_eval_single('html/body/div[@pinfo]');
@@ -602,33 +599,27 @@ class Render {
 
 		if( new_page_state.cart_edit_ ) {
 
-			plist.style.display = 'none';
-			pinfo.style.display = 'none';
-			backb.style.display = 'inline-block';
-			pcart.style.display = 'inline-block';
+			plist.fadeout();
+			pinfo.fadeout();
+			backb.fadein();
+			pcart.fadein();
 
 		}
 		else if( new_page_state.product_ === null ) {
 
-			plist.style.display = 'inline-block';
-			pinfo.style.display = 'none';
-			backb.style.display = 'none';
-			pcart.style.display = 'none';
+			plist.fadein();
+			pinfo.fadeout();
+			backb.fadeout();
+			pcart.fadeout();
 
 		}
 		else {
 
-			pcart.style.display = 'none';
-			plist.style.display = 'none';
-			pinfo.style.display = 'inline-block';
-			backb.style.display = 'inline-block';
+			pcart.fadeout();
+			plist.fadeout();
+			pinfo.fadein();
+			backb.fadein();
 
-		}
-
-		// restore fadein annimation effect if needed
-		for( let e of xpath_eval('//*[@fadein_rest]') ) {
-			e.removeAttribute('fadein_rest');
-			e.setAttribute('fadein', '');
 		}
 
 	}
@@ -658,7 +649,7 @@ class Render {
 
 			if( !new_paging_state ) {
 
-				new_paging_state = Object.assign({}, state.paging_state_template);
+				new_paging_state = state.paging_state_template;
 				new_paging_state.category_ = c.uuid;
 				new_page_state.paging_state_by_category_[c.uuid] = new_paging_state;
 
@@ -675,6 +666,7 @@ class Render {
 		element.innerHTML = html;
 
 		// set events for new a[@btc] elements
+		state.setup_animation_events(xpath_eval('//*[@fadein or @fadeout]', element));
 		state.setup_events(xpath_eval('div[@btc]', element));
 
 	}
@@ -691,7 +683,6 @@ class HtmlPageEvents extends HtmlPageState {
 
 		this.render_ = null;
 		this.events_ = [
-			'animationend',
 			//'mousedown',
 			//'mouseenter',
 			//'mouseleave',
@@ -723,20 +714,18 @@ class HtmlPageEvents extends HtmlPageState {
 		this.ellapsed_	= 0;
 
 		let get_new_state = function () {
-			new_page_state				= Object.assign({}, state.page_state_);
+			new_page_state				= extend_object(state.page_state_);
+
+			new_page_state.cart_by_uuid_ = {};
+
+			for( let e of new_page_state.cart_ )
+				new_page_state.cart_by_uuid_[e.uuid] = e;
+
 			new_page_state.modified_	= false;
 			new_paging_state			= new_page_state.paging_state_by_category_[new_page_state.category_];
 		};
 
 		switch( e.type ) {
-
-			case 'animationend'	:
-
-				if( attrs.fadein && attrs.fadein.value.isEmpty() ) {
-					element.removeAttribute('fadein');
-					element.setAttribute('fadein_rest', '');
-				}
-				break;
 
 			case 'mouseup'		:
 
@@ -888,7 +877,6 @@ class HtmlPageEvents extends HtmlPageState {
 					new_page_state.modified_ = true;
 
 					render.rewrite_info(new_page_state);
-					render.show_new_page_state(new_page_state);
 
 				}
 				else if( attrs.btn && attrs.back ) {
@@ -907,7 +895,6 @@ class HtmlPageEvents extends HtmlPageState {
 					new_page_state.modified_ = true;
 
 					render.rewrite_page(new_page_state);
-					render.show_new_page_state(new_page_state);
 
 				}
 				else if( attrs.pimg
@@ -1078,10 +1065,9 @@ class HtmlPageEvents extends HtmlPageState {
 					new_page_state.modified_ = true;
 
 					render.rewrite_cart(new_page_state);
-					render.show_new_page_state(new_page_state);
 
 				}
-				else if( attrs.btn && attrs.check
+				else if( attrs.btn && attrs.cheque
 					&& element.parentNode.attributes.cart_informer ) {
 
 					get_new_state();
@@ -1092,38 +1078,96 @@ class HtmlPageEvents extends HtmlPageState {
 						'order'		: []
 					};
 
-					for( let e of new_page_state.cart_ ) {
-
+					for( let e of new_page_state.cart_ )
 						request.order.push({
 							'uuid'		: e.uuid,
+							'price'		: e.price,
 							'quantity'	: e.buy_quantity
 						});
-
-						e.buy_quantity = 0;
-
-					}
 
 					let data = post_json_sync('proxy.php', request);
 					state.ellapsed_ += data.ellapsed;
 
-					/*data.order.uuid
-					data.order.number
-					data.order.date
-					data.order.barcode
-					data.order.barcode_eangnivc
+					if( data.order.availability ) {
 
-					print them
-					*/
+						// fail, modify buy quantities and show cart alert
 
-					render.rewrite_cart(new_page_state);
+						for( let p of data.order.availability ) {
 
-					new_page_state.cart_edit_ = false;
+							let e = new_page_state.cart_by_uuid_[p.product];
+
+							if( e.buy_quantity > p.remainder - p.reserve ) {
+
+								e.buy_quantity = p.remainder - p.reserve;
+								e.modified = true;
+
+							}
+
+							//data.availability[i].product
+							//data.availability[i].remainder
+							//data.availability[i].reserve
+							//data.availability[i].quantity
+							//data.availability[i].na
+
+						}
+
+						render.rewrite_cart(new_page_state);
+
+						let e = xpath_eval_single('html/body/div[@alert]');
+						e.innerHTML = 'Недостаточное количество товара для заказа, Ваш заказ изменён, проверьте пожалуйста и попробуйте ещё раз';
+						e.fadein();
+
+						new_page_state.cart_edit_ = true;
+						new_page_state.product_ = null;
+						new_page_state.modified_ = true;
+
+					}
+					else {
+
+						let iframe_content = xpath_eval_single('html/body/iframe[@cheque_print]').contentWindow;
+						let iframe	= iframe_content.document;
+
+						let head	= xpath_eval_single('html/body/div[@head]', iframe, iframe);
+						xpath_eval_single('p[@node_name]'			, head, iframe).innerHTML = data.order.name;
+						xpath_eval_single('p[@uuid]'				, head, iframe).innerHTML = data.order.uuid;
+						xpath_eval_single('p[@number]'				, head, iframe).innerHTML = 'Заказ&nbsp;:&nbsp;' + data.order.number;
+						xpath_eval_single('p[@date]'				, head, iframe).innerHTML = 'Время&nbsp;:&nbsp;' + data.order.date.toLocaleFormat('%d.%M.%Y %H:%M:%S');
+						xpath_eval_single('p[@barcode]'				, head, iframe).innerHTML = 'EAN13&nbsp;:&nbsp;' + data.order.barcode;
+
+						let table	= xpath_eval_single('html/body/div[@table]', iframe, iframe);
+						xpath_eval_single('p[@totals]/span[@txt]'	, table, iframe).innerHTML = 'Сумма&nbsp;:';
+						xpath_eval_single('p[@totals]/span[@sum]'	, table, iframe).innerHTML = data.order.totals + '&nbsp;₽';
+
+						let tail	= xpath_eval_single('html/body/div[@tail]', iframe, iframe);
+						xpath_eval_single('p[@barcode]'				, tail, iframe).innerHTML = data.order.barcode_eangnivc;
+
+						iframe_content.print();
+
+						// successfully, clear cart now
+						for( let e of new_page_state.cart_ ) {
+
+							e.buy_quantity = 0;
+							e.modified = true;
+
+						}
+
+						render.rewrite_cart(new_page_state);
+
+						new_page_state.cart_edit_ = false;
+
+					}
+
 					new_page_state.product_ = null;
 					new_page_state.modified_ = true;
 
-					render.show_new_page_state(new_page_state);
+				}
+				else if( attrs.alert ) {
+
+					// switch off product image large view
+					xpath_eval_single('html/body/div[@alert]').fadeout('inline-block');
 
 				}
+
 				break;
 
 			case 'touchstart'	:
@@ -1150,7 +1194,8 @@ class HtmlPageEvents extends HtmlPageState {
 		// success rewrite page, save new state
 		if( new_page_state && new_page_state.modified_ ) {
 
-			new_page_state.paging_state_by_category_[new_page_state.category_] = new_paging_state;
+			render.show_new_page_state(new_page_state);
+
 			this.page_state_ = new_page_state;
 
 			render.debug_ellapsed(0, 'PAGE:&nbsp;');
@@ -1158,6 +1203,51 @@ class HtmlPageEvents extends HtmlPageState {
 		}
 
 		e.preventDefault();
+
+	}
+
+	animation_events_handler(e) {
+
+		if( e.animationName !== 'fadein' && e.animationName !== 'fadeout' )
+			return;
+
+		let element	= e.currentTarget;
+		let attrs	= element.attributes;
+
+		if( attrs.fadein || attrs.fadeout ); else return;
+
+		switch( e.type ) {
+
+			case 'animationstart'	:
+				break;
+
+			case 'animationend'		:
+
+				if( attrs.fadein )
+					element.removeAttribute('fadein');
+
+				if( attrs.fadeout ) {
+
+					if( attrs.fadeout.value.isEmpty() )
+						element.style.display = 'none';
+
+					element.removeAttribute('fadeout');
+
+				}
+
+				break;
+
+		}
+
+		e.preventDefault();
+
+	}
+
+	setup_animation_events(elements, phase = false) {
+
+		for( let element of elements )
+			for( let event of [ 'animationstart', 'animationend' ] )
+				add_event(element, event , e => this.animation_events_handler(e), phase);
 
 	}
 
@@ -1169,8 +1259,8 @@ class HtmlPageEvents extends HtmlPageState {
 			// xpath-to-select-multiple-tags
 			// //body/*[self::div or self::p or self::a]
 
-		for( let event of this.events_ )
-			for( let element of elements )
+		for( let element of elements )
+			for( let event of this.events_ )
 				add_event(element, event , e => this.events_handler(e), phase);
 
 	}
@@ -1187,11 +1277,12 @@ class HtmlPageManager extends HtmlPageEvents {
 
 		Render.hide_cursor();
 
+		this.setup_animation_events(xpath_eval('//*[@fadein or @fadeout]'));
 		this.setup_events(xpath_eval('html/body/div[@btn]'));
 		this.setup_events(xpath_eval('html/body/div[@plist]/div[@pcontrols]/div[@plist_controls or @psort_controls]/div[@btn]'));
 		this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pright]/div[@btn]'));
 		this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pimg]'));
-		this.setup_events(xpath_eval('html/body/div[@plargeimg]'));
+		this.setup_events(xpath_eval('html/body/div[@plargeimg or @alert]'));
 		this.setup_events(xpath_eval('html/body/div[@top]/div[@cart_informer]/div[@btn]'));
 		this.setup_events(xpath_eval('html/body/div[@pcart]/div[@pcontrols]/div[@btn]'));
 
@@ -1206,9 +1297,6 @@ class HtmlPageManager extends HtmlPageEvents {
 	}
 
 }
-//------------------------------------------------------------------------------
-let manager = null;
-let msg_source = null;
 //------------------------------------------------------------------------------
 function core() {
 /*
@@ -1244,7 +1332,7 @@ switch (mgs_source.readyState) {
 
 	msg_source.addEventListener('ping', function (e) {
 		//let newElement = document.createElement("li");
-  		let obj = JSON.parse(e.data);
+  		let obj = JSON.parse(e.data, JSON.dateParser);
   		//newElement.innerHTML = "ping at " + obj.time;
 		//eventList.appendChild(newElement);
 		Render.debug(8, 'ping at ' + obj.time);
@@ -1256,26 +1344,26 @@ switch (mgs_source.readyState) {
 */
 	manager = new HtmlPageManager;
 
+	idle = new Idle();
+
+	idle.onAway = function() {
+
+		console.log(new Date().toTimeString() + ": away");
+
+		xpath_eval_single('html/body/div[@alert]').fadeout('inline-block');
+
+	};
+
+	idle.onAwayBack = function() {
+
+		console.log(new Date().toTimeString() + ": back");
+
+	};
+
+	idle.setAwayTimeout(15000);
+	idle.start();
+
 }
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
-//------------------------------------------------------------------------------
-/*let idle = new Idle();
-//------------------------------------------------------------------------------
-let idle_away_callback = function() {
-
-	console.log(new Date().toTimeString() + ": away");
-
-};
-//------------------------------------------------------------------------------
-let idle_away_back_callback = function() {
-
-	console.log(new Date().toTimeString() + ": back");
-
-};
-//------------------------------------------------------------------------------
-idle.onAway = idle_away_callback;
-idle.onAwayBack = idle_away_back_callback;
-idle.setAwayTimeout(15000);
-idle.start();*/
 //------------------------------------------------------------------------------

@@ -183,7 +183,7 @@
 
 	html > body > div[top] > div[cart_informer] > div[btn][drop],
 	html > body > div[top] > div[cart_informer] > div[btn][cart],
-	html > body > div[top] > div[cart_informer] > div[btn][check] {
+	html > body > div[top] > div[cart_informer] > div[btn][cheque] {
 		float				: right;
 		margin-right		: 3px;
 	}
@@ -195,12 +195,12 @@
 
 	html > body > div[top] > div[cart_informer] > div[btn][cart] > img[btn_ico] {
 		/* fix: shift down */
-		margin-top			: -1.1%;
+		margin-top			: -3.1%;
 	}
 
-	html > body > div[top] > div[cart_informer] > div[btn][check] > img[btn_ico] {
+	html > body > div[top] > div[cart_informer] > div[btn][cheque] > img[btn_ico] {
 		/* fix: shift down */
-		margin-top			: -2.1%;
+		margin-top			: -3.1%;
 	}
 
 	html > body > div[top] > div[logo] > img {
@@ -223,6 +223,7 @@
 		float				: right;
 		width				: auto;
 		margin-right		: 3px;
+		display				: none;
 	}
 
 	html > body > div[btn][back] > img[btn_ico] {
@@ -691,40 +692,30 @@
 		z-index				: 1;
 	}
 
-	html > body > p[debug] {
+	html > body > iframe[cheque_print] {
 		display				: none;
 	}
 
-}
-
-@media screen {
-
-	@keyframes blink {  
-		from { opacity: 1.0; }
-		to { opacity: 0.0; }
-	}
-
-/* http://www.roblaplaca.com/examples/bezierBuilder/
-  cubic-bezier(.13, 1.01, -.01, 1.01)
- */
-
-	*[blink] {
-		animation			: blink 0.6s cubic-bezier(1.0, 0, 0.7, 1.0) infinite alternate;
-	}
-
-	@keyframes noblink {}
-
-	*[noblink] {
-		animation			: noblink;
-	}
-
-	@keyframes fadein {
-    	from { opacity: 0; }
-	    to   { opacity: 1; }
-	}
-
-	*[fadein] {
-		animation			: fadein 200ms;
+	html > body > div[alert] {
+		z-index				: 2000;
+		position			: fixed;
+		top					: 2.5%;
+		left				: 2.5%;
+		width				: 95%;
+		height				: 95%;
+		float				: none;
+		border				: 3px solid #dfba3c;
+		border-radius		: 7px;
+		box-shadow			: none;
+		background-color	: white;
+		background-size		: contain;
+		background-repeat	: no-repeat;
+		background-position	: center;
+		display				: none;
+		font-size			: 32px;
+		font-weight			: bold;
+		text-align			: center;
+		vertical-align		: middle;
 	}
 
 	html > body > div[debug] {
@@ -754,6 +745,45 @@
 		font-weight			: normal;
 		font-style			: normal;
 
+	}
+
+	/* animation */
+
+	@keyframes blink {  
+		from { opacity: 1.0; }
+		to { opacity: 0.0; }
+	}
+
+	/* http://www.roblaplaca.com/examples/bezierBuilder/
+	  cubic-bezier(.13, 1.01, -.01, 1.01)
+	 */
+
+	*[blink] {
+		animation			: blink 0.6s cubic-bezier(1.0, 0, 0.7, 1.0) infinite alternate;
+	}
+
+	@keyframes noblink {}
+
+	*[noblink] {
+		animation			: noblink;
+	}
+
+	@keyframes fadein {
+    	from { opacity: 0; }
+	    to   { opacity: 1; }
+	}
+
+	*[fadein] {
+		animation			: fadein 200ms;
+	}
+
+	@keyframes fadeout {
+    	from { opacity: 1; }
+	    to   { opacity: 0; }
+	}
+
+	*[fadeout] {
+		animation			: fadeout 2000ms;
 	}
 
 }

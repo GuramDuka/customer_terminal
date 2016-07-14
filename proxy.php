@@ -34,8 +34,8 @@ class proxy_handler extends srv1c\handler {
 			]
 		];
 
-		$module = @$this->request_->module;
-		$handler = @$this->request_->handler;
+		$module = @$this->request_['module'];
+		$handler = @$this->request_['handler'];
 
 		if( !array_key_exists($module, $modules) )
 			throw new runtime_exception('Unknown module ' . $module, E_ERROR);
@@ -54,8 +54,8 @@ class proxy_handler extends srv1c\handler {
 		$handler->request_ = $this->request_;
 
 		$this->request_ = null;
-		unset($handler->request_->module);
-		unset($handler->request_->handler);
+		unset($handler->request_['module']);
+		unset($handler->request_['handler']);
 
 		$handler->handle_request();
 

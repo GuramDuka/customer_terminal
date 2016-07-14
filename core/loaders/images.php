@@ -29,7 +29,7 @@ class images_loader extends objects_loader {
 			foreach( $all_fields as $field )
 				$$field = null;
 
-			extract(get_object_vars($object));
+			extract($object);
 
 			foreach( $fields_uuid as $field )
 				$$field = uuid2bin(@$$field);
@@ -37,7 +37,7 @@ class images_loader extends objects_loader {
 			if( $raw !== null && !empty($raw) ) {
 
 				$dir = APP_DIR . get_image_path($uuid);
-				$name = $dir . DIRECTORY_SEPARATOR . $object->uuid;
+				$name = $dir . DIRECTORY_SEPARATOR . $object['uuid'];
 
 				$raw = base64_decode($raw);
 
@@ -192,7 +192,7 @@ class images_loader extends objects_loader {
 			foreach( $all_fields as $field )
 				$$field = null;
 
-			extract(get_object_vars($object));
+			extract($object);
 
 			foreach( $fields_uuid as $field )
 				$$field = uuid2bin(@$$field);

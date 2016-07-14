@@ -34,7 +34,7 @@ class properties_assignments_loader extends objects_loader {
 			foreach( $all_fields as $field )
 				$$field = null;
 
-			extract(get_object_vars($object));
+			extract($object);
 
 			foreach( $fields_uuid as $field )
 				$$field = uuid2bin(@$$field);

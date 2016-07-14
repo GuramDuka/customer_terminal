@@ -75,7 +75,14 @@ EOT
 
 	protected function handle_order(&$order) {
 
-		$constants = [ 'exchange_node' => null, 'exchange_url' => null, 'exchange_user' => null, 'exchange_pass' => null ];
+		$constants = [
+			'exchange_node'			=> null,
+			'exchange_node_name'	=> null,
+			'exchange_url'			=> null,
+			'exchange_user'			=> null,
+			'exchange_pass'			=> null
+		];
+
 		extract($constants);
 
 		$in = '\'' . implode('\', \'', array_keys($constants)) . '\'';
@@ -107,10 +114,11 @@ EOT
 
 		foreach( $order AS $e ) {
 
-			extract(get_object_vars($e));
+			extract($e);
 
 			$order_products[] = [
 				'product'	=> $uuid,
+				'price'		=> $price,
 				'quantity'	=> $quantity
 			];
 
@@ -138,10 +146,10 @@ EOT
 
 		curl_setopt($ch, CURLOPT_USERPWD			, "$exchange_user:$exchange_pass");
 		curl_setopt($ch, CURLOPT_HTTPAUTH			, CURLAUTH_BASIC);
-		curl_setopt($ch, CURLOPT_FAILONERROR		, true);
+		curl_setopt($ch, CURLOPT_FAILONERROR		, false);
 		curl_setopt($ch, CURLOPT_URL				, $exchange_url);
 		curl_setopt($ch, CURLOPT_REFERER			, $exchange_url);
-		curl_setopt($ch, CURLOPT_VERBOSE			, true);
+		curl_setopt($ch, CURLOPT_VERBOSE			, false);
 		curl_setopt($ch, CURLOPT_POST				, true);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION		, true);
 		curl_setopt($ch, CURLOPT_POSTFIELDS			, json_encode($order_request, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
@@ -159,16 +167,29 @@ EOT
 
 		\curl_exception::throw_curl_error($ch);
 
+		$curl_info = curl_getinfo($ch);
 		curl_close($ch);			
-
-		error_log(var_export($response, true));
 
 		// if CURLOPT_FAILONERROR === true && http_code !== 200 then curl library automatical set curl_error to nonzero
 		// and this check not needed
-		//if( $curl_info['http_code'] !== 200 )
-		//	throw new \runtime_exception(var_export($curl_info, true) . "\n" . $response, $curl_info['http_code']);
 
-		$this->response_['order'] = json_decode($response, false, 512, JSON_BIGINT_AS_STRING);
+		if( $curl_info['http_code'] !== 200 ) {
+
+			$msg = "\n" . $response;
+
+			if( config::$debug )
+				$msg .= "\n" . var_export($curl_info, true);
+
+			throw new \runtime_exception($msg, $curl_info['http_code']);
+
+		}
+
+		$data = json_decode(substr($response, $curl_info['header_size']), true, 512, JSON_BIGINT_AS_STRING);
+		\invalid_json_exception::throw_json_error();
+
+		$data['name'] = $exchange_node_name;
+
+		$this->response_['order'] = $data;
 
 	}
 
@@ -180,20 +201,21 @@ EOT
 		$this->infobase_->set_create_if_not_exists(false);
 		$this->infobase_->initialize();
 
-		extract(get_object_vars($this->request_));
+		extract($this->request_);
 
 		$this->infobase_->exec('BEGIN TRANSACTION');
 
 		if( @$order !== null )
 			$this->handle_order($order);
 
-		if( @$products !== null && count($products) > 0 ) {
+		if( @$products !== null && count($products) > 0
+			&& @$order['availability'] === null ) {
 
 			$start_time_st = micro_time();
 
 			foreach( $products as $product ) {
 
-				extract(get_object_vars($product));
+				extract($product);
 
 				$product_uuid = uuid2bin($uuid);
 

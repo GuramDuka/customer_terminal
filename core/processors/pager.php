@@ -24,7 +24,7 @@ class pager_handler extends handler {
 
 		$pgsz = config::$page_size;
 
-		extract(get_object_vars($this->request_));
+		extract($this->request_);
 
 		$this->infobase_->exec('BEGIN TRANSACTION');
 

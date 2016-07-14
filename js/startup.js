@@ -29,9 +29,197 @@ function get_browser() {
 
 }
 //------------------------------------------------------------------------------
-String.prototype.isEmpty = function() {
-    return (this.length === 0 || !this.trim());
+// https://weblog.west-wind.com/posts/2014/jan/06/javascript-json-date-parsing-and-real-dates
+//------------------------------------------------------------------------------
+if( window.JSON && !window.JSON.dateParser ) {
+
+	// http://stackoverflow.com/a/37563868
+	/**
+	 * RegExp to test a string for a ISO 8601 Date spec
+	 *  YYYY
+	 *  YYYY-MM
+	 *  YYYY-MM-DD
+	 *  YYYY-MM-DDThh:mmTZD
+	 *  YYYY-MM-DDThh:mm:ssTZD
+	 *  YYYY-MM-DDThh:mm:ss.sTZD
+	 * @see: https://www.w3.org/TR/NOTE-datetime
+	 * @type {RegExp}
+	 */
+	let ISO_8601 = /^\d{4}(-\d\d(-\d\d(T\d\d:\d\d(:\d\d)?(\.\d+)?(([+-]\d\d:\d\d)|Z)?)?)?)?$/i
+
+	/**
+	 * RegExp to test a string for a full ISO 8601 Date
+	 * Does not do any sort of date validation, only checks if the string is according to the ISO 8601 spec.
+	 *  YYYY-MM-DDThh:mm:ss
+	 *  YYYY-MM-DDThh:mm:ssTZD
+	 *  YYYY-MM-DDThh:mm:ss.sTZD
+	 * @see: https://www.w3.org/TR/NOTE-datetime
+	 * @type {RegExp}
+	 */
+	let ISO_8601_FULL = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?(([+-]\d\d:\d\d)|Z)?$/i
+
+	let reISO = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*))(?:Z|(\+|-)([\d|:]*))?$/;
+	//let reMsAjax = /^\/Date\((d|-|.*)\)[\/|\\]$/;
+   
+	JSON.dateParser = function (key, value) {
+
+		if( typeof value === 'string' ) {
+
+			let a = ISO_8601_FULL.exec(value);
+
+			if( a )
+				return new Date(value);
+
+			/*let a = reISO.exec(value);
+
+			if( a )
+				return new Date(value);
+
+			a = reMsAjax.exec(value);
+
+			if( a ) {
+				let b = a[1].split(/[-+,.]/);
+				return new Date(b[0] ? +b[0] : 0 - +b[1]);
+			}*/
+
+		}
+
+		return value;
+	};
+
+}
+//------------------------------------------------------------------------------
+// http://stackoverflow.com/a/1042676
+// extends 'from' object with members from 'to'. If 'to' is null, a deep clone of 'from' is returned
+function extend_object(from, to = null) {
+
+    if( from == null || typeof from != 'object' )
+		return from;
+
+    if( from.constructor != Object && from.constructor != Array )
+		return from;
+
+    if( from.constructor == Date || from.constructor == RegExp || from.constructor == Function ||
+		from.constructor == String || from.constructor == Number || from.constructor == Boolean )
+		return new from.constructor(from);
+
+	to = to || new from.constructor();
+
+    for( let name in from )
+		to[name] = typeof to[name] == 'undefined' ? extend_object(from[name], null) : to[name];
+
+    return to;
+
+}
+//------------------------------------------------------------------------------
+HTMLElement.prototype.fade_state = undefined;
+//------------------------------------------------------------------------------
+HTMLElement.prototype.fadein = function () {
+
+	this.removeAttribute('fadeout');
+	this.fade_state = true;
+	this.setAttribute('fadein', '');
+	this.style.display = 'inline-block';
+
 };
+//------------------------------------------------------------------------------
+HTMLElement.prototype.fadeout = function (display = 'none') {
+
+	this.removeAttribute('fadein');
+	this.fade_state = false;
+	this.setAttribute('fadeout', '');
+	this.style.display = display;
+
+};
+//------------------------------------------------------------------------------
+HTMLElement.prototype.fade = function (v) {
+
+	if( this.fade_state === v )
+		return;
+
+	if( v )
+		this.fadein();
+	else
+		this.fadeout();
+
+};
+//------------------------------------------------------------------------------
+String.prototype.isEmpty = function () {
+    return this.length === 0 || !this.trim();
+};
+//------------------------------------------------------------------------------
+function htmlspecialchars(string, quoteStyle, charset, doubleEncode) {
+  //       discuss at: http://locutus.io/php/htmlspecialchars/
+  //      original by: Mirek Slugen
+  //      improved by: Kevin van Zonneveld (http://kvz.io)
+  //      bugfixed by: Nathan
+  //      bugfixed by: Arno
+  //      bugfixed by: Brett Zamir (http://brett-zamir.me)
+  //      bugfixed by: Brett Zamir (http://brett-zamir.me)
+  //       revised by: Kevin van Zonneveld (http://kvz.io)
+  //         input by: Ratheous
+  //         input by: Mailfaker (http://www.weedem.fr/)
+  //         input by: felix
+  // reimplemented by: Brett Zamir (http://brett-zamir.me)
+  //           note 1: charset argument not supported
+  //        example 1: htmlspecialchars("<a href='test'>Test</a>", 'ENT_QUOTES')
+  //        returns 1: '&lt;a href=&#039;test&#039;&gt;Test&lt;/a&gt;'
+  //        example 2: htmlspecialchars("ab\"c'd", ['ENT_NOQUOTES', 'ENT_QUOTES'])
+  //        returns 2: 'ab"c&#039;d'
+  //        example 3: htmlspecialchars('my "&entity;" is still here', null, null, false)
+  //        returns 3: 'my &quot;&entity;&quot; is still here'
+
+  var optTemp = 0
+  var i = 0
+  var noquotes = false
+  if (typeof quoteStyle === 'undefined' || quoteStyle === null) {
+    quoteStyle = 2
+  }
+  string = string || ''
+  string = string.toString()
+
+  if (doubleEncode !== false) {
+    // Put this first to avoid double-encoding
+    string = string.replace(/&/g, '&amp;')
+  }
+
+  string = string
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+
+  var OPTS = {
+    'ENT_NOQUOTES': 0,
+    'ENT_HTML_QUOTE_SINGLE': 1,
+    'ENT_HTML_QUOTE_DOUBLE': 2,
+    'ENT_COMPAT': 2,
+    'ENT_QUOTES': 3,
+    'ENT_IGNORE': 4
+  }
+  if (quoteStyle === 0) {
+    noquotes = true
+  }
+  if (typeof quoteStyle !== 'number') {
+    // Allow for a single string or an array of string flags
+    quoteStyle = [].concat(quoteStyle)
+    for (i = 0; i < quoteStyle.length; i++) {
+      // Resolve string input to bitwise e.g. 'ENT_IGNORE' becomes 4
+      if (OPTS[quoteStyle[i]] === 0) {
+        noquotes = true
+      } else if (OPTS[quoteStyle[i]]) {
+        optTemp = optTemp | OPTS[quoteStyle[i]]
+      }
+    }
+    quoteStyle = optTemp
+  }
+  if (quoteStyle & OPTS.ENT_HTML_QUOTE_SINGLE) {
+    string = string.replace(/'/g, '&#039;')
+  }
+  if (!noquotes) {
+    string = string.replace(/"/g, '&quot;')
+  }
+
+  return string
+}
 //------------------------------------------------------------------------------
 function sprintf () {
   //  discuss at: http://locutus.io/php/sprintf/
@@ -642,7 +830,7 @@ function post_json(path, data, success, error) {
 		if( this.readyState === XMLHttpRequest.DONE ) {
 			if( this.status === 200 ) {
 				if( success )
-					success(JSON.parse(this.responseText));
+					success(JSON.parse(this.responseText, JSON.dateParser));
 			}
 			else if( error ) {
 				error(this);
@@ -664,7 +852,7 @@ function post_json_sync(path, data) {
 	xhr.send(JSON.stringify(data, null, '\t'));
 
 	if( xhr.status === 200 )
-		return JSON.parse(xhr.responseText);
+		return JSON.parse(xhr.responseText, JSON.dateParser);
 
 	throw new Error(request.status.toString() + ' ' + request.statusText);
 
@@ -673,19 +861,25 @@ function post_json_sync(path, data) {
 function add_event(obj, type, fn, phase = true) {
 
 	if( obj.addEventListener ) {
+
 		obj.addEventListener(type, fn, phase);
+
 	}
 	else if( obj.attachEvent ) {
+
 		obj.attachEvent('on' + type, function() {
 			return fn.apply(obj, [window.event]);
 		});
+
 	}
+
 }
 //------------------------------------------------------------------------------
-function xpath_eval(path, parent = undefined) {
+function xpath_eval(path, parent = undefined, document_node = null) {
 
+	let doc = document_node === null ? document : document_node;
+	let it = doc.evaluate(path, parent ? parent : doc, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
 	let a = [];
-	let it = document.evaluate(path, parent ? parent : document, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
 	
 	for( let e; e = it.iterateNext(); )
 		a.push(e);
@@ -693,9 +887,9 @@ function xpath_eval(path, parent = undefined) {
 	return a;
 }
 //------------------------------------------------------------------------------
-function xpath_eval_single(path, parent = undefined) {
+function xpath_eval_single(path, parent = undefined, document_node = null) {
 
-	let a = xpath_eval(path, parent);
+	let a = xpath_eval(path, parent, document_node);
 
 	if( a.length > 1 )
 		throw new Error('evaluate return multiple elements');

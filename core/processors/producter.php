@@ -20,7 +20,7 @@ class producter_handler extends handler {
 		$infobase->set_create_if_not_exists(false);
 		$infobase->initialize();
 
-		extract(get_object_vars($this->request_));
+		extract($this->request_);
 
 		$product_uuid = uuid2bin($product);
 
