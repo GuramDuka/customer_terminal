@@ -25,7 +25,7 @@ class properties_registry_loader extends objects_loader {
 
 		$start_time = micro_time();
 
-		$this->infobase_->exec('BEGIN TRANSACTION');
+		$this->infobase_->begin_immediate_transaction();
 
 		$st = null;
 		$where = null;

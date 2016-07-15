@@ -26,7 +26,7 @@ class pager_handler extends handler {
 
 		extract($this->request_);
 
-		$this->infobase_->exec('BEGIN TRANSACTION');
+		$this->infobase_->begin_immediate_transaction();
 
 		$category_table = 'products_' . uuid2table_name($category) . 'pages';
 

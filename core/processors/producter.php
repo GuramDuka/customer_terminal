@@ -24,7 +24,7 @@ class producter_handler extends handler {
 
 		$product_uuid = uuid2bin($product);
 
-		$infobase->exec('BEGIN TRANSACTION');
+		$infobase->begin_immediate_transaction();
 
 		/*$infobase->exec(<<<EOT
 			CREATE TEMP TABLE IF NOT EXISTS t_properties (

@@ -25,7 +25,7 @@ function rewrite_pages($infobase) {
 
 	$start_time = micro_time();
 
-	$infobase->exec('BEGIN TRANSACTION');
+	$infobase->begin_immediate_transaction();
 
 	$entity = $infobase->escapeString('products_pages');
 	$r = $infobase->query("SELECT entity FROM dirties WHERE entity = '${entity}'");

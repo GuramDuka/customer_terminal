@@ -203,7 +203,7 @@ EOT
 
 		extract($this->request_);
 
-		$this->infobase_->exec('BEGIN TRANSACTION');
+		$this->infobase_->begin_immediate_transaction();
 
 		if( @$order !== null )
 			$this->handle_order($order);

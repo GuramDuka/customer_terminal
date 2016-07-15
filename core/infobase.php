@@ -38,8 +38,8 @@ class infobase extends \SQLite3 {
 			$pgsz = config::$sqlite_page_size;
 
 			$this->exec("PRAGMA page_size = ${pgsz}");
-			$this->exec('PRAGMA count_changes = OFF');
 			$this->exec('PRAGMA journal_mode = WAL');
+			$this->exec('PRAGMA count_changes = OFF');
 			$this->exec('PRAGMA auto_vacuum = NONE');
 
 		}
@@ -87,6 +87,20 @@ class infobase extends \SQLite3 {
 		return $new_ib;
 
     }
+
+
+	public function begin_immediate_transaction() {
+
+	    // php sqlite3 with enabled exceptions does not wait busy timeout, fix
+
+		$this->enableExceptions(false);
+
+		$v = $this->exec('BEGIN IMMEDIATE TRANSACTION');
+		\runtime_exception::throw_false($v);
+
+		$this->enableExceptions(true);
+
+	}
 
 	public function create_scheme() {
 
