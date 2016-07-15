@@ -119,7 +119,8 @@ class infobase extends \SQLite3 {
 
 		$this->response_['ellapsed'] = $ellapsed_ms;
 
-	    error_log('SQLITE lock wait, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+		if( intval($ellapsed_ms) > 500 )
+	    	error_log('SQLITE lock wait, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
 
 		//\runtime_exception::throw_false($v);
 

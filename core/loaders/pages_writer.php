@@ -25,8 +25,6 @@ function rewrite_pages($infobase) {
 
 	$start_time = micro_time();
 
-	$infobase->begin_immediate_transaction();
-
 	$entity = $infobase->escapeString('products_pages');
 	$r = $infobase->query("SELECT entity FROM dirties WHERE entity = '${entity}'");
 
@@ -115,6 +113,8 @@ EOT
 			$categories[] = $r[0];
 
 		foreach( $categories as $category_uuid ) {
+
+			$infobase->begin_immediate_transaction();
 
 			// fetch categories hierarchy
 			if( $category_uuid !== null ) {
@@ -358,13 +358,13 @@ EOT
 
 			}
 
+			$infobase->exec('COMMIT TRANSACTION');
+
 		}
 
 		$infobase->exec("DELETE FROM dirties WHERE entity = '${entity}'");
 
 	}
-
-	$infobase->exec('COMMIT TRANSACTION');
 
 	if( $pgupd !== 0 ) {
 
