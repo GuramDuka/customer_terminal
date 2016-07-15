@@ -635,7 +635,10 @@ class Render {
 				to_info();
 
 		}
-		
+		else if( new_page_state.category_ !== cur_state.category_ ) {
+			plist.fadein();
+		}
+
 	}
 
 	rewrite_category(new_page_state = null) {

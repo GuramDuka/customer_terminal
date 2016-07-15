@@ -15,8 +15,8 @@ try {
 	$infobase->set_create_if_not_exists(false);
 	$infobase->initialize();
 
-	foreach( $tbl as [ 'products_fts', 'cars_fts', 'properties_values_fts' ] )
-		foreach( $cmd as [ 'optimize'/*, 'rebuild', 'integrity-check'*/ ] ) {
+	foreach( [ 'products_fts', 'cars_fts', 'properties_values_fts' ] as $tbl )
+		foreach( [ 'optimize'/*, 'rebuild', 'integrity-check'*/ ] as $cmd ) {
 
 			$start_time = micro_time();
 			$infobase->exec("INSERT INTO ${tbl} (${tbl}) VALUES('${cmd}')");
