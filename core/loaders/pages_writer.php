@@ -25,10 +25,15 @@ function rewrite_pages($infobase) {
 
 	$start_time = micro_time();
 
+	$infobase->begin_immediate_transaction();
+
 	$entity = $infobase->escapeString('products_pages');
 	$r = $infobase->query("SELECT entity FROM dirties WHERE entity = '${entity}'");
 
 	if( $r->fetchArray(SQLITE3_NUM) || config::$force_rewrite_pages ) {
+
+		$infobase->commit_immediate_transaction();
+		$infobase->begin_immediate_transaction();
 
 		// create temp tables
 
@@ -91,6 +96,9 @@ EOT
 
 		}
 
+		$infobase->commit_immediate_transaction();
+		$infobase->begin_immediate_transaction();
+
 		// fetch all categories
 		$sql = <<<'EOT'
 			SELECT
@@ -112,10 +120,14 @@ EOT
 		while( $r = $result->fetchArray(SQLITE3_NUM) )
 			$categories[] = $r[0];
 
+		$infobase->commit_immediate_transaction();
+
 		foreach( $categories as $category_uuid ) {
 
 			// fetch categories hierarchy
 			if( $category_uuid !== null ) {
+
+				$infobase->begin_immediate_transaction();
 
 				$start_time_st = micro_time();
 
@@ -157,6 +169,9 @@ EOT
 
 				}
 
+				$infobase->commit_immediate_transaction();
+				$infobase->begin_immediate_transaction();
+
 				$start_time_st = micro_time();
 
 				$infobase->exec('DELETE FROM cf_products');
@@ -189,6 +204,8 @@ EOT
 
 				}
 
+				$infobase->commit_immediate_transaction();
+
 			}
 
 			// CREATE TABLE IF NOT EXISTS products_${category_uuid}_pages AS
@@ -196,8 +213,12 @@ EOT
 			// FROM products_pages
 			// WHERE pgnon IS NULL;
 
+			$infobase->begin_immediate_transaction();
+
 			$category_table = 'products_' . uuid2table_name(bin2uuid($category_uuid)) . 'pages';
 			$infobase->exec($infobase->create_table_products_pages($category_table));
+
+			$infobase->commit_immediate_transaction();
 
 			// create variables in this scope // foreach( $categories as $category_uuid )
 			$v = [];
@@ -212,6 +233,8 @@ EOT
 
 			foreach( $orders as $order )
 				foreach( $directions as $direction ) {
+
+				$infobase->begin_immediate_transaction();
 
 				$start_time_st = micro_time();
 
@@ -262,6 +285,8 @@ EOT
 			    	error_log('products by categories fetched, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
 
 				}
+
+				$infobase->commit_immediate_transaction();
 
 			}
 
@@ -340,7 +365,7 @@ EOT
 
 				$st->execute();
 
-				if( intval(bcsub($finish_time, $begin_start_time)) >= 100 ) {
+				if( bccomp(bcsub(micro_time(), $begin_start_time), config::$sqlite_tx_duration) >= 0 ) {
 
 					$infobase->commit_immediate_transaction();
 					$infobase->begin_immediate_transaction();

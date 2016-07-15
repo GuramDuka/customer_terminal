@@ -283,7 +283,7 @@ EOT
 
 		}
 
-		$this->infobase_->exec('COMMIT TRANSACTION');
+		$this->infobase_->commit_immediate_transaction();
 
 		$finish_time = micro_time();
 		$ellapsed_ms = bcsub($finish_time, $start_time);

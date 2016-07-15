@@ -21,9 +21,9 @@ class remainders_registry_loader extends objects_loader {
 			else
 				$fields[] = $field;
 
-		$start_time = micro_time();
-
 		$this->infobase_->begin_immediate_transaction();
+
+		$begin_start_time = $start_time = micro_time();
 
 		$st_records_ins = null;
 		$st_records_del = null;
@@ -149,12 +149,20 @@ EOT
 
 			$st_totals_add->execute();
 
+			if( bccomp(bcsub(micro_time(), $begin_start_time), config::$sqlite_tx_duration) >= 0 ) {
+
+				$this->infobase_->commit_immediate_transaction();
+				$this->infobase_->begin_immediate_transaction();
+				$begin_start_time = micro_time();
+
+			}
+
 		}
 
 		$entity = $this->infobase_->escapeString('products_pages');
 		$this->infobase_->exec("REPLACE INTO dirties (entity) VALUES ('${entity}')");
 
-		$this->infobase_->exec('COMMIT TRANSACTION');
+		$this->infobase_->commit_immediate_transaction();
 
 		if( config::$log_timing ) {
 

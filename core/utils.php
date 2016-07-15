@@ -2,11 +2,27 @@
 //------------------------------------------------------------------------------
 namespace {
 //------------------------------------------------------------------------------
+function usleep_win($ms) {
+
+	$sec	= bcdiv($ms, 1000000, 0);
+	$usec	= bcmod($ms, 1000000);
+	$read	= NULL;
+	$write	= NULL;
+	$sock	= [ socket_create(AF_INET, SOCK_RAW, 0) ];
+
+	socket_select($read, $write, $sock, $sec, $usec);
+
+}
+//------------------------------------------------------------------------------
 function micro_time() {
 
-	list($u, $s) = explode(' ', microtime(false));
+	/*list($u, $s) = explode(' ', microtime(false));
 
-    return bcadd(bcmul($s, 1000000, 0), bcmul($u, 1000000, 0), 0);
+    return bcadd(bcmul($s, 1000000, 0), bcmul($u, 1000000, 0), 0);*/
+
+	$t = gettimeofday();
+
+	return bcadd(bcmul($t['sec'], 1000000), $t['usec']);
 
 }
 //------------------------------------------------------------------------------

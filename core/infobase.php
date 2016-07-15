@@ -30,7 +30,11 @@ class infobase extends \SQLite3 {
 
 		$new_ib = file_exists($ib_file_name) === false;
 
-		parent::open($ib_file_name, $flags | SQLITE3_OPEN_CREATE | SQLITE3_OPEN_SHAREDCACHE);
+		parent::close();
+		parent::open($ib_file_name, $flags | SQLITE3_OPEN_CREATE);
+		// must not use SQLITE3_OPEN_SHAREDCACHE and immediately after opening your database connection, you could do this:
+		$this->busyTimeout(180000);
+
 		$this->enableExceptions(true);
 
 		if( $new_ib ) {
@@ -46,12 +50,10 @@ class infobase extends \SQLite3 {
 
 		$cachesz = config::$sqlite_cache_size;
 
-		$this->busyTimeout(180000);
-
 		$this->exec("PRAGMA cache_size = -${cachesz}");
 		$this->exec('PRAGMA synchronous = NORMAL');
 		$this->exec('PRAGMA temp_store = MEMORY');
-		$this->exec('PRAGMA busy_timeout = 180000');
+		//$this->exec('PRAGMA busy_timeout = 180000');
 
 		if( config::$debug ) {
 
@@ -92,47 +94,14 @@ class infobase extends \SQLite3 {
 
 	public function begin_immediate_transaction() {
 
-	    // php sqlite3 wait busy timeout, fix
-
-		$start_time = micro_time();
-
-		for(;;) {
-
-			try {
-
-				$this->exec('BEGIN IMMEDIATE TRANSACTION');
-				break;
-
-   			}
-			catch( \Throwable $e ) {
-
-				if( strstr($e->getMessage(), 'locked' ) === false )
-					throw $e;
-
-				//error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . $e->getTraceAsString());
-
-			}
-
-			usleep(10);
-
-		}
-
-		$finish_time = micro_time();
-		$ellapsed_ms = bcsub($finish_time, $start_time);
-
-		$this->response_['ellapsed'] = $ellapsed_ms;
-
-		if( intval($ellapsed_ms) > 500 )
-	    	error_log('SQLITE lock wait, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
-
-		//\runtime_exception::throw_false($v);
-
-		//$this->enableExceptions(true);
+		$this->exec('BEGIN DEFERRED /*IMMEDIATE*/ /*EXCLUSIVE*/ TRANSACTION');
 
 	}
 
 	public function commit_immediate_transaction() {
-		$infobase->exec('COMMIT TRANSACTION');
+
+		$this->exec('COMMIT TRANSACTION');
+
 	}
 
 	public function create_scheme() {
