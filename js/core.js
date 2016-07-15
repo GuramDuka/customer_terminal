@@ -340,6 +340,10 @@ class Render {
 		}
 
 		xpath_eval_single('div[@pright]/div[@premainders]', pinfo_element).innerHTML = html;
+		xpath_eval_single('div[@pright]/p[@premainders_head]', pinfo_element).fade(data.remainders.length > 0);
+
+		for( let e of xpath_eval('div[@pright]/hr', pinfo_element) )
+			e.fade(data.remainders.length > 0);
 
 	}
 
