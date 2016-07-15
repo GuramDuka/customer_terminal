@@ -28,9 +28,16 @@
 
 @media screen {
 
-	/* disable text selection */
 	* {
 		z-index				: 100;
+		/*text-shadow			: 3px 3px 3px #CCCCCC;*/
+		/*font-variant		: small-caps;*/
+		font-stretch		: ultra-condensed;
+		cursor				: none;
+	}
+
+	/* disable text selection */
+	* {
 		-webkit-touch-callout: none;	/* iOS Safari */
 		-webkit-user-select	: none;		/* Chrome/Safari/Opera */
 		-o-user-select		: none;
@@ -38,9 +45,6 @@
 		-moz-user-select	: none;		/* Firefox */
 		-ms-user-select		: none;		/* Internet Explorer/Edge */
 		user-select			: none;		/* Non-prefixed version, currently not supported by any browser */
-		/*text-shadow			: 3px 3px 3px #CCCCCC;*/
-		/*font-variant		: small-caps;*/
-		font-stretch		: ultra-condensed;
 	}
 
 	html > body {
@@ -61,15 +65,6 @@
 		overflow			: hidden;
 	}
 
-	html > body > div[plist], html > body > div[pinfo], html > body > div[pcart] {
-		height				: 690px;
-	}
-
-	html > body > div[top] {
-		height				: 120px;
-		padding-bottom		: 3px;
-	}
-
 	div[btn], div[btc] {
     	min-width			: 32px;
 		width				: auto;
@@ -79,8 +74,6 @@
 		box-shadow			: none;
 		color				: #5f5b51;
 		color				: darkgreen;
-		cursor				: pointer;
-		display				: inline-block;
 		vertical-align		: middle;
 		font-size			: 24px;
 		font-weight			: bold;
@@ -99,6 +92,7 @@
 		line-height			: 35px;
 		float				: none;
 		position			: relative;
+		display				: inline-block;
 	}
 
 	div[btc] {
@@ -122,6 +116,17 @@
 		float				: none;
 		width				: auto;
 		height				: auto;
+	}
+
+	html > body > div[plist],
+	html > body > div[pinfo],
+	html > body > div[pcart] {
+		height				: 720px;
+	}
+
+	html > body > div[top] {
+		height				: 120px;
+		padding-bottom		: 3px;
 	}
 
 	html > body > div[top] > div[mag] {
@@ -168,7 +173,7 @@
 		margin-bottom		: 3px;
 	}
 
-	html > body > div[top] > div[cart_informer] > div[cinfo] > span {
+	html > body > div[top] > div[cart_informer] > div[cinfo] > p {
 		width				: auto;
 		height				: auto;
 		float				: left;
@@ -247,7 +252,6 @@
 		background-repeat	: no-repeat;
 		background-position	: center;
 		margin-right		: 3px;
-		cursor				: pointer;
 	}
 
 	html > body > div[pinfo] > div[pmid] {
@@ -508,7 +512,6 @@
 		background-size		: contain;
 		background-repeat	: no-repeat;
 		background-position	: center;
-		cursor				: pointer;
 	}
 
 	html > body > div[plist] > div[ptable] > div[pitem] > p[pname] {
@@ -527,43 +530,43 @@
 		font-weight			: bold;
 	}
 
-	html > body > div[plist] > div[pcontrols] {
+	html > body > div[pcontrols] {
 		float				: none;
 		vertical-align		: middle;
 	}
 
-	html > body > div[plist] > div[pcontrols] > div[psort_controls] {
+	html > body > div[pcontrols] > div[psort_controls] {
 		width				: 30%;
 		float				: left;
 		text-align			: left;
 	}
 
-	html > body > div[plist] > div[pcontrols] > div[psort_controls] > div[list_sort_order],
-	html > body > div[plist] > div[pcontrols] > div[psort_controls] > div[list_sort_direction] {
+	html > body > div[pcontrols] > div[psort_controls] > div[list_sort_order],
+	html > body > div[pcontrols] > div[psort_controls] > div[list_sort_direction] {
 		margin-left			: 3px;
 	}
 
-	html > body > div[plist] > div[pcontrols] > div[psort_controls] > div[list_sort_order] > img[btn_ico],
-	html > body > div[plist] > div[pcontrols] > div[psort_controls] > div[list_sort_direction] > img[btn_ico] {
+	html > body > div[pcontrols] > div[psort_controls] > div[list_sort_order] > img[btn_ico],
+	html > body > div[pcontrols] > div[psort_controls] > div[list_sort_direction] > img[btn_ico] {
 		/* fix: shift up */
 		margin-top			: -4.5%;
 	}
 
-	html > body > div[plist] > div[pcontrols] > div[plist_controls] {
+	html > body > div[pcontrols] > div[plist_controls] {
 		width				: 69%;
 		float				: right;
 		text-align			: right;
 	}
 
-	html > body > div[plist] > div[pcontrols] > div[plist_controls] > div[first_page],
-	html > body > div[plist] > div[pcontrols] > div[plist_controls] > div[prev_page],
-	html > body > div[plist] > div[pcontrols] > div[plist_controls] > div[next_page],
-	html > body > div[plist] > div[pcontrols] > div[plist_controls] > div[last_page] {
+	html > body > div[pcontrols] > div[plist_controls] > div[first_page],
+	html > body > div[pcontrols] > div[plist_controls] > div[prev_page],
+	html > body > div[pcontrols] > div[plist_controls] > div[next_page],
+	html > body > div[pcontrols] > div[plist_controls] > div[last_page] {
 		margin-right		: 3px;
 	}
 
-	html > body > div[plist] > div[pcontrols] > div[plist_controls] > div[btn] > img[btn_ico],
-	html > body > div[plist] > div[pcontrols] > div[plist_controls] > div[btn] > img[btn_ico_condensed] {
+	html > body > div[pcontrols] > div[plist_controls] > div[btn] > img[btn_ico],
+	html > body > div[pcontrols] > div[plist_controls] > div[btn] > img[btn_ico_condensed] {
 		/* fix: shift up */
 		margin-top			: -5.1%;
 	}
@@ -720,7 +723,7 @@
 
 	html > body > div[debug] {
 		width				: 15% !important;
-		display				: block;
+		display				: none;
 		font-family			: "droid";
 		font-weight			: bold;
 		font-size			: 16px;
@@ -732,6 +735,7 @@
 		border				: solid 1px black;
 		text-align			: left;
 		white-space			: nowrap;
+		display				: none;
 	}
 
 	html > body > div[debug] > p {

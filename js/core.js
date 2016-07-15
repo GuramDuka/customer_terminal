@@ -248,18 +248,16 @@ class Render {
 
 		}
 
-		let pctrl = xpath_eval_single('html/body/div[@plist]/div[@pcontrols]');
+		let pctrl = xpath_eval_single('html/body/div[@pcontrols]');
 		let base = xpath_eval_single('div[@plist_controls]', pctrl);
 
-		xpath_eval_single('div[@first_page]', base).fade(new_paging_state.pgno_ < 2 || new_paging_state.pages_ < 2  ? false : true);
-		xpath_eval_single('div[@prev_page]', base).fade(new_paging_state.pgno_ === 0 || new_paging_state.pages_ < 2 ? false : true);
+		xpath_eval_single('div[@first_page]', base).fade(new_paging_state.pgno_ >= 2 && new_paging_state.pages_ >= 2);
+		xpath_eval_single('div[@prev_page]', base).fade(new_paging_state.pgno_ !== 0 && new_paging_state.pages_ >= 2);
 		xpath_eval_single('div[@prev_page]/span[@btn_txt]', base).innerText = (new_paging_state.pgno_ + 1) - 1;
-		xpath_eval_single('div[@next_page]', base).fade(new_paging_state.pgno_ > new_paging_state.pages_ - 2 || new_paging_state.pages_ < 2 ? false : true);
+		xpath_eval_single('div[@next_page]', base).fade(new_paging_state.pgno_ <= new_paging_state.pages_ - 2 && new_paging_state.pages_ >= 2);
 		xpath_eval_single('div[@next_page]/span[@btn_txt]', base).innerText = (new_paging_state.pgno_ + 1) + 1;
-		xpath_eval_single('div[@last_page]', base).fade(new_paging_state.pgno_ > new_paging_state.pages_ - 3 || new_paging_state.pages_ < 3 ? false : true);
-
-		if( new_paging_state.pages_ > 0 )
-			xpath_eval_single('div[@last_page]/span[@btn_txt]', base).innerText = new_paging_state.pages_;
+		xpath_eval_single('div[@last_page]', base).fade(new_paging_state.pgno_ <= new_paging_state.pages_ - 3 && new_paging_state.pages_ >= 3);
+		xpath_eval_single('div[@last_page]/span[@btn_txt]', base).innerText = new_paging_state.pages_ > 0 ? new_paging_state.pages_ : '';
 
 		base = xpath_eval_single('div[@psort_controls]', pctrl);
 
@@ -363,8 +361,8 @@ class Render {
 
 			let cinfo = xpath_eval_single('div[@cinfo]', pcrin);
 
-			xpath_eval_single('span[@ccount]'	, cinfo).innerText = 'В корзине: ' + ccount + ' товар' + (ccount == 1 ? '' : ccount <= 4 ? 'а' : 'ов');
-			xpath_eval_single('span[@csum]'		, cinfo).innerHTML = 'На сумму : ' + csum + '&nbsp;₽';
+			xpath_eval_single('p[@ccount]'	, cinfo).innerText = 'В корзине: ' + ccount + ' товар' + (ccount == 1 ? '' : ccount <= 4 ? 'а' : 'ов');
+			xpath_eval_single('p[@csum]'	, cinfo).innerHTML = 'На сумму : ' + csum + '&nbsp;₽';
 
 		}
 
@@ -374,14 +372,15 @@ class Render {
 
 		let state = this.state_;
 		let pcrin = xpath_eval_single('html/body/div[@top]/div[@cart_informer]/div[@btn and @cart]');
-		let element = xpath_eval_single('html/body/div[@pcart]/div[@ptable]');
+		let base = xpath_eval_single('html/body/div[@pcart]');
+		let element = xpath_eval_single('div[@ptable]', base);
 		let cart = new_page_state.cart_;
 
 		if( !new_page_state.cart_page_size_ ) {
 			//let height = sscanf(getComputedStyle(element).height, '%u')[0];
 			//let line_height = sscanf(getComputedStyle(pcrin).height, '%u')[0];
 			//new_page_state.cart_page_size_ = page_size = Math.trunc(height / line_height);
-			new_page_state.cart_page_size_ = navigator.userAgent.match(/altair$/i) ? 9 : Math.trunc(9 * 690 / 390);
+			new_page_state.cart_page_size_ = navigator.userAgent.match(/altair$/i) ? 9 : Math.trunc(9 * 720 / 390);
 		}
 
 		new_page_state.cart_pages_ = Math.trunc(cart.length / new_page_state.cart_page_size_) + (cart.length % new_page_state.cart_page_size_ !== 0 ? 1 : 0);
@@ -418,7 +417,6 @@ class Render {
 
 			element.innerHTML = html;
 
-			state.setup_animation_events(xpath_eval('//*[@fadein or @fadeout]', element));
 			state.setup_events(xpath_eval('div[@pitem]/div[@btn]', element));
 
 		}
@@ -460,8 +458,10 @@ class Render {
 
 		}
 
-		xpath_eval_single('div[@pcontrols]/div[@btn and @prev_page]', element.parentNode).fade(new_page_state.cart_pgno_ > 0);
-		xpath_eval_single('div[@pcontrols]/div[@btn and @next_page]', element.parentNode).fade(new_page_state.cart_pgno_ + 1 < new_page_state.cart_pages_);
+		let pctrl = xpath_eval_single('div[@pcontrols]', base);
+
+		xpath_eval_single('div[@prev_page]', pctrl).fade(new_page_state.cart_pgno_ > 0);
+		xpath_eval_single('div[@next_page]', pctrl).fade(new_page_state.cart_pgno_ + 1 < new_page_state.cart_pages_);
 
 		for( let a of xpath_eval('div[@pitem]/span[@psum]', element) )
 			a.fade(!buy_quantity_one);
@@ -588,55 +588,50 @@ class Render {
 		let pinfo = xpath_eval_single('html/body/div[@pinfo]');
 		let backb = xpath_eval_single('html/body/div[@btn and @back]');
 		let pcart = xpath_eval_single('html/body/div[@pcart]');
+		let pctrl = xpath_eval_single('html/body/div[@pcontrols]');
 		let pcrin = xpath_eval_single('html/body/div[@top]/div[@cart_informer]');
 
-		if( (new_page_state.cart_.length > 0 && cur_state.cart_.length === 0) || zero )
+		if( new_page_state.cart_.length > 0 && (cur_state.cart_.length === 0 || zero) )
 			pcrin.fadein();
 
 		if( new_page_state.cart_.length === 0 && cur_state.cart_.length > 0 )
 			pcrin.fadeout();
 
-		let view = new_page_state.cart_edit_ !== cur_state.cart_edit_
-				|| new_page_state.product_ !== cur_state.product_;
+		let to_cart = function () {
+			backb.fadein();
+			pcart.fadein();
+			plist.fadeout();
+			pctrl.fadeout();
+			pinfo.fadeout();
+		};
 
-		if( new_page_state.cart_edit_ ) {
-
-			if( view ) {
-
-				plist.fadeout();
-				pinfo.fadeout();
-				backb.fadein();
-				pcart.fadein();
-
-			}
-
-		}
-		else if( new_page_state.product_ === null ) {
-
+		let to_list = function () {
+			backb.fadeout();
+			pcart.fadeout();
 			plist.fadein();
+			pctrl.fadein();
+			pinfo.fadeout();
+		};
 
-			if( view ) {
+		let to_info = function () {
+			backb.fadein();
+			pcart.fadeout();
+			plist.fadeout();
+			pctrl.fadeout();
+			pinfo.fadein();
+		};
 
-				pinfo.fadeout();
-				backb.fadeout();
-				pcart.fadeout();
+		if( new_page_state.cart_edit_ !== cur_state.cart_edit_ || new_page_state.product_ !== cur_state.product_ ) {
 
-			}
+			if( new_page_state.cart_edit_ )
+				to_cart();
+			else if( new_page_state.product_ === null )
+				to_list();
+			else
+				to_info();
 
 		}
-		else {
-
-			if( view ) {
-
-				pcart.fadeout();
-				plist.fadeout();
-				pinfo.fadein();
-				backb.fadein();
-
-			}
-
-		}
-
+		
 	}
 
 	rewrite_category(new_page_state = null) {
@@ -751,8 +746,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 				if( attrs.btn && attrs.prev_page
 					&& element.parentNode.attributes.plist_controls
-					&& element.parentNode.parentNode.attributes.pcontrols
-					&& element.parentNode.parentNode.parentNode.attributes.plist ) {
+					&& element.parentNode.parentNode.attributes.pcontrols ) {
 
 					get_new_state();
 
@@ -769,8 +763,7 @@ class HtmlPageEvents extends HtmlPageState {
 				}
 				else if( attrs.btn && attrs.next_page
 					&& element.parentNode.attributes.plist_controls
-					&& element.parentNode.parentNode.attributes.pcontrols
-					&& element.parentNode.parentNode.parentNode.attributes.plist ) {
+					&& element.parentNode.parentNode.attributes.pcontrols ) {
 
 					get_new_state();
 
@@ -787,8 +780,7 @@ class HtmlPageEvents extends HtmlPageState {
 				}
 				else if( attrs.btn && attrs.first_page
 					&& element.parentNode.attributes.plist_controls
-					&& element.parentNode.parentNode.attributes.pcontrols
-					&& element.parentNode.parentNode.parentNode.attributes.plist ) {
+					&& element.parentNode.parentNode.attributes.pcontrols ) {
 
 					get_new_state();
 
@@ -805,8 +797,7 @@ class HtmlPageEvents extends HtmlPageState {
 				}
 				else if( attrs.btn && attrs.last_page
 					&& element.parentNode.attributes.plist_controls
-					&& element.parentNode.parentNode.attributes.pcontrols
-					&& element.parentNode.parentNode.parentNode.attributes.plist ) {
+					&& element.parentNode.parentNode.attributes.pcontrols ) {
 
 					get_new_state();
 
@@ -850,8 +841,7 @@ class HtmlPageEvents extends HtmlPageState {
 				}
 				else if( attrs.btn && attrs.list_sort_order
 					&& element.parentNode.attributes.psort_controls
-					&& element.parentNode.parentNode.attributes.pcontrols
-					&& element.parentNode.parentNode.parentNode.attributes.plist ) {
+					&& element.parentNode.parentNode.attributes.pcontrols ) {
 
 					get_new_state();
 
@@ -866,8 +856,7 @@ class HtmlPageEvents extends HtmlPageState {
 				}
 				else if( attrs.btn && attrs.list_sort_direction
 					&& element.parentNode.attributes.psort_controls
-					&& element.parentNode.parentNode.attributes.pcontrols
-					&& element.parentNode.parentNode.parentNode.attributes.plist ) {
+					&& element.parentNode.parentNode.attributes.pcontrols ) {
 
 					get_new_state();
 
@@ -1133,13 +1122,11 @@ class HtmlPageEvents extends HtmlPageState {
 						e.fadein();
 
 						let idle = new Idle();
-						idle.onAway = function () { e.fadeout('inline-block'); idle.stop(); };
+						idle.onAway = function () { idle.stop(); idle = undefined; e.fadeout('inline-block'); };
 						idle.setAwayTimeout(3000);
 						idle.start();
 
 						new_page_state.cart_edit_ = true;
-						new_page_state.product_ = null;
-						new_page_state.modified_ = true;
 
 					}
 					else {
@@ -1299,7 +1286,7 @@ class HtmlPageManager extends HtmlPageEvents {
 
 		this.setup_animation_events(xpath_eval('//*[@fadein or @fadeout]'));
 		this.setup_events(xpath_eval('html/body/div[@btn]'));
-		this.setup_events(xpath_eval('html/body/div[@plist]/div[@pcontrols]/div[@plist_controls or @psort_controls]/div[@btn]'));
+		this.setup_events(xpath_eval('html/body/div[@pcontrols]/div[@plist_controls or @psort_controls]/div[@btn]'));
 		this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pright]/div[@btn]'));
 		this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pimg]'));
 		this.setup_events(xpath_eval('html/body/div[@plargeimg or @alert]'));
