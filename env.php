@@ -4,6 +4,19 @@ print '<pre style="text-align: justify">'.var_export($_SERVER,true).'</pre>';
 print '<pre style="text-align: justify">'.var_export($_GET,true).'</pre>';
 print '<pre style="text-align: justify">'.phpinfo().'</pre>';
 
+$n = tempnam(sys_get_temp_dir(), 'sqlite');
+$ib = new SQLite3($n, SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
+$s = 'SQLITE compile options: ';
+$result = $ib->query('PRAGMA compile_options');
+
+while( $r = $result->fetchArray(SQLITE3_ASSOC) )
+	$s .= "\n\t" . $r['compile_option'];
+
+$ib->close();
+unlink($n);
+
+print '<pre style="text-align: justify">'.$s.'</pre>';
+
 set_time_limit(920);
 
 $begin = startTime();

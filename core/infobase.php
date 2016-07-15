@@ -69,7 +69,8 @@ class infobase extends \SQLite3 {
 
 				parent::close();
 
-				unlink($ib_file_name);
+				if( $new_ib )
+					unlink($ib_file_name);
 				
 				throw $e;
 
@@ -131,6 +132,42 @@ EOT
 		);
 
 		$this->exec(<<<'EOT'
+			CREATE VIRTUAL TABLE IF NOT EXISTS products_fts USING fts4 (uuid BLOB, name TEXT, notindexed=uuid)
+EOT
+		);
+
+		$this->exec(<<<'EOT'
+			CREATE TRIGGER IF NOT EXISTS products_before_update_trigger
+			       BEFORE UPDATE
+			       ON products
+			BEGIN
+			     DELETE FROM products_fts WHERE uuid = old.uuid;
+			END;
+
+			CREATE TRIGGER IF NOT EXISTS products_before_delete_trigger
+			       BEFORE DELETE
+			       ON products
+			BEGIN
+			     DELETE FROM products_fts WHERE uuid = old.uuid;
+			END;
+
+			CREATE TRIGGER IF NOT EXISTS products_after_update_trigger
+			       AFTER UPDATE
+			       ON products
+			BEGIN
+			     INSERT INTO products_fts(uuid, name) VALUES (new.uuid, new.name);
+			END;
+
+			CREATE TRIGGER IF NOT EXISTS products_after_insert_trigger
+			       AFTER INSERT
+			       ON products
+			BEGIN
+			     INSERT INTO products_fts(uuid, name) VALUES (new.uuid, new.name);
+			END;
+EOT
+		);
+
+		$this->exec(<<<'EOT'
 			CREATE TABLE IF NOT EXISTS categories (
 				uuid			BLOB PRIMARY KEY ON CONFLICT REPLACE,
 				marked			INTEGER,
@@ -173,6 +210,42 @@ EOT
 				modification_uuid	BLOB,
 				year_uuid			BLOB
 			) WITHOUT ROWID
+EOT
+		);
+
+		$this->exec(<<<'EOT'
+			CREATE VIRTUAL TABLE IF NOT EXISTS cars_fts USING fts4 (uuid BLOB, name TEXT, notindexed=uuid)
+EOT
+		);
+
+		$this->exec(<<<'EOT'
+			CREATE TRIGGER IF NOT EXISTS cars_before_update_trigger
+			       BEFORE UPDATE
+			       ON cars
+			BEGIN
+			     DELETE FROM cars_fts WHERE uuid = old.uuid;
+			END;
+
+			CREATE TRIGGER IF NOT EXISTS cars_before_delete_trigger
+			       BEFORE DELETE
+			       ON cars
+			BEGIN
+			     DELETE FROM cars_fts WHERE uuid = old.uuid;
+			END;
+
+			CREATE TRIGGER IF NOT EXISTS cars_after_update_trigger
+			       AFTER UPDATE
+			       ON cars
+			BEGIN
+			     INSERT INTO cars_fts(uuid, name) VALUES (new.uuid, new.name);
+			END;
+
+			CREATE TRIGGER IF NOT EXISTS cars_after_insert_trigger
+			       AFTER INSERT
+			       ON cars
+			BEGIN
+			     INSERT INTO cars_fts(uuid, name) VALUES (new.uuid, new.name);
+			END;
 EOT
 		);
 
@@ -239,6 +312,39 @@ EOT
 		$this->exec(
 			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'properties_values_by_property'), -4)
 			. ' ON properties_values (property_uuid)'
+		);
+
+		$this->exec(<<<'EOT'
+			CREATE VIRTUAL TABLE IF NOT EXISTS properties_values_fts USING fts4 (uuid BLOB, value_b INTEGER, value_n NUMERIC, value_s TEXT, notindexed=uuid);
+
+			CREATE TRIGGER IF NOT EXISTS properties_values_before_update_trigger
+			       BEFORE UPDATE
+			       ON properties_values
+			BEGIN
+			     DELETE FROM properties_values_fts WHERE uuid = old.uuid;
+			END;
+
+			CREATE TRIGGER IF NOT EXISTS properties_values_before_delete_trigger
+			       BEFORE DELETE
+			       ON properties_values
+			BEGIN
+			     DELETE FROM properties_values_fts WHERE uuid = old.uuid;
+			END;
+
+			CREATE TRIGGER IF NOT EXISTS properties_values_after_update_trigger
+			       AFTER UPDATE
+			       ON properties_values
+			BEGIN
+			     INSERT INTO properties_values_fts(uuid, value_b, value_n, value_s) VALUES (new.uuid, new.value_b, new.value_n, new.value_s);
+			END;
+
+			CREATE TRIGGER IF NOT EXISTS properties_values_after_insert_trigger
+			       AFTER INSERT
+			       ON properties_values
+			BEGIN
+			     INSERT INTO properties_values_fts(uuid, value_b, value_n, value_s) VALUES (new.uuid, new.value_b, new.value_n, new.value_s);
+			END;
+EOT
 		);
 
 		// регистр значения свойств объектов
