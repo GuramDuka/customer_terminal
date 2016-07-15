@@ -114,8 +114,6 @@ EOT
 
 		foreach( $categories as $category_uuid ) {
 
-			$infobase->begin_immediate_transaction();
-
 			// fetch categories hierarchy
 			if( $category_uuid !== null ) {
 
@@ -158,7 +156,6 @@ EOT
 			    	error_log('f_categories updated, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
 
 				}
-
 
 				$start_time_st = micro_time();
 
@@ -306,6 +303,9 @@ EOT
 
 				}
 
+			$infobase->begin_immediate_transaction();
+			$begin_start_time = micro_time();
+
 			for( $j = -1, $i = 0; ; $i++ ) {
 
 				$r = false;
@@ -340,11 +340,21 @@ EOT
 
 				$st->execute();
 
+				if( intval(bcsub($finish_time, $begin_start_time)) >= 100 ) {
+
+					$infobase->commit_immediate_transaction();
+					$infobase->begin_immediate_transaction();
+					$begin_start_time = micro_time();
+
+				}
+
 			}
 
 			$st = $infobase->prepare("DELETE FROM ${category_table} WHERE pgnon > :pgnon");
 			$st->bindParam(':pgnon', $pgnon);
 			$st->execute();
+
+			$infobase->commit_immediate_transaction();
 
 			$pgupd += $pgnon < 0 ? 0 : ($pgnon >> 4) + 1;
 
@@ -357,8 +367,6 @@ EOT
 		    	error_log("${category_table} updated, ellapsed: " . ellapsed_time_string($ellapsed_ms));
 
 			}
-
-			$infobase->exec('COMMIT TRANSACTION');
 
 		}
 

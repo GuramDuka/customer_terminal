@@ -106,6 +106,9 @@ class infobase extends \SQLite3 {
    			}
 			catch( \Throwable $e ) {
 
+				if( strstr($e->getMessage(), 'locked' ) === false )
+					throw $e;
+
 				//error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . $e->getTraceAsString());
 
 			}
@@ -126,6 +129,10 @@ class infobase extends \SQLite3 {
 
 		//$this->enableExceptions(true);
 
+	}
+
+	public function commit_immediate_transaction() {
+		$infobase->exec('COMMIT TRANSACTION');
 	}
 
 	public function create_scheme() {
