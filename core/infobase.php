@@ -46,11 +46,12 @@ class infobase extends \SQLite3 {
 
 		$cachesz = config::$sqlite_cache_size;
 
+		$this->busyTimeout(180000);
+
 		$this->exec("PRAGMA cache_size = -${cachesz}");
 		$this->exec('PRAGMA synchronous = NORMAL');
 		$this->exec('PRAGMA temp_store = MEMORY');
-
-		$this->busyTimeout(180000);
+		$this->exec('PRAGMA busy_timeout = 180000');
 
 		if( config::$debug ) {
 
@@ -91,14 +92,38 @@ class infobase extends \SQLite3 {
 
 	public function begin_immediate_transaction() {
 
-	    // php sqlite3 with enabled exceptions does not wait busy timeout, fix
+	    // php sqlite3 wait busy timeout, fix
 
-		$this->enableExceptions(false);
+		$start_time = micro_time();
 
-		$v = $this->exec('BEGIN IMMEDIATE TRANSACTION');
-		\runtime_exception::throw_false($v);
+		for(;;) {
 
-		$this->enableExceptions(true);
+			try {
+
+				$this->exec('BEGIN IMMEDIATE TRANSACTION');
+				break;
+
+   			}
+			catch( \Throwable $e ) {
+
+				//error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+
+			}
+
+			usleep(10);
+
+		}
+
+		$finish_time = micro_time();
+		$ellapsed_ms = bcsub($finish_time, $start_time);
+
+		$this->response_['ellapsed'] = $ellapsed_ms;
+
+	    error_log('SQLITE lock wait, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+
+		//\runtime_exception::throw_false($v);
+
+		//$this->enableExceptions(true);
 
 	}
 

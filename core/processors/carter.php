@@ -278,7 +278,6 @@ EOT
 
 			$finish_time = micro_time();
 			$ellapsed_ms = bcsub($finish_time, $start_time_st);
-			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
 
 	    	error_log('cart fetch, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
 
