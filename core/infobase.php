@@ -559,18 +559,18 @@ EOT
 
 		// регистр Настройка подбора терминала покупателя
 		$this->exec(<<<'EOT'
-			CREATE TABLE IF NOT EXISTS products_selection_by_properties_setup (
+			CREATE TABLE IF NOT EXISTS products_selection_by_properties_setup_registry (
 				category_uuid		BLOB,
 				property_uuid		BLOB,
 				display				TEXT,
 				display_order		INTEGER,
-				selection_type		INTEGER		/* 1 - checkbox, 2 - radio, 3 - dropdown list or multiple checkbox list */
+				display_type		INTEGER		/* 1 - checkbox, 2 - radio, 3 - dropdown list or multiple checkbox list */
 			)
 EOT
 		);
 
-		$dimensions = [ 'category' => '_uuid' ];
-		$this->create_unique_indexes_on_registry('products_selection_by_properties_setup', $dimensions);
+		$dimensions = [ 'category' => '_uuid', 'property' => '_uuid' ];
+		$this->create_unique_indexes_on_registry('products_selection_by_properties_setup_registry', $dimensions);
 
 	}
 
@@ -650,10 +650,10 @@ EOT
 					$gv .= ', ' . $dim[0] . $dim[1];
 				}
 
-				$this->exec(
-					'CREATE UNIQUE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', "${rel}_by${gf}"), -4)
-					. " ON ${rel} (${gv})"
-				);
+				$sql = 'CREATE UNIQUE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', "${rel}_by${gf}"), -4)
+					. " ON ${rel} (${gv})";
+
+				$this->exec($sql);
 
 				if( $shuffle === false )
 					break;
