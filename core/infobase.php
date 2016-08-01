@@ -92,9 +92,9 @@ class infobase extends \SQLite3 {
     }
 
 
-	public function begin_immediate_transaction() {
+	public function begin_immediate_transaction($type = 'DEFERRED') {
 
-		$this->exec('BEGIN DEFERRED /*IMMEDIATE*/ /*EXCLUSIVE*/ TRANSACTION');
+		$this->exec("BEGIN ${type} /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION");
 
 	}
 

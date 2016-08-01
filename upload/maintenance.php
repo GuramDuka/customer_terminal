@@ -11,6 +11,8 @@ require_once CORE_DIR . 'infobase.php';
 //------------------------------------------------------------------------------
 try {
 
+	$timer = new \nano_timer;
+
 	$infobase = new srv1c\infobase;
 	$infobase->set_create_if_not_exists(false);
 	$infobase->initialize();
@@ -18,28 +20,24 @@ try {
 	foreach( [ 'products_fts', 'cars_fts', 'properties_values_fts' ] as $tbl )
 		foreach( [ 'optimize'/*, 'rebuild', 'integrity-check'*/ ] as $cmd ) {
 
-			$start_time = micro_time();
 			$infobase->exec("INSERT INTO ${tbl} (${tbl}) VALUES('${cmd}')");
-			$finish_time = micro_time();
-			$ellapsed_ms = bcsub($finish_time, $start_time);
+			$ellapsed = $timer->last_nano_time();
 
-		    error_log("SQLITE ${tbl} ${cmd}, ellapsed: " . ellapsed_time_string($ellapsed_ms));
+		    error_log("SQLITE ${tbl} ${cmd}, ellapsed: " . $timer->ellapsed_string($ellapsed));
 
 	}
 
-	$start_time = micro_time();
+	$timer->restart();
 	$infobase->exec('VACUUM');
-	$finish_time = micro_time();
-	$ellapsed_ms = bcsub($finish_time, $start_time);
+	$ellapsed = $timer->last_nano_time();
 
-    error_log('SQLITE VACUUM, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+    error_log('SQLITE VACUUM, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
-	$start_time = micro_time();
+	$timer->restart();
 	$infobase->exec('ANALYZE');
-	$finish_time = micro_time();
-	$ellapsed_ms = bcsub($finish_time, $start_time);
+	$ellapsed = $timer->last_nano_time();
 
-    error_log('SQLITE ANAYLYZE, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+    error_log('SQLITE ANAYLYZE, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 }
 catch( Throwable $e ) {

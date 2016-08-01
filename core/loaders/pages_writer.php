@@ -23,9 +23,9 @@ function rewrite_pages($infobase) {
 
 	$pgupd = 0;
 
-	$start_time = micro_time();
-
 	$infobase->begin_immediate_transaction();
+
+	$timer = new \nano_timer;
 
 	$entity = $infobase->escapeString('products_pages');
 	$r = $infobase->query("SELECT entity FROM dirties WHERE entity = '${entity}'");
@@ -57,7 +57,7 @@ EOT
 EOT
 			);
 
-		$start_time_st = micro_time();
+		$timer->restart();
 
 		// fetch only not empty name and have image, price, quantity
 		$sql = <<<'EOT'
@@ -88,11 +88,8 @@ EOT
 
 		if( config::$rewrite_pages_timing ) {
 
-			$finish_time = micro_time();
-			$ellapsed_ms = bcsub($finish_time, $start_time_st);
-			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
-
-	    	error_log('rpf_products updated, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+			$ellapsed = $timer->last_nano_time();
+	    	error_log('rpf_products updated, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 		}
 
@@ -129,7 +126,7 @@ EOT
 
 				$infobase->begin_immediate_transaction();
 
-				$start_time_st = micro_time();
+				$timer->restart();
 
 				$infobase->exec('DELETE FROM f_categories');
 
@@ -161,18 +158,15 @@ EOT
 
 				if( config::$rewrite_pages_timing ) {
 
-					$finish_time = micro_time();
-					$ellapsed_ms = bcsub($finish_time, $start_time_st);
-					$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
-
-			    	error_log('f_categories updated, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+					$ellapsed = $timer->last_nano_time();
+			    	error_log('f_categories updated, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 				}
 
 				$infobase->commit_immediate_transaction();
 				$infobase->begin_immediate_transaction();
 
-				$start_time_st = micro_time();
+				$timer->restart();
 
 				$infobase->exec('DELETE FROM cf_products');
 
@@ -196,11 +190,8 @@ EOT
 
 				if( config::$rewrite_pages_timing ) {
 
-					$finish_time = micro_time();
-					$ellapsed_ms = bcsub($finish_time, $start_time_st);
-					$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
-
-			    	error_log('cf_products updated, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+					$ellapsed = $timer->last_nano_time();
+			    	error_log('cf_products updated, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 				}
 
@@ -236,7 +227,7 @@ EOT
 
 				$infobase->begin_immediate_transaction();
 
-				$start_time_st = micro_time();
+				$timer->restart();
 
 				$sql = <<<EOT
 					SELECT
@@ -278,19 +269,14 @@ EOT
 
 				if( config::$rewrite_pages_timing ) {
 
-					$finish_time = micro_time();
-					$ellapsed_ms = bcsub($finish_time, $start_time_st);
-					$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
-
-			    	error_log('products by categories fetched, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+					$ellapsed = $timer->last_nano_time();
+			    	error_log('products by categories fetched, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 				}
 
 				$infobase->commit_immediate_transaction();
 
 			}
-
-			$start_time_st = micro_time();
 
 			$v = [];
 			$gf = 'pgnon';
@@ -329,7 +315,8 @@ EOT
 				}
 
 			$infobase->begin_immediate_transaction();
-			$begin_start_time = micro_time();
+
+			$timer->restart();
 
 			for( $j = -1, $i = 0; ; $i++ ) {
 
@@ -365,11 +352,15 @@ EOT
 
 				$st->execute();
 
-				if( bccomp(bcsub(micro_time(), $begin_start_time), config::$sqlite_tx_duration) >= 0 ) {
+				$ellapsed = $timer->last_nano_time();
+
+				if( bccomp($ellapsed, config::$sqlite_tx_duration) >= 0 ) {
 
 					$infobase->commit_immediate_transaction();
 					$infobase->begin_immediate_transaction();
-					$begin_start_time = micro_time();
+
+					if( config::$log_sqlite_tx_duration )
+	    				error_log('sqlite tx duration reached, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 				}
 
@@ -385,11 +376,8 @@ EOT
 
 			if( config::$rewrite_pages_timing ) {
 
-				$finish_time = micro_time();
-				$ellapsed_ms = bcsub($finish_time, $start_time_st);
-				$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
-
-		    	error_log("${category_table} updated, ellapsed: " . ellapsed_time_string($ellapsed_ms));
+				$ellapsed = $timer->last_nano_time();
+		    	error_log("${category_table} updated, ellapsed: " . $timer->ellapsed_string($ellapsed));
 
 			}
 
@@ -403,12 +391,10 @@ EOT
 
 		if( config::$log_timing ) {
 
-			$finish_time = micro_time();
-			$ellapsed_ms = bcsub($finish_time, $start_time);
-			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
-			$rps = $ellapsed_seconds != 0 ? bcdiv($pgupd, $ellapsed_seconds, 2) : $pgno;
+			list($ellapsed, $seconds) = $timer->nano_time();
+			$rps = $seconds != 0 ? bcdiv($pgupd, $seconds, 2) : $pgno;
 
-		    error_log(sprintf('%u', $pgupd) . ' products pages updated, ' . $rps . ' pps, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+		    error_log(sprintf('%u', $pgupd) . ' products pages updated, ' . $rps . ' pps, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 		}
 

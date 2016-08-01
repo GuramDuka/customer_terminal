@@ -16,7 +16,7 @@ class categorer_handler extends handler {
 
 	protected function handle_request() {
 
-		$start_time = micro_time();
+		$timer = new \nano_timer;
 
 		$this->infobase_ = new infobase;
 		$this->infobase_->set_create_if_not_exists(false);
@@ -74,13 +74,12 @@ EOT
 
 		$this->infobase_->commit_immediate_transaction();
 
-		$finish_time = micro_time();
-		$ellapsed_ms = bcsub($finish_time, $start_time);
+		$ellapsed = $timer->nano_time();
 
-		$this->response_['ellapsed'] = $ellapsed_ms;
+		$this->response_['ellapsed'] = $ellapsed;
 
 		if( config::$log_timing )
-		    error_log('categories list retrieved, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+		    error_log('categories list retrieved, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
     }
 

@@ -14,7 +14,7 @@ class producter_handler extends handler {
 
 	protected function handle_request() {
 
-		$start_time = micro_time();
+		$timer = new \nano_timer;
 
 		$infobase = new infobase;
 		$infobase->set_create_if_not_exists(false);
@@ -145,7 +145,7 @@ EOT
 
 		$infobase->dump_plan($sql);
 
-		$start_time_st = micro_time();
+		$timer->restart();
 
 		$st = $infobase->prepare($sql);
 		$st->bindParam(':product_uuid', $product_uuid, SQLITE3_BLOB);
@@ -176,11 +176,8 @@ EOT
 
 		if( config::$producter_timing ) {
 
-			$finish_time = micro_time();
-			$ellapsed_ms = bcsub($finish_time, $start_time_st);
-			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
-
-	    	error_log('product properties fetch, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+			$ellapsed = $timer->last_nano_time();
+	    	error_log('product properties fetch, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 		}
 
@@ -211,7 +208,7 @@ EOT
 
 		$infobase->dump_plan($sql);
 
-		$start_time_st = micro_time();
+		$timer->restart();
 
 		$st = $infobase->prepare($sql);
 		$st->bindParam(':product_uuid', $product_uuid, SQLITE3_BLOB);
@@ -236,11 +233,8 @@ EOT
 
 		if( config::$producter_timing ) {
 
-			$finish_time = micro_time();
-			$ellapsed_ms = bcsub($finish_time, $start_time_st);
-			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
-
-	    	error_log('product info fetch, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+			$ellapsed = $timer->last_nano_time();
+	    	error_log('product info fetch, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 		}
 
@@ -264,7 +258,7 @@ EOT
 
 		$infobase->dump_plan($sql);
 
-		$start_time_st = micro_time();
+		$timer->restart();
 
 		$st = $infobase->prepare($sql);
 		$st->bindParam(':product_uuid', $product_uuid, SQLITE3_BLOB);
@@ -289,23 +283,19 @@ EOT
 
 		if( config::$producter_timing ) {
 
-			$finish_time = micro_time();
-			$ellapsed_ms = bcsub($finish_time, $start_time_st);
-			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
-
-	    	error_log('product remainder fetch, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+			$ellapsed = $timer->last_nano_time();
+	    	error_log('product remainder fetch, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 		}
 
 		$infobase->commit_immediate_transaction();
 
-		$finish_time = micro_time();
-		$ellapsed_ms = bcsub($finish_time, $start_time);
+		$ellapsed = $timer->nano_time(false);
 
-		$this->response_['ellapsed'] = $ellapsed_ms;
+		$this->response_['ellapsed'] = $ellapsed;
 
 		if( config::$log_timing )
-		    error_log('product info retrieved, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+		    error_log('product info retrieved, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
     }
 

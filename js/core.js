@@ -486,7 +486,7 @@ class Render {
 		};
 
 		let data = post_json_sync('proxy.php', request);
-		state.ellapsed_ += data.ellapsed;
+		//state.ellapsed_ += data.ellapsed;
 
 		this.assemble_info(new_page_state, data);
 
@@ -510,7 +510,7 @@ class Render {
 		};
 
 		let data = post_json_sync('proxy.php', request);
-		state.ellapsed_ += data.ellapsed;
+		//state.ellapsed_ += data.ellapsed;
 
 		new_paging_state.page_size_	= data.page_size;
 		new_paging_state.pages_		= data.pages;
@@ -566,7 +566,7 @@ class Render {
 		}
 
 		let data = post_json_sync('proxy.php', request);
-		state.ellapsed_ += data.ellapsed;
+		//state.ellapsed_ += data.ellapsed;
 
 		new_page_state.cart_ = data.cart;
 		new_page_state.cart_by_uuid_ = {};
@@ -1096,8 +1096,31 @@ class HtmlPageEvents extends HtmlPageState {
 							'quantity'	: e.buy_quantity
 						});
 
-					let data = post_json_sync('proxy.php', request);
-					state.ellapsed_ += data.ellapsed;
+					try {
+
+						let data = post_json_sync('proxy.php', request);
+						//state.ellapsed_ += data.ellapsed;
+
+						if( data.errno !== 0 )
+							throw new Exception(data.error);
+
+					}
+					catch( e ) {
+
+						let e = xpath_eval_single('html/body/div[@alert]');
+						e.innerHTML = e.message;
+						e.fadein();
+
+						let idle = new Idle();
+						idle.onAway = function () { idle.stop(); idle = undefined; e.fade(false, 'inline-block'); };
+						idle.setAwayTimeout(3000);
+						idle.start();
+
+						console.error(e.message);
+
+						throw e;
+
+					}
 
 					if( data.order.availability ) {
 
@@ -1129,7 +1152,7 @@ class HtmlPageEvents extends HtmlPageState {
 						e.fadein();
 
 						let idle = new Idle();
-						idle.onAway = function () { idle.stop(); idle = undefined; e.fadeout('inline-block'); };
+						idle.onAway = function () { idle.stop(); idle = undefined; e.fade(false, 'inline-block'); };
 						idle.setAwayTimeout(3000);
 						idle.start();
 

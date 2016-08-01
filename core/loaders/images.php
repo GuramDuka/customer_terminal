@@ -21,7 +21,7 @@ class images_loader extends objects_loader {
 			else
 				$fields[] = $field;
 
-		$start_time = micro_time();
+		$timer = new \nano_timer;
 
 		foreach( $this->objects_ as $object ) {
 
@@ -143,13 +143,11 @@ class images_loader extends objects_loader {
 
 		if( config::$log_timing ) {
 
-			$finish_time = micro_time();
-			$ellapsed_ms = bcsub($finish_time, $start_time);
-			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
+			list($ellapsed, $seconds) = $timer->nano_time();
 			$cnt = count($this->objects_);
-			$rps = $ellapsed_seconds != 0 ? bcdiv($cnt, $ellapsed_seconds, 2) : $cnt;
+			$rps = $seconds != 0 ? bcdiv($cnt, $seconds, 2) : $cnt;
 
-	    	error_log(sprintf('%u', $cnt) . ' images rewrited, ' . $rps . ' ips, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+	    	error_log(sprintf('%u', $cnt) . ' images rewrited, ' . $rps . ' ips, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 		}
 
@@ -181,7 +179,7 @@ class images_loader extends objects_loader {
 
 		$this->infobase_->begin_immediate_transaction();
 
-		$begin_start_time = $start_time = micro_time();
+		$timer = new \nano_timer;
 
 		$st = null;
 		$st_erase = null;
@@ -228,11 +226,15 @@ class images_loader extends objects_loader {
 
 			}
 
-			if( bccomp(bcsub(micro_time(), $begin_start_time), config::$sqlite_tx_duration) >= 0 ) {
+			$ellapsed = $timer->last_nano_time();
+
+			if( bccomp($ellapsed, config::$sqlite_tx_duration) >= 0 ) {
 
 				$this->infobase_->commit_immediate_transaction();
 				$this->infobase_->begin_immediate_transaction();
-				$begin_start_time = micro_time();
+
+				if( config::$log_sqlite_tx_duration )
+	    			error_log('sqlite tx duration reached, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 			}
 
@@ -240,13 +242,15 @@ class images_loader extends objects_loader {
 
 		$this->infobase_->commit_immediate_transaction();
 
-		$finish_time = micro_time();
-		$ellapsed_ms = bcsub($finish_time, $start_time);
-		$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
-		$cnt = count($this->objects_);
-		$rps = $ellapsed_seconds != 0 ? bcdiv($cnt, $ellapsed_seconds, 2) : $cnt;
+		if( config::$log_timing ) {
 
-	    error_log(sprintf('%u', $cnt) . ' images updated, ' . $rps . ' rps, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+			list($ellapsed, $seconds) = $timer->nano_time();
+			$cnt = count($this->objects_);
+			$rps = $seconds != 0 ? bcdiv($cnt, $seconds, 2) : $cnt;
+
+		    error_log(sprintf('%u', $cnt) . ' images updated, ' . $rps . ' rps, ellapsed: ' . $timer->ellapsed_string($ellapsed));
+
+		}
 
 	}
 

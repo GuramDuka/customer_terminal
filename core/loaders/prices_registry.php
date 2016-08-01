@@ -23,7 +23,7 @@ class prices_registry_loader extends objects_loader {
 
 		$this->infobase_->begin_immediate_transaction();
 
-		$begin_start_time = $start_time = micro_time();
+		$timer = new \nano_timer;
 
 		$st_records_ins = null;
 		$st_records_del = null;
@@ -160,11 +160,15 @@ EOT
 
 			$st_totals_add->execute();
 
-			if( bccomp(bcsub(micro_time(), $begin_start_time), config::$sqlite_tx_duration) >= 0 ) {
+			$ellapsed = $timer->last_nano_time();
+
+			if( bccomp($ellapsed, config::$sqlite_tx_duration) >= 0 ) {
 
 				$this->infobase_->commit_immediate_transaction();
 				$this->infobase_->begin_immediate_transaction();
-				$begin_start_time = micro_time();
+
+				if( config::$log_sqlite_tx_duration )
+	    			error_log('sqlite tx duration reached, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 			}
 
@@ -177,13 +181,11 @@ EOT
 
 		if( config::$log_timing ) {
 
-			$finish_time = micro_time();
-			$ellapsed_ms = bcsub($finish_time, $start_time);
-			$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
+			list($ellapsed, $seconds) = $timer->nano_time();
 			$cnt = count($this->objects_);
-			$rps = $ellapsed_seconds != 0 ? bcdiv($cnt, $ellapsed_seconds, 2) : $cnt;
+			$rps = $seconds != 0 ? bcdiv($cnt, $seconds, 2) : $cnt;
 
-	    	error_log(sprintf('%u', $cnt) . ' prices registry updated, ' . $rps . ' rps, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+	    	error_log(sprintf('%u', $cnt) . ' prices registry updated, ' . $rps . ' rps, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 		}
 

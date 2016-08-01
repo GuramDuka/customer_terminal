@@ -16,14 +16,15 @@ namespace srv1c {
 //------------------------------------------------------------------------------
 class config extends \config {
 
-	public static $sqlite_tx_duration							= '100'; // using string constant because bccomp want string parameters 
+	public static $sqlite_tx_duration							= 50000000;	// in nanoseconds, 1000ns == 1micros, 1000000ns == 1ms, 1000000000ns = 1s. 50ms by default
+	public static $log_sqlite_tx_duration						= true;
 	public static $sqlite_page_size								= 4096;
-	public static $sqlite_cache_size							= 262144;  // 131072, 262144, 524288
+	public static $sqlite_cache_size							= 262144;	// 131072, 262144, 524288
 	public static $log_loader_request							= false;
 	public static $explain										= false;
 	public static $rewrite_pages_timing							= false;
 	public static $pager_timing									= true;
-	public static $producter_timing								= true;
+	public static $producter_timing								= false;
 	public static $cart_timing									= true;
 	public static $log_timing									= true;
 	public static $page_size									= 6;

@@ -195,7 +195,7 @@ EOT
 
 	protected function handle_request() {
 
-		$start_time = micro_time();
+		$timer = new \nano_timer;
 
 		$this->infobase_ = new infobase;
 		$this->infobase_->set_create_if_not_exists(false);
@@ -211,7 +211,7 @@ EOT
 		if( @$products !== null && count($products) > 0
 			&& @$order['availability'] === null ) {
 
-			$start_time_st = micro_time();
+			$timer->restart();
 
 			foreach( $products as $product ) {
 
@@ -260,38 +260,32 @@ EOT
 
 			if( config::$cart_timing ) {
 
-				$finish_time = micro_time();
-				$ellapsed_ms = bcsub($finish_time, $start_time_st);
-				$ellapsed_seconds = bcdiv($ellapsed_ms, 1000000, 6);
-
-		    	error_log('cart update, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+				$ellapsed = $timer->last_nano_time();
+		    	error_log('cart update, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 			}
 
 		}
 
-		$start_time_st = micro_time();
+		$timer->restart();
 
 		$this->response_['cart'] = $this->fetch_cart();
 
 		if( config::$cart_timing ) {
 
-			$finish_time = micro_time();
-			$ellapsed_ms = bcsub($finish_time, $start_time_st);
-
-	    	error_log('cart fetch, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+			$ellapsed = $timer->last_nano_time();
+	    	error_log('cart fetch, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 		}
 
 		$this->infobase_->commit_immediate_transaction();
 
-		$finish_time = micro_time();
-		$ellapsed_ms = bcsub($finish_time, $start_time);
+		$ellapsed = $timer->nano_time(false);
 
-		$this->response_['ellapsed'] = $ellapsed_ms;
+		$this->response_['ellapsed'] = $ellapsed;
 
 		if( config::$log_timing )
-		    error_log('cart retrieved, ellapsed: ' . ellapsed_time_string($ellapsed_ms));
+		    error_log('cart retrieved, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
     }
 
