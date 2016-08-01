@@ -237,6 +237,17 @@
 		margin-top			: -4.1%;
 	}
 
+	html > body > div[btn][selections] {
+		float				: right;
+		width				: auto;
+		margin-right		: 3px;
+	}
+
+	html > body > div[btn][selections] > img[btn_ico] {
+		/* fix: shift up */
+		margin-top			: -2.1%;
+	}
+
 	html > body > div[pinfo] {
 		width				: 100%;
 		display				: none;
@@ -781,6 +792,10 @@
 		animation			: fadein 200ms;
 	}
 
+	*[blink][fadein] {
+		animation			: blink 0.6s cubic-bezier(1.0, 0, 0.7, 1.0) infinite alternate, fadein 200ms;
+	}
+
 	@keyframes fadeout {
     	from { opacity: 1; }
 	    to   { opacity: 0; }
@@ -788,6 +803,10 @@
 
 	*[fadeout] {
 		animation			: fadeout 2000ms;
+	}
+
+	*[blink][fadeout] {
+		animation			: blink 0.6s cubic-bezier(1.0, 0, 0.7, 1.0) infinite alternate, fadeout 2000ms;
 	}
 
 }

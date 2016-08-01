@@ -557,6 +557,21 @@ EOT
 EOT
 		);
 
+		// регистр Настройка подбора терминала покупателя
+		$this->exec(<<<'EOT'
+			CREATE TABLE IF NOT EXISTS products_selection_by_properties_setup (
+				category_uuid		BLOB,
+				property_uuid		BLOB,
+				display				TEXT,
+				display_order		INTEGER,
+				selection_type		INTEGER		/* 1 - checkbox, 2 - radio, 3 - dropdown list or multiple checkbox list */
+			)
+EOT
+		);
+
+		$dimensions = [ 'category' => '_uuid' ];
+		$this->create_unique_indexes_on_registry('products_selection_by_properties_setup', $dimensions);
+
 	}
 
 	public function dump_plan($sql) {

@@ -123,6 +123,8 @@ HTMLElement.prototype.fadein = function () {
 	this.setAttribute('fadein', '');
 	this.style.display = 'inline-block';
 
+	return this;
+
 };
 //------------------------------------------------------------------------------
 HTMLElement.prototype.fadeout = function (display = 'none') {
@@ -134,6 +136,8 @@ HTMLElement.prototype.fadeout = function (display = 'none') {
 	this.setAttribute('fadeout', '');
 	this.style.display = display;
 
+	return this;
+
 };
 //------------------------------------------------------------------------------
 HTMLElement.prototype.fade = function (v, display = 'none') {
@@ -142,9 +146,23 @@ HTMLElement.prototype.fade = function (v, display = 'none') {
 		return;
 
 	if( v )
-		this.fadein(display);
+		this.fadein();
 	else
 		this.fadeout(display);
+
+	return this;
+
+};
+//------------------------------------------------------------------------------
+HTMLElement.prototype.blink = function (v) {
+
+	if( this.attributes.blink )
+		this.removeAttribute('blink');
+
+	if( v )
+		this.setAttribute('blink', '');
+
+	return this;
 
 };
 //------------------------------------------------------------------------------

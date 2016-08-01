@@ -591,9 +591,11 @@ class Render {
 		let plist = xpath_eval_single('html/body/div[@plist]');
 		let pinfo = xpath_eval_single('html/body/div[@pinfo]');
 		let backb = xpath_eval_single('html/body/div[@btn and @back]');
+		let selsb = xpath_eval_single('html/body/div[@btn and @selections]');
 		let pcart = xpath_eval_single('html/body/div[@pcart]');
 		let pctrl = xpath_eval_single('html/body/div[@pcontrols]');
 		let pcrin = xpath_eval_single('html/body/div[@top]/div[@cart_informer]');
+		let catsb = xpath_eval('html/body/div[@categories]/div[@btc]');
 
 		if( new_page_state.cart_.length > 0 && (cur_state.cart_.length === 0 || zero) )
 			pcrin.fadein();
@@ -602,27 +604,45 @@ class Render {
 			pcrin.fadeout();
 
 		let to_cart = function () {
+
 			backb.fadein();
 			pcart.fadein();
 			plist.fadeout();
 			pctrl.fadeout();
 			pinfo.fadeout();
+			selsb.fadeout();
+
+			for( let e of catsb )
+				e.fadeout();
+
 		};
 
 		let to_list = function () {
+
 			backb.fadeout();
 			pcart.fadeout();
 			plist.fadein();
 			pctrl.fadein();
 			pinfo.fadeout();
+			selsb.fadein();
+
+			for( let e of catsb )
+				e.fadein();
+
 		};
 
 		let to_info = function () {
+
 			backb.fadein();
 			pcart.fadeout();
 			plist.fadeout();
 			pctrl.fadeout();
 			pinfo.fadein();
+			selsb.fadeout();
+
+			for( let e of catsb )
+				e.fadeout();
+
 		};
 
 		if( new_page_state.cart_edit_ !== cur_state.cart_edit_ || new_page_state.product_ !== cur_state.product_ ) {
@@ -839,11 +859,11 @@ class HtmlPageEvents extends HtmlPageState {
 
 					// switch on blinking new category
 					if( cur_category !== new_category )
-						element.setAttribute('blink', '');
+						element.blink(true);
 
 					// switch off blinking current category
 					if( cur_category !== null )
-						xpath_eval_single('html/body/div[@categories]/div[@btc and @uuid=\'' + cur_category + '\']').removeAttribute('blink');
+						xpath_eval_single('html/body/div[@categories]/div[@btc and @uuid=\'' + cur_category + '\']').blink(false);
 
 				}
 				else if( attrs.btn && attrs.list_sort_order
@@ -1105,10 +1125,10 @@ class HtmlPageEvents extends HtmlPageState {
 							throw new Exception(data.error);
 
 					}
-					catch( e ) {
+					catch( ex ) {
 
 						let e = xpath_eval_single('html/body/div[@alert]');
-						e.innerHTML = e.message;
+						e.innerHTML = ex.message;
 						e.fadein();
 
 						let idle = new Idle();
@@ -1116,9 +1136,9 @@ class HtmlPageEvents extends HtmlPageState {
 						idle.setAwayTimeout(3000);
 						idle.start();
 
-						console.error(e.message);
+						console.error(ex.message);
 
-						throw e;
+						throw ex;
 
 					}
 

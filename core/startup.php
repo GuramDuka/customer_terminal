@@ -30,7 +30,7 @@ require_once CORE_DIR . 'version.php';
 //------------------------------------------------------------------------------
 PHP_VERSION_ID < 70007 && die('PHP ' . PHP_VERSION . ' detected, required: 7.0.7');
 //------------------------------------------------------------------------------
-/*function e_handler($errno, $errstr, $errfile, $errline, array $errcontext) { 
+function e_handler($errno, $errstr, $errfile, $errline, array $errcontext) { 
 
 	// error was suppressed with the @-operator
     if( 0 === error_reporting() )
@@ -40,7 +40,7 @@ PHP_VERSION_ID < 70007 && die('PHP ' . PHP_VERSION . ' detected, required: 7.0.7
 
 }
 //------------------------------------------------------------------------------
-set_error_handler('e_handler', E_ALL); // E_WARNING | E_NOTICE;*/
+set_error_handler('e_handler', E_WARNING | E_NOTICE/*E_ALL*/);
 //------------------------------------------------------------------------------
 require_once CORE_DIR . 'config.php';
 //------------------------------------------------------------------------------

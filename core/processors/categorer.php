@@ -74,7 +74,7 @@ EOT
 
 		$this->infobase_->commit_immediate_transaction();
 
-		$ellapsed = $timer->nano_time();
+		$ellapsed = $timer->nano_time(false);
 
 		$this->response_['ellapsed'] = $ellapsed;
 
