@@ -5,7 +5,7 @@ var prefetch = new Idle();
 //------------------------------------------------------------------------------
 var prefetch_away_callback = function() {
 
-	var start = microtime();
+	var start = mili_time();
 
 	var head = document.getElementsByTagName('head')[0];
 
@@ -46,7 +46,7 @@ var prefetch_away_callback = function() {
 
 			preloaded_pgno++;
 
-			var finish = microtime();
+			var finish = mili_time();
 			var ellapsed = finish - start;
 
 			console.log('prefetch: ' + ellapsed_time_string(ellapsed));

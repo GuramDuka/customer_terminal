@@ -16,65 +16,80 @@ class proxy_handler extends srv1c\handler {
 
 	protected function handle_request() {
 
-		if( config::$log_request )
-			error_log(var_export($this->request_, true));
+		$handler = null;
 
-		$modules = [
-			'pager' => [
-				'pager'			=> true
-			],
-			'categorer' => [
-				'categorer'		=> true
-			],
-			'producter' => [
-				'producter'		=> true
-			],
-			'carter' => [
-				'carter'		=> true
-			]
-		];
+		try {
 
-		$module = @$this->request_['module'];
-		$handler = @$this->request_['handler'];
+			if( config::$log_request )
+				error_log(var_export($this->request_, true));
 
-		if( !array_key_exists($module, $modules) )
-			throw new runtime_exception('Unknown module ' . $module, E_ERROR);
+			$modules = [
+				'pager' => [
+					'pager'			=> true
+				],
+				'categorer' => [
+					'categorer'		=> true
+				],
+				'producter' => [
+					'producter'		=> true
+				],
+				'carter' => [
+					'carter'		=> true
+				]
+			];
 
-		if( !array_key_exists($handler, $modules[$module]) )
-			throw new runtime_exception('Unknown handler ' . $handler, E_ERROR);
+			$module = @$this->request_['module'];
+			$handler = @$this->request_['handler'];
 
-		if( !$modules[$module][$handler] )
-			throw new runtime_exception('Handler ' . $handler . ' disabled', E_ERROR);
+			if( !array_key_exists($module, $modules) )
+				throw new runtime_exception('Unknown module ' . $module, E_ERROR);
 
-		require_once PROCESSORS_DIR . $module . '.php';
+			if( !array_key_exists($handler, $modules[$module]) )
+				throw new runtime_exception('Unknown handler ' . $handler, E_ERROR);
 
-		$class_name = "srv1c\\${handler}_handler";
+			if( !$modules[$module][$handler] )
+				throw new runtime_exception('Handler ' . $handler . ' disabled', E_ERROR);
 
-		$handler = new $class_name;
-		$handler->request_ = $this->request_;
+			require_once PROCESSORS_DIR . $module . '.php';
 
-		$this->request_ = null;
-		unset($handler->request_['module']);
-		unset($handler->request_['handler']);
+			$class_name = "srv1c\\${handler}_handler";
 
-		$handler->handle_request();
+			$handler = new $class_name;
+			$handler->request_ = $this->request_;
+			$this->request_ = null;
+			unset($handler->request_['module']);
+			unset($handler->request_['handler']);
 
-		print($handler->get_json());
+			$handler->response_ = $this->response_;
+			$handler->handle_request();
 
-		if( config::$log_response )
-			error_log(var_export($handler->response_, true));
+			print($handler->get_json());
 
-    }
+			if( config::$log_response )
+				error_log(var_export($handler->response_, true));
+
+	    }
+		catch( Throwable $e ) {
+
+			if( $handler !== null )
+				$this->response_ = $handler->response_;
+
+			$this->response_['errno'] = $e->getCode() !== 0 ? $e->getCode() : E_ERROR;
+			$this->response_['error'] = htmlspecialchars($e->getMessage(), ENT_HTML5);
+			$this->response_['stacktrace'] = htmlspecialchars($e->getTraceAsString(), ENT_HTML5);
+
+			print($this->get_json());
+
+		    error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+
+		}
+
+	}
 
 };
 //------------------------------------------------------------------------------
-try {
-	$handler = new proxy_handler;
-	$handler->handle_json_request();
-}
-catch( Throwable $e ) {
-    error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . $e->getTraceAsString());
-}
+$handler = new proxy_handler;
+$handler->handle_json_request();
 //------------------------------------------------------------------------------
 } // global namespace
 //------------------------------------------------------------------------------

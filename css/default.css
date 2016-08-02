@@ -234,7 +234,7 @@
 	html > body > div[btn][back] > img[btn_ico] {
 		transform			: scaleY(-1); /* flip horizontally */
 		/* fix: shift up */
-		margin-top			: -4.1%;
+		margin-top			: -5.1%;
 	}
 
 	html > body > div[btn][selections] {
@@ -246,6 +246,17 @@
 	html > body > div[btn][selections] > img[btn_ico] {
 		/* fix: shift up */
 		margin-top			: -2.1%;
+	}
+
+	html > body > div[btn][select_by_car] {
+		float				: right;
+		width				: auto;
+		margin-right		: 3px;
+	}
+
+	html > body > div[btn][select_by_car] > img[btn_ico] {
+		/* fix: shift up */
+		margin-top			: -1.1%;
 	}
 
 	html > body > div[pinfo] {
@@ -421,12 +432,11 @@
 		margin-left			: 16px;
 		margin-top			: 8px;
 		margin-bottom		: 8px;
-		display				: none;
 	}
 
-	html > body > div[pinfo] > div[pright] > div[btn][buy] > img[btn_ico] {
+	html > body > div[pinfo] > div[pright] > div[buy] > img[btn_ico] {
 		/* fix: shift down */
-		margin-top			: -2.1%;
+		margin-top			: -3.1%;
 	}
 
 	html > body > div[pinfo] > div[pright] > div[premainders] {
@@ -509,7 +519,7 @@
 		height				: 100%;
 	}
 
-	html > body > div[plist] > div[ptable] > div[pitem] > div[btn][buy] > img[btn_ico] {
+	html > body > div[plist] > div[ptable] > div[pitem] > div[buy] > img[btn_ico] {
 		/* fix: shift up */
 		margin-top			: -8.1%;
 	}
@@ -667,12 +677,6 @@
 		margin-top			: -6.1%;
 	}
 
-	html > body > div[pcart] > div[ptable] > div[pitem] > div[btn][buy] {
-		float				: right;
-		margin-right		: 3px;
-		display				: none;
-	}
-
 	html > body > div[pcart] > div[pcontrols] {
 		width				: 100%;
 	}
@@ -730,6 +734,12 @@
 		font-weight			: bold;
 		text-align			: center;
 		vertical-align		: middle;
+	}
+
+	html > body > div[alert] > pre[error] {
+		text-align			: left;
+		font-size			: 14px;
+		font-weight			: normal;
 	}
 
 	html > body > div[debug] {

@@ -85,11 +85,11 @@ class nano_timer {
 		if( bccomp($days, 0, 0) !== 0 )
 			$s = sprintf('%u:%02u:%02u:%02u.%09u', $days, $hours, $mins, $secs, $nsecs);
 		else if( bccomp($hours, 0, 0) !== 0 )
-			$s = sprintf('%2u:%02u:%02u.%09u', $hours, $mins, $secs, $nsecs);
+			$s = sprintf('%u:%02u:%02u.%09u', $hours, $mins, $secs, $nsecs);
 		else if( bccomp($mins, 0, 0) !== 0 )
-			$s = sprintf('%2u:%02u.%09u', $mins, $secs, $nsecs);
+			$s = sprintf('%u:%02u.%09u', $mins, $secs, $nsecs);
 		else if( bccomp($secs, 0, 0) !== 0 )
-			$s = sprintf('%2u.%09u', $secs, $nsecs);
+			$s = sprintf('%u.%09u', $secs, $nsecs);
 		else
 			$s = sprintf('.%09u', $nsecs);
 

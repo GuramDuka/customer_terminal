@@ -17,9 +17,7 @@ abstract class handler {
 
 		header('Content-Type: application/json; charset=utf-8');
 
-		$this->response_ = [
-			'errno' => JSON_ERROR_NONE,
-		];
+		$this->response_ = [ 'errno' => JSON_ERROR_NONE ];
 
 		$e = null;
 
@@ -62,13 +60,14 @@ abstract class handler {
 			$e = $ex;
 
 			$this->response_['errno'] = $e->getCode() !== 0 ? $e->getCode() : E_ERROR;
-			$this->response_['error'] = $e->getMessage();
-			$this->response_['stacktrace'] = $e->getTraceAsString();
+			$this->response_['error'] = htmlspecialchars($e->getMessage(), ENT_HTML5);
+			$this->response_['stacktrace'] = htmlspecialchars($e->getTraceAsString(), ENT_HTML5);
 
 		}
 
 		if( $e !== null )
 			error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+
     }
 
 	public function get_json() {

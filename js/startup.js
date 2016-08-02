@@ -166,6 +166,19 @@ HTMLElement.prototype.blink = function (v) {
 
 };
 //------------------------------------------------------------------------------
+HTMLElement.prototype.ascend = function (path) {
+
+	let a = path.split('/');
+	let p = this.parentNode;
+
+	for( let i = 0; i < a.length && p; i++, p = p.parentNode )
+		if( !p.attributes[a[i]] )
+			return false;
+
+	return true;
+
+};
+//------------------------------------------------------------------------------
 String.prototype.isEmpty = function () {
     return this.length === 0 || !this.trim();
 };
@@ -776,25 +789,38 @@ function sleep(ms) {
 
 }
 //------------------------------------------------------------------------------
-function microtime() {
+function mili_time() {
 
-	return window.performance.timing.navigationStart + window.performance.now();
+	let t = new Date();
+
+	return t.getUTCSeconds() * 1000 + t.getUTCMilliseconds();
+	//return window.performance.timing.navigationStart + window.performance.now();
 
 }
 //------------------------------------------------------------------------------
 function ellapsed_time_string(ms) {
 
-	var a		= Math.round(ms / 1000);
-	var days	= Math.round(a / (60 * 60 * 24));
-	var hours	= Math.round(a / (60 * 60)) - days * 24;
-	var mins	= Math.round(a / 60) - days * 24 * 60 - hours * 60;
-	var secs	= a - days * 24 * 60 * 60 - hours * 60 * 60 - mins * 60;
-	var msecs	= ms % 1000;
+	if( ms < 0 )
+		ms = 0;
 
-	s = sprintf('%02u:%02u:%02u.%03u', hours, mins, secs, msecs);
+	let a		= Math.trunc(ms / 1000);
+	let days	= Math.trunc(a / (60 * 60 * 24));
+	let hours	= Math.trunc(a / (60 * 60)) - days * 24;
+	let mins	= Math.trunc(a / 60) - days * 24 * 60 - hours * 60;
+	let secs	= a - days * 24 * 60 * 60 - hours * 60 * 60 - mins * 60;
+	let msecs	= ms % 1000;
+	let s;
 
-	if( days != 0 )
-		s = sprintf('%u', $days) + ':' + s;
+	if( days !== 0 )
+		s = sprintf('%u:%02u:%02u:%02u.%03u', days, hours, mins, secs, msecs);
+	else if( hours !== 0 )
+		s = sprintf('%u:%02u:%02u.%03u', hours, mins, secs, msecs);
+	else if( mins !== 0 )
+		s = sprintf('%u:%02u.%03u', mins, secs, msecs);
+	else if( secs !== 0 )
+		s = sprintf('%u.%03u', secs, msecs);
+	else
+		s = sprintf('.%03u', msecs);
 
 	return s;
 
@@ -877,7 +903,7 @@ function post_json_sync(path, data) {
 	xhr.send(JSON.stringify(data, null, '\t'));
 
 	if( xhr.status !== 200 )
-		throw new Error(request.status.toString() + ' ' + request.statusText);
+		throw new Error(xhr.status.toString() + ' ' + xhr.statusText + "\n" + xhr.responseText);
 
 	return JSON.parse(xhr.responseText, JSON.dateParser);
 
@@ -955,7 +981,43 @@ function define_enum(list) {
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------
-(function() {
+class Idle {
+
+	static events() {
+		return [ 'click', 'mousemove', 'mouseenter', 'keydown', 'touchstart', 'touchmove', 'scroll', 'mousewheel' ];
+	}
+
+	constructor() {
+	}
+
+	activity_handler() {
+	}
+
+	timeout_handler() {
+	}
+
+	start(timeout) {
+
+		this.handler_ = e => this.activity_handler(e);
+
+		for( let event of Idle.events() )
+			add_event(window, event , this.handler_, true);
+
+		this.timeout_ = timeout;
+		this.away_timer_ = setTimeout(e => this.timeout_handler(e), timeout);
+
+	}
+
+	stop() {
+
+		for( let event of Idle.events() )
+			window.removeEventListener(window, this.handler_);
+
+	}
+
+}
+//------------------------------------------------------------------------------
+/*(function() {
   var Idle;
 
   if (!document.addEventListener) {
@@ -1119,5 +1181,5 @@ function define_enum(list) {
     window.Idle = Idle;
   }
 
-}).call(this);
+}).call(this);*/
 //------------------------------------------------------------------------------

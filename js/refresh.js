@@ -5,7 +5,7 @@ var refresh = new Idle();
 //------------------------------------------------------------------------------
 var refresh_away_callback = function() {
 
-	var start = microtime();
+	var start = mili_time();
 
 	var req = {
 		'module'	: 'pager',
@@ -38,7 +38,7 @@ var refresh_away_callback = function() {
 			if( pgno >= pages )
 				pgno = pages > 0 ? pages - 1 : 0;
 
-			var finish = microtime();
+			var finish = mili_time();
 			var ellapsed = finish - start;
 
 			console.log('refresh: ' + ellapsed_time_string(ellapsed));
