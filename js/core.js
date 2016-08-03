@@ -1,4 +1,5 @@
 //------------------------------------------------------------------------------
+let null_uuid = '00000000-0000-0000-0000-000000000000';
 let manager = null;
 let msg_source = null;
 //------------------------------------------------------------------------------
@@ -13,7 +14,8 @@ class HtmlPageState {
 			pages_ 					: 0,
 			page_size_				: 0,
 			order_					: 1,
-			direction_				: 0
+			direction_				: 0,
+			selections_				: false
 		};
 
 	}
@@ -76,9 +78,9 @@ class HtmlPageState {
 		];
 
 		this.page_state_	= {
-			category_					: null,
-			paging_state_by_category_	: { null : this.paging_state_template },
-			product_					: null,
+			category_					: null_uuid,
+			paging_state_by_category_	: { [null_uuid] : this.paging_state_template },
+			product_					: null_uuid,
 			cart_edit_					: false,
 			cart_pgno_					: 0,
 			cart_						: [],
@@ -501,7 +503,7 @@ class Render {
 		let request = {
 			'module'			: 'pager',
 			'handler'			: 'pager',
-			'category'			: new_page_state.category_,
+			'category'			: new_page_state.category_ !== null_uuid ? new_page_state.category_ : null,
 			'order'				: state.orders_[new_paging_state.order_].name,
 			'direction'			: state.directions_[new_paging_state.direction_],
 			'pgno'				: new_paging_state.pgno_
@@ -524,7 +526,7 @@ class Render {
 
 	}
 
-	rewrite_cart(new_page_state = null, product = null, buy_quantity = null) {
+	rewrite_cart(new_page_state = null, product = null_uuid, buy_quantity = null) {
 
 		let state = this.state_;
 
@@ -548,7 +550,7 @@ class Render {
 			cart_entity.modified = true;
 
 		}
-		else if( product !== null && buy_quantity !== null ) {
+		else if( product !== null_uuid && buy_quantity !== null ) {
 
 			if( !request.products )
 				request.products = [];
@@ -607,9 +609,12 @@ class Render {
 		let zero = new_page_state === null;
 		let state = this.state_;
 		let cur_state = state.page_state_;
+		let cur_paging_state = cur_state.paging_state_by_category_[cur_state.category_];
 
 		if( new_page_state === null )
 			new_page_state = cur_state;
+
+		let new_paging_state = new_page_state.paging_state_by_category_[new_page_state.category_];
 
 		let plist = xpath_eval_single('html/body/div[@plist]');
 		let pinfo = xpath_eval_single('html/body/div[@pinfo]');
@@ -627,6 +632,49 @@ class Render {
 		if( new_page_state.cart_.length === 0 && cur_state.cart_.length > 0 )
 			pcrin.fadeout();
 
+		let setup_categories_selections = function () {
+
+			if( new_page_state.category_ !== null_uuid ) {
+
+				selsb.fadein();
+				carbb.fadein();
+
+			}
+			else {
+
+				selsb.fadeout();
+				carbb.fadeout();
+
+			}
+
+			let selections = false;
+			let e = xpath_eval_single('html/body/div[@categories]');
+
+			for( let cat_uuid in new_page_state.paging_state_by_category_ ) {
+
+				if( cat_uuid === null_uuid )
+					continue;
+
+				let s = xpath_eval_single('div[@selections_frame and @uuid=\'' + cat_uuid + '\']', e);
+
+				if( new_page_state.paging_state_by_category_[cat_uuid].selections_ && cat_uuid === new_page_state.category_ ) {
+
+					s.fadein();
+					selections = true;
+
+				}
+				else {
+
+					s.fadeout();
+
+				}
+
+			}
+
+			selsb.blink(selections);
+
+		};
+
 		let to_cart = function () {
 
 			backb.fadein();
@@ -640,6 +688,9 @@ class Render {
 			for( let e of catsb )
 				e.fadeout();
 
+			for( let e of xpath_eval('html/body/div[@categories]/div[@selections_frame]') )
+				e.fadeout();
+
 		};
 
 		let to_list = function () {
@@ -649,11 +700,11 @@ class Render {
 			plist.fadein();
 			pctrl.fadein();
 			pinfo.fadeout();
-			selsb.fadein();
-			carbb.fadein();
 
 			for( let e of catsb )
 				e.fadein();
+
+			setup_categories_selections();
 
 		};
 
@@ -670,21 +721,86 @@ class Render {
 			for( let e of catsb )
 				e.fadeout();
 
+			for( let e of xpath_eval('html/body/div[@categories]/div[@selections_frame]') )
+				e.fadeout();
+
 		};
 
 		if( new_page_state.cart_edit_ !== cur_state.cart_edit_ || new_page_state.product_ !== cur_state.product_ ) {
 
 			if( new_page_state.cart_edit_ )
 				to_cart();
-			else if( new_page_state.product_ === null )
+			else if( new_page_state.product_ === null_uuid )
 				to_list();
 			else
 				to_info();
 
 		}
 		else if( new_page_state.category_ !== cur_state.category_ ) {
+
 			plist.fadein();
+			setup_categories_selections();
+
 		}
+		else if( new_paging_state.selections_ !== cur_paging_state.selections_ ) {
+
+			setup_categories_selections();
+
+		}
+
+	}
+
+	assemble_selections(new_page_state, data) {
+
+		let new_paging_state = new_page_state.paging_state_by_category_[new_page_state.category_];
+		let element = xpath_eval_single('html/body/div[@categories]/div[@selections_frame and @uuid=\'' + new_page_state.category_ + '\']');
+		let html = '';
+
+		for( let p of data.setup ) {
+
+			html = html
+				+ '<div uuid=\"' + p.uuid + '\">'
+				+ '<p>' + p.display + '</p>'
+				+ '<ul>'
+			;
+
+			for( let v of p.values )
+				html = html
+					+ '<li uuid=\"' + v.uuid + '\">'
+					+ v.value
+					+ '</li>'
+				;
+
+			html = html
+				+ '</ul>'
+				+ '</div>'
+			;
+
+		}
+
+		element.innerHTML = html;
+
+	}
+
+	rewrite_selections(new_page_state = null) {
+
+		let state = this.state_;
+
+		if( new_page_state === null )
+			new_page_state = state.page_state_;
+
+		let new_paging_state = new_page_state.paging_state_by_category_[new_page_state.category_];
+
+		let request = {
+			'module'	: 'selectorer',
+			'handler'	: 'selectorer',
+			'category'	: new_page_state.category_ !== null_uuid ? new_page_state.category_ : null,
+			'setup'		: true
+		};
+
+		let data = post_json_sync('proxy.php', request);
+
+		this.assemble_selections(new_page_state, data);
 
 	}
 
@@ -699,7 +815,7 @@ class Render {
 		let request = {
 			'module'	: 'categorer',
 			'handler'	: 'categorer',
-			'parent'	: new_page_state.category_
+			'parent'	: new_page_state.category_ !== null_uuid ? new_page_state.category_ : null
 		};
 
 		let data = post_json_sync('proxy.php', request);
@@ -722,7 +838,8 @@ class Render {
 			html +=
 				'<div btc uuid="' + c.uuid + '"'
 					+ (c.uuid === new_page_state.category_ ? ' blink' : '')
-				+ '>' + c.name + '</div>'
+				+ '>' + c.name +'</div>'
+				+ '<div selections_frame fadein uuid="' + c.uuid + '"' + '></div>'
 			;
 
 		}
@@ -764,27 +881,20 @@ class HtmlPageEvents extends HtmlPageState {
 
 	}
 
-	show_alert(msg, state, timeout = 0) {
+	show_alert(msg, state, idle_timeout = 0) {
 
 		let e = xpath_eval_single('html/body/div[@alert]');
 		e.innerHTML = msg;
 		e.fadein();
 
-		if( timeout > 0 ) {
+		if( idle_timeout > 0 ) {
 
-			let idle = new Idle();
-
-			idle.onAway = function () {
-
-				idle.stop();
-				idle = undefined;
-				e.fade(false, 'inline-block');
-				state.alert_ = false;
-
-			};
-
-			idle.setAwayTimeout(timeout);
-			idle.start();
+			new Idle({
+				oneshot	: true,
+				start	: true,
+				timeout	: idle_timeout,
+				away	: () => { e.fade(false, 'inline-block'); state.alert_ = false; }
+			});
 
 		}
 
@@ -885,12 +995,12 @@ class HtmlPageEvents extends HtmlPageState {
 
 		// categories buttons
 		let cur_category = cur_page_state.category_;
-		let new_category = cur_page_state.category_ !== attrs.uuid.value ? attrs.uuid.value : null;
+		let new_category = cur_page_state.category_ !== attrs.uuid.value ? attrs.uuid.value : null_uuid;
 
 		let [ new_page_state ] = this.clone_page_state();
 
 		new_page_state.category_ = new_category;
-		new_page_state.product_ = null;
+		new_page_state.product_ = null_uuid;
 		new_page_state.modified_ = true;
 
 		this.render_.rewrite_page(new_page_state);
@@ -900,7 +1010,7 @@ class HtmlPageEvents extends HtmlPageState {
 			element.blink(true);
 
 		// switch off blinking current category
-		if( cur_category !== null )
+		if( cur_category !== null_uuid )
 			xpath_eval_single('html/body/div[@categories]/div[@btc and @uuid=\'' + cur_category + '\']').blink(false);
 
 		return new_page_state;
@@ -914,7 +1024,7 @@ class HtmlPageEvents extends HtmlPageState {
 		if( ++new_paging_state.order_ >= this.orders_.length )
 			new_paging_state.order_ = 0;
 
-		new_page_state.product_ = null;
+		new_page_state.product_ = null_uuid;
 		new_page_state.modified_ = true;
 
 		this.render_.rewrite_page(new_page_state);
@@ -930,7 +1040,7 @@ class HtmlPageEvents extends HtmlPageState {
 		if( ++new_paging_state.direction_ >= this.directions_.length )
 			new_paging_state.direction_ = 0;
 
-		new_page_state.product_ = null;
+		new_page_state.product_ = null_uuid;
 		new_page_state.modified_ = true;
 
 		this.render_.rewrite_page(new_page_state);
@@ -949,7 +1059,7 @@ class HtmlPageEvents extends HtmlPageState {
 		}
 		else {
 			// switch back from product info
-			new_page_state.product_ = null;
+			new_page_state.product_ = null_uuid;
 		}
 
 		new_page_state.modified_ = true;
@@ -957,6 +1067,24 @@ class HtmlPageEvents extends HtmlPageState {
 		this.render_.rewrite_page(new_page_state);
 
 		return new_page_state;
+
+	}
+
+	btn_selections_handler(cur_page_state, cur_paging_state) {
+
+		if( cur_page_state.category_ !== null_uuid ) {
+
+			let [ new_page_state, new_paging_state ] = this.clone_page_state();
+
+			new_paging_state.selections_ = !cur_paging_state.selections_;
+			new_page_state.modified_ = true;
+
+			if( new_paging_state.selections_ )
+				this.render_.rewrite_selections(new_page_state);
+
+			return new_page_state;
+
+		}
 
 	}
 
@@ -1196,7 +1324,7 @@ class HtmlPageEvents extends HtmlPageState {
 				let msg = 'Недостаточное количество товара для заказа, Ваш заказ изменён, проверьте пожалуйста и попробуйте ещё раз';
 				this.show_alert(msg, new_page_state, 15000);
 
-				new_page_state.cart_edit_ = true;
+				new_page_state.cart_edit_ = new_page_state.cart_.length > 0;
 
 			}
 			else {
@@ -1238,7 +1366,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 			}
 
-			new_page_state.product_ = null;
+			new_page_state.product_ = null_uuid;
 
 		}
 		catch( ex ) {
@@ -1352,6 +1480,11 @@ class HtmlPageEvents extends HtmlPageState {
 				else if( attrs.btn && attrs.back ) {
 
 					new_page_state = this.btn_back_handler();
+
+				}
+				else if( attrs.btn && attrs.selections ) {
+
+					new_page_state = this.btn_selections_handler(cur_page_state, cur_paging_state);
 
 				}
 				else if( attrs.pimg && element.ascend('pitem/ptable/plist') ) {
@@ -1595,6 +1728,21 @@ switch (mgs_source.readyState) {
 		console.log('EventSource failed.', e);
 	};
 */
+
+	let browser = get_browser();
+
+	if( navigator.userAgent.match(/altair$/i) ) {
+
+		let lnk = document.createElement('link');
+		lnk.setAttribute('rel', 'stylesheet');
+		lnk.setAttribute('type', 'text/css');
+		lnk.setAttribute('href', '/resources/css/debug.css');
+
+		let head = document.getElementsByTagName('head')[0];
+		head.appendChild(lnk);
+
+	}
+
 	manager = new HtmlPageManager;
 
 }

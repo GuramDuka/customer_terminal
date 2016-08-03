@@ -35,24 +35,27 @@ class proxy_handler extends srv1c\handler {
 				],
 				'carter' => [
 					'carter'		=> true
+				],
+				'selectorer' => [
+					'selectorer'	=> true
 				]
 			];
 
-			$module = @$this->request_['module'];
-			$handler = @$this->request_['handler'];
+			$module_name = @$this->request_['module'];
+			$handler_name = @$this->request_['handler'];
 
-			if( !array_key_exists($module, $modules) )
-				throw new runtime_exception('Unknown module ' . $module, E_ERROR);
+			if( !array_key_exists($module_name, $modules) )
+				throw new runtime_exception('Unknown module ' . $module_name, E_ERROR);
 
-			if( !array_key_exists($handler, $modules[$module]) )
-				throw new runtime_exception('Unknown handler ' . $handler, E_ERROR);
+			if( !array_key_exists($handler_name, $modules[$module_name]) )
+				throw new runtime_exception('Unknown handler ' . $handler_name, E_ERROR);
 
-			if( !$modules[$module][$handler] )
-				throw new runtime_exception('Handler ' . $handler . ' disabled', E_ERROR);
+			if( !$modules[$module_name][$handler_name] )
+				throw new runtime_exception('Handler ' . $handler_name . ' disabled', E_ERROR);
 
-			require_once PROCESSORS_DIR . $module . '.php';
+			require_once PROCESSORS_DIR . $module_name . '.php';
 
-			$class_name = "srv1c\\${handler}_handler";
+			$class_name = "srv1c\\${handler_name}_handler";
 
 			$handler = new $class_name;
 			$handler->request_ = $this->request_;
@@ -71,6 +74,8 @@ class proxy_handler extends srv1c\handler {
 	    }
 		catch( Throwable $e ) {
 
+		    error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+
 			if( $handler !== null )
 				$this->response_ = $handler->response_;
 
@@ -79,8 +84,6 @@ class proxy_handler extends srv1c\handler {
 			$this->response_['stacktrace'] = htmlspecialchars($e->getTraceAsString(), ENT_HTML5);
 
 			print($this->get_json());
-
-		    error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . $e->getTraceAsString());
 
 		}
 

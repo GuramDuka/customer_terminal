@@ -241,6 +241,7 @@
 		float				: right;
 		width				: auto;
 		margin-right		: 3px;
+		display				: none;
 	}
 
 	html > body > div[btn][selections] > img[btn_ico] {
@@ -248,10 +249,42 @@
 		margin-top			: -2.1%;
 	}
 
+	html > body > div[categories] > div[selections_frame] {
+		z-index				: 1000;
+		position			: fixed;
+		top					: 165px;
+		left				: 3%;
+		width				: 93%;
+		height				: calc(98% - 165px);
+		float				: none;
+		border				: 3px solid #dfba3c;
+		border-radius		: 7px;
+		box-shadow			: none;
+		background-color	: rgba(255, 255, 255, .9);
+		background-size		: contain;
+		background-repeat	: no-repeat;
+		background-position	: center;
+		display				: none;
+		font-size			: 16px;
+		font-weight			: normal;
+		text-align			: center;
+		vertical-align		: middle;
+
+		-moz-column-count	: 2;
+		-moz-column-gap		: 8px;
+		-moz-column-width	: auto;
+		-moz-column-rule	: thick inset blue;
+		-moz-column-fill	: auto;
+	}
+
+	html > body > div[categories] > div[selections_frame] > div[uuid] {
+	}
+
 	html > body > div[btn][select_by_car] {
 		float				: right;
 		width				: auto;
 		margin-right		: 3px;
+		display				: none;
 	}
 
 	html > body > div[btn][select_by_car] > img[btn_ico] {
@@ -725,7 +758,7 @@
 		border				: 3px solid #dfba3c;
 		border-radius		: 7px;
 		box-shadow			: none;
-		background-color	: white;
+		background-color	: rgba(255, 255, 255, .8);/*white;*/
 		background-size		: contain;
 		background-repeat	: no-repeat;
 		background-position	: center;

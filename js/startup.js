@@ -979,44 +979,6 @@ function define_enum(list) {
 	return Object.freeze(list);
 }
 //------------------------------------------------------------------------------
-////////////////////////////////////////////////////////////////////////////////
-//------------------------------------------------------------------------------
-class Idle {
-
-	static events() {
-		return [ 'click', 'mousemove', 'mouseenter', 'keydown', 'touchstart', 'touchmove', 'scroll', 'mousewheel' ];
-	}
-
-	constructor() {
-	}
-
-	activity_handler() {
-	}
-
-	timeout_handler() {
-	}
-
-	start(timeout) {
-
-		this.handler_ = e => this.activity_handler(e);
-
-		for( let event of Idle.events() )
-			add_event(window, event , this.handler_, true);
-
-		this.timeout_ = timeout;
-		this.away_timer_ = setTimeout(e => this.timeout_handler(e), timeout);
-
-	}
-
-	stop() {
-
-		for( let event of Idle.events() )
-			window.removeEventListener(window, this.handler_);
-
-	}
-
-}
-//------------------------------------------------------------------------------
 /*(function() {
   var Idle;
 

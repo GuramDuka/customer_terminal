@@ -45,8 +45,7 @@
 				</div>
 			</div>
 		</div>
-		<div categories>
-		</div>
+		<div categories></div>
 		<div btn back>
 			<img btn_ico src="/resources/assets/arrows/arrow_undo.ico">
 			<span btn_txt>НАЗАД</span>
@@ -60,8 +59,7 @@
 			<span btn_txt>ВЫБРАТЬ АВТОМОБИЛЬ</span>
 		</div>
 		<div plist fadein>
-			<div ptable>
-			</div>
+			<div ptable></div>
 		</div>
 		<div pcontrols>
 			<div psort_controls>
@@ -98,8 +96,7 @@
 			<div pmid>
 				<p pname></p>
 				<hr><p pproperties_head>Характеристики</p><hr>
-				<div pproperties>
-				</div>
+				<div pproperties></div>
 			</div>
 			<div pright>
 				<p pprice></p>
@@ -117,12 +114,10 @@
 					<span btn_txt>КУПИТЬ</span>
 				</div>
 				<hr><p premainders_head>Наличие в магазинах</p><hr>
-				<div premainders>
-				</div>
+				<div premainders></div>
 			</div>
 		</div>
-		<div plargeimg fadein>
-		</div>
+		<div plargeimg fadein></div>
 		<div pcart fadein>
 			<div ptable>
 			</div>
@@ -138,35 +133,19 @@
 			</div>
 		</div>
 		<div mount></div>
-		<div alert fadein>
-		</div>
-		<iframe cheque_print src="/resources/assets/print/cheque_template.html">
-		</iframe>
+		<div alert fadein></div>
+		<iframe cheque_print src="/resources/assets/print/cheque_template.html"></iframe>
 
 		<script type="text/javascript" src="js/startup.js"></script>
+		<script type="text/javascript" src="js/idle.js"></script>
 		<script type="text/javascript" src="js/core.js"></script>
 
 		<!--<script type="text/javascript" src="js/prefetch.js"></script>-->
 		<!--<script type="text/javascript" src="js/refresh.js"></script>-->
 
 		<script type="text/javascript">
-
-			let browser = get_browser();
-
-			if( navigator.userAgent.match(/altair$/i) ) {
-
-				let lnk = document.createElement('link');
-       			lnk.setAttribute('rel', 'stylesheet');
-       			lnk.setAttribute('type', 'text/css');
-       			lnk.setAttribute('href', '/resources/css/debug.css');
-
-				let head = document.getElementsByTagName('head')[0];
-				head.appendChild(lnk);
-
-			}
-
 			document.addEventListener('DOMContentLoaded', core);
-
 		</script>
+
 	</body>
 </html>

@@ -112,7 +112,7 @@ EOT
 		$order_request = [ 'exchange_node' => bin2uuid($exchange_node) ];
 		$order_products = [];
 
-		foreach( $order AS $e ) {
+		foreach( $order as $e ) {
 
 			extract($e);
 
