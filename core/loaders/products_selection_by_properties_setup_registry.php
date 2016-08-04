@@ -13,7 +13,7 @@ class products_selection_by_properties_setup_registry_loader extends objects_loa
 
 		$all_fields = [ 'category_uuid', 'property_uuid' ];
 		$dimensions = array_merge($all_fields, []);
-		$all_fields = array_merge($all_fields, [ 'display', 'display_order', 'display_type' ]);
+		$all_fields = array_merge($all_fields, [ 'display', 'display_order', 'columns', 'multi_select' ]);
 		$fields = [];
 		$fields_uuid = [];
 

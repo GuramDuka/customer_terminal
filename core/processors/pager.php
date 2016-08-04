@@ -28,38 +28,113 @@ class pager_handler extends handler {
 
 		$this->infobase_->begin_immediate_transaction();
 
-		$category_table = 'products_' . uuid2table_name($category) . 'pages';
+		$table = $category_table = 'products_' . uuid2table_name($category) . 'pages';
+
+		$bind_values = [
+			'pgnon0' => $pgno << 4,
+			'pgnon1' => ($pgno << 4) + ((1 << 4) - 1)
+		];
+
+		$limit = $before = '';
+
+		if( @$selections !== null ) {
+
+			$offset = $pgno * $pgsz;
+			$limit = "LIMIT ${pgsz} OFFSET ${offset}";
+			$sql = '';
+
+			foreach( $selections as $p ) {
+
+				$property_uuid = strtoupper(str_replace('-', '', $p['uuid']));
+				$bind_values['property_uuid'] = uuid2bin($p['uuid']);
+
+				foreach( $p['values'] as $v ) {
+
+					$value_uuid = strtoupper(str_replace('-', '', $v['uuid']));
+					$bind_values['value_uuid'] = uuid2bin($v['uuid']);
+
+					$sql = <<<EOT
+						SELECT DISTINCT
+							p.*
+						FROM
+							${category_table} AS p
+								INNER JOIN properties_registry AS r
+								ON p.${order}_${direction}_uuid = r.object_uuid
+									AND r.property_uuid = :property_uuid
+									AND r.value_uuid = :value_uuid
+EOT
+					;
+
+				}
+
+			}
+
+			$before = <<<EOT
+				WITH cte AS (
+					${sql}
+				),
+				cte2 AS (
+					SELECT
+						count(*) AS objects
+					FROM
+						cte
+				)
+EOT
+			;
+
+			$table = 'cte';
+
+		}
 
 		$sql = <<<EOT
+			${before}
 			SELECT
-				${order}_${direction}_uuid				AS uuid,
-				${order}_${direction}_code				AS code,
-				${order}_${direction}_name				AS name,
-				${order}_${direction}_base_image_uuid	AS base_image_uuid,
-				${order}_${direction}_base_image_ext	AS base_image_ext,
-				${order}_${direction}_price				AS price,
-				${order}_${direction}_remainder			AS remainder,
-				${order}_${direction}_reserve			AS reserve
+				p.${order}_${direction}_uuid			AS uuid,
+				p.${order}_${direction}_code			AS code,
+				p.${order}_${direction}_name			AS name,
+				p.${order}_${direction}_base_image_uuid	AS base_image_uuid,
+				p.${order}_${direction}_base_image_ext	AS base_image_ext,
+				p.${order}_${direction}_price			AS price,
+				p.${order}_${direction}_remainder		AS remainder,
+				p.${order}_${direction}_reserve			AS reserve, c.objects
 			FROM
-				${category_table}
+				${table} AS p, cte2 AS c
 			WHERE
-				pgnon BETWEEN :pgnon0 AND :pgnon1
+				p.pgnon BETWEEN :pgnon0 AND :pgnon1
 			ORDER BY
-				pgnon
+				p.pgnon
+			${limit}
 EOT
 		;
+
+		if( @$selections !== null ) {
+
+			$sql = str_replace('p.pgnon BETWEEN :pgnon0 AND :pgnon1', '1', $sql);
+
+		}
+		else {
+
+			$sql = str_replace(', c.objects', '', $sql);
+			$sql = str_replace(', cte2 AS c', '', $sql);
+
+		}
 
 		$this->infobase_->dump_plan($sql);
 
 		$timer->restart();
 
 		$st = $this->infobase_->prepare($sql);
-		$st->bindValue(':pgnon0', $pgno << 4);
-		$st->bindValue(':pgnon1', ($pgno << 4) + ((1 << 4) - 1));
+
+		foreach( $bind_values as $k => $v )
+			if( substr($k, -4) === 'uuid' )
+				$st->bindValue(":${k}", $v, SQLITE3_BLOB);
+			else
+				$st->bindValue(":${k}", $v);
 
 		$result = $st->execute();
 
 		$page = [];
+		$objects = 0;
 
 		while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
 
@@ -86,9 +161,19 @@ EOT
 
 		}
 
-		$r = $this->infobase_->query("SELECT max(pgnon) FROM ${category_table}");
-		list($pgnon) = $r->fetchArray(SQLITE3_NUM);
-		$this->response_['pages'] = $r ? ($pgnon >> 4) + 1 : 0;
+		if( @$selections !== null ) {
+
+			$this->response_['pages'] = (int) ($objects / $pgsz) + ($objects % $pgsz !== 0 ? 1 : 0);
+
+		}
+		else {
+
+			$r = $this->infobase_->query("SELECT max(pgnon) FROM ${category_table}");
+			list($pgnon) = $r->fetchArray(SQLITE3_NUM);
+			$this->response_['pages'] = $r ? ($pgnon >> 4) + 1 : 0;
+
+		}
+
 		$this->response_['page_size'] = config::$page_size;
 
 		$this->infobase_->commit_immediate_transaction();

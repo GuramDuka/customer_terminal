@@ -15,7 +15,8 @@ class HtmlPageState {
 			page_size_				: 0,
 			order_					: 1,
 			direction_				: 0,
-			selections_				: false
+			selections_				: false,
+			selections_state_		: []
 		};
 
 	}
@@ -509,6 +510,37 @@ class Render {
 			'pgno'				: new_paging_state.pgno_
 		};
 
+		let new_selections_state = new_paging_state.selections_state_;
+		let selections = [];
+
+		for( let p of new_selections_state ) {
+
+			let a = [];
+
+			for( let v of p.values ) {
+
+				if( !v.checked )
+					continue;
+
+				a.push(extend_object(v));
+
+			}
+
+			if( a.length !== 0 ) {
+
+				let q = extend_object(p);
+
+				q.values = a;
+
+				selections.push(q);
+
+			}
+
+		}
+
+		if( selections.length !== 0 )
+			request.selections = selections;
+
 		let data = post_json_sync('proxy.php', request);
 		//state.ellapsed_ += data.ellapsed;
 
@@ -516,7 +548,7 @@ class Render {
 		new_paging_state.pages_		= data.pages;
 
 		// if pages changed suddenly
-		if( new_paging_state.pgno_ >= new_paging_state.pages_ ) {
+		if( new_paging_state.pgno_ > 0 && new_paging_state.pgno_ >= new_paging_state.pages_ ) {
 			new_paging_state.pgno_ = new_paging_state.pages_ > 0 ? new_paging_state.pages_ - 1 : 0;
 			this.rewrite_page(new_page_state);
 			return;
@@ -671,6 +703,14 @@ class Render {
 
 			}
 
+			// bug: css by attr not applied after display, reset background image
+			// TODO: not work
+			for( let s of xpath_eval('div[@selections_frame]/div[@property]/div[@values]/p[@value]/span[@check_box_ico]', e) ) {
+				let b = s.style.backgroundImage;
+				s.style.backgroundImage = '';
+				s.style.backgroundImage = b;
+			}				
+
 			selsb.blink(selections);
 
 		};
@@ -752,33 +792,56 @@ class Render {
 
 	assemble_selections(new_page_state, data) {
 
+		let state = this.state_;
 		let new_paging_state = new_page_state.paging_state_by_category_[new_page_state.category_];
-		let element = xpath_eval_single('html/body/div[@categories]/div[@selections_frame and @uuid=\'' + new_page_state.category_ + '\']');
+		let selections_state = new_paging_state.selections_state_;
 		let html = '';
 
-		for( let p of data.setup ) {
+		for( let i = 0; i < data.setup.length; i++ ) {
+
+			let p = data.setup[i];
 
 			html = html
-				+ '<div uuid=\"' + p.uuid + '\">'
+				+ '<div property uuid=\"' + p.uuid + '\">'
 				+ '<p>' + p.display + '</p>'
-				+ '<ul>'
+				+ '<div values style="-moz-column-count: '
+				+ (p.columns > 0 ? p.columns : 1)
+				+ (p.columns < 2 ? '; text-align: center' : '')
+				+ '">'
 			;
 
-			for( let v of p.values )
+			let vtag = p.columns > 1 ? 'p' : 'span';
+
+			for( let j = 0; j < p.values.length; j++ ) {
+
+				let v = p.values[j];
+				let prop = selections_state.find(e => e.uuid === p.uuid);
+				let val = prop ? prop.values.find(e => e.uuid === v.uuid) : undefined;
+
+				v.checked = val ? val.checked : false;
+
 				html = html
-					+ '<li uuid=\"' + v.uuid + '\">'
-					+ v.value
-					+ '</li>'
+					+ '<' + vtag + ' value uuid=\"' + v.uuid + '\">'
+					+ '<span check_box_ico' + (v.checked ? ' checked' : '') + '></span>'
+					+ '<span check_box_txt>' + v.value + '</span>'
+					+ '</' + vtag + '>'
 				;
 
+			}
+
 			html = html
-				+ '</ul>'
+				+ '</div>'
 				+ '</div>'
 			;
 
 		}
 
+		new_paging_state.selections_state_ = data.setup;
+
+		let element = xpath_eval_single('html/body/div[@categories]/div[@selections_frame and @uuid=\'' + new_page_state.category_ + '\']');
 		element.innerHTML = html;
+
+		state.setup_events(xpath_eval('div[@property]/div[@values]/*[(self::p or self::span) and @value]', element));
 
 	}
 
@@ -1067,24 +1130,6 @@ class HtmlPageEvents extends HtmlPageState {
 		this.render_.rewrite_page(new_page_state);
 
 		return new_page_state;
-
-	}
-
-	btn_selections_handler(cur_page_state, cur_paging_state) {
-
-		if( cur_page_state.category_ !== null_uuid ) {
-
-			let [ new_page_state, new_paging_state ] = this.clone_page_state();
-
-			new_paging_state.selections_ = !cur_paging_state.selections_;
-			new_page_state.modified_ = true;
-
-			if( new_paging_state.selections_ )
-				this.render_.rewrite_selections(new_page_state);
-
-			return new_page_state;
-
-		}
 
 	}
 
@@ -1383,6 +1428,82 @@ class HtmlPageEvents extends HtmlPageState {
 
 	}
 
+	btn_selections_handler(cur_page_state, cur_paging_state) {
+
+		if( cur_page_state.category_ !== null_uuid ) {
+
+			let [ new_page_state, new_paging_state ] = this.clone_page_state();
+
+			new_paging_state.selections_ = !cur_paging_state.selections_;
+			new_page_state.modified_ = true;
+
+			if( new_paging_state.selections_ )
+				this.render_.rewrite_selections(new_page_state);
+
+			return new_page_state;
+
+		}
+
+	}
+
+	checkbox_values_property_selections_frame_handler(element) {
+
+		let [ new_page_state, new_paging_state ] = this.clone_page_state();
+		let new_selections_state = new_paging_state.selections_state_;
+
+		let property_uuid	= element.parentNode.parentNode.attributes.uuid.value;
+		let value_uuid		= element.attributes.uuid.value;
+		let checked, p, v;
+
+		for( p of new_selections_state ) {
+
+			if( p.uuid !== property_uuid )
+				continue;
+
+			for( v of p.values ) {
+
+				if( v.uuid !== value_uuid )
+					continue;
+
+				checked = v.checked = !v.checked;
+
+				break;
+
+			}
+
+			if( checked !== undefined )
+				break;
+
+		}
+
+		if( checked && !p.multi_select )
+			for( let q of p.values )
+				if( q.uuid !== v.uuid )
+					q.checked = false;
+
+		new_page_state.modified_ = true;
+
+		this.render_.rewrite_page(new_page_state);
+
+		if( checked ) {
+
+			if( !p.multi_select )
+				for( let q of xpath_eval('*[(self::p or self::span) and @value]', element.parentNode) )
+					q.removeAttribute('checked');
+
+			element.setAttribute('checked', '');
+
+		}
+		else {
+
+			element.removeAttribute('checked');
+
+		}
+
+		return new_page_state;
+
+	}
+
 	events_handler(e) {
 
 		let touchobj, startx, dist;
@@ -1553,6 +1674,11 @@ class HtmlPageEvents extends HtmlPageState {
 					new_page_state = this.btn_cheque_cart_informer_handler(cur_page_state);
 
 				}
+				else if( attrs.value && element.ascend('values/property/selections_frame') ) {
+
+					new_page_state = this.checkbox_values_property_selections_frame_handler(element);
+
+				}
 
 				break;
 
@@ -1638,12 +1764,6 @@ class HtmlPageEvents extends HtmlPageState {
 	}
 
 	setup_events(elements, phase = true) {
-
-		/*for( let element of elements )
-			console.log('setup events: ', element);
-		 */
-			// xpath-to-select-multiple-tags
-			// //body/*[self::div or self::p or self::a]
 
 		for( let element of elements )
 			for( let event of this.events_ )

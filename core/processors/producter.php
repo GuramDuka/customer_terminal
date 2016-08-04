@@ -167,7 +167,8 @@ EOT
 				'property_idx'	=> $property_idx,
 				'value_uuid'	=> bin2uuid($value_uuid),
 				'value_type'	=> $value_type,
-				'value'			=> is_string($value) ? htmlspecialchars($value, ENT_HTML5) : $value
+				'value'			=> is_string($value) ? htmlspecialchars($value, ENT_HTML5) :
+									($value_type === 1 ? $value !== 0 : $value)
 			];
 
 		}

@@ -19,6 +19,7 @@ class selectorer_handler extends handler {
 		extract($this->request_);
 
 		$category_uuid = uuid2bin($category);
+		$category_table = 'products_' . uuid2table_name($category) . 'pages';
 
 		$sql = <<<EOT
 			WITH cte AS (
@@ -26,7 +27,8 @@ class selectorer_handler extends handler {
 					property_uuid,
 					display,
 					display_order,
-					display_type
+					columns,
+					multi_select
 				FROM
 					products_selection_by_properties_setup_registry
 				WHERE
@@ -38,9 +40,10 @@ class selectorer_handler extends handler {
 					c.property_uuid,
 					c.display,
 					c.display_order,
-					c.display_type
+					c.columns,
+					c.multi_select
 				FROM
-					products_83f528bc_481a_11e2_9a03_ace5647d95bd_pages AS p
+					${category_table} AS p
 						INNER JOIN cte AS c
 						ON 1
 			),
@@ -49,7 +52,8 @@ class selectorer_handler extends handler {
 					p.property_uuid,
 					p.display,
 					p.display_order,
-					p.display_type,
+					p.columns,
+					p.multi_select,
 					r.value_uuid
 				FROM
 					cte0 AS p
@@ -62,7 +66,8 @@ class selectorer_handler extends handler {
 				r.property_uuid								AS property_uuid,
 				r.display									AS display,
 				r.display_order								AS display_order,
-				r.display_type								AS display_type,
+				r.columns									AS columns,
+				r.multi_select								AS multi_select,
 				v.uuid										AS value_uuid,
 				v.value_type								AS value_type,
 				COALESCE(v.value_b, v.value_n, v.value_s)	AS value
@@ -72,7 +77,7 @@ class selectorer_handler extends handler {
 					ON r.value_uuid = v.uuid
 
 			ORDER BY
-				r.display_order, r.property_uuid
+				r.display_order, r.display
 EOT
 		;
 
@@ -92,25 +97,69 @@ EOT
 			$property_uuid	= bin2uuid($property_uuid);
 			$value_uuid		= bin2uuid($value_uuid);
 
-			if( !array_key_exists($property_uuid, $map) )
-				$map[$property_uuid] = count($map);
+			$idx = @$map[$property_uuid];
 
-			$idx = $map[$property_uuid];
+			if( $idx === null ) {
 
-			if( $idx >= count($setup) )
+				$idx = $map[$property_uuid] = count($map);
+
 				$setup[$idx] = [
 					'uuid'			=> $property_uuid,
 					'display'		=> htmlspecialchars($display, ENT_HTML5),
-					'display_order'	=> $display_order,
-					'display_type'	=> $display_type,
+					'columns'		=> $columns,
+					'multi_select'	=> $multi_select !== 0,
 					'values'		=> []
 				];
+
+			}
 
 			$setup[$idx]['values'][] = [
 				'uuid'			=> $value_uuid,
 				'value_type'	=> $value_type,
-				'value'			=> is_string($value) ? htmlspecialchars($value, ENT_HTML5) : $value
+				'value'			=> is_string($value) ? htmlspecialchars($value, ENT_HTML5) :
+									($value_type === 1 ? $value !== 0 : $value),
+				'raw'			=> $value
 			];
+
+		}
+
+		// sorting
+		foreach( $setup as $k => $v ) {
+
+			$ar = $v['values'];
+
+			usort($ar, function($n0, $n1) {
+
+				$r = null;
+
+				$a = $n0['raw'];
+				$b = $n1['raw'];
+
+				if( is_numeric($a) && is_numeric($b) ) {
+
+					$x = floatval($a) == intval($a) ? intval($a) : floatval($a);
+					$y = floatval($b) == intval($b) ? intval($b) : floatval($b);
+
+					// in php operator ? has a priority different from C or C++, so parentheses are necessary
+					$r = $x < $y ? -1 : ($x > $y ? 1 : 0);
+
+				}
+				else if( is_string($a) && is_string($b) ) {
+
+					$r = strcmp(mb_strtoupper($a), mb_strtoupper($b));
+
+				}
+				else {
+
+					$r = strcmp(mb_strtoupper(strval($a)), mb_strtoupper(strval($b)));
+
+				}
+
+				return $r;
+
+			});
+
+			$setup[$k]['values'] = $ar;
 
 		}
 

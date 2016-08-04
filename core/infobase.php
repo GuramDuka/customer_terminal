@@ -383,6 +383,16 @@ EOT
 		$dimensions = [ 'object' => '_uuid', 'property' => '_uuid', 'idx' => '' ];
 		$this->create_unique_indexes_on_registry('properties_registry', $dimensions);
 
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'properties_registry_by_value'), -4)
+			. ' ON properties_registry (value_uuid)'
+		);
+
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'properties_registry_by_object_property_value'), -4)
+			. ' ON properties_registry (object_uuid, property_uuid, value_uuid)'
+		);
+
 		// регистр ЗначенияПодбораАвтомобилейИнтернетПортала
 		$sql = '';
 
@@ -560,11 +570,12 @@ EOT
 		// регистр Настройка подбора терминала покупателя
 		$this->exec(<<<'EOT'
 			CREATE TABLE IF NOT EXISTS products_selection_by_properties_setup_registry (
-				category_uuid		BLOB,
-				property_uuid		BLOB,
-				display				TEXT,
-				display_order		INTEGER,
-				display_type		INTEGER		/* 1 - checkbox, 2 - radio, 3 - dropdown list or multiple checkbox list */
+				category_uuid	BLOB,
+				property_uuid	BLOB,
+				display			TEXT,
+				display_order	INTEGER,
+				columns			INTEGER,
+				multi_select	INTEGER
 			)
 EOT
 		);

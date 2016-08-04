@@ -28,7 +28,7 @@
 
 	html > body > div[pinfo] > div[pimg],
 	html > body > div[plist] > div[ptable] > div[pitem] > div[pimg],
-	div[btn], div[btc], img[btn_ico], img[btn_ico_condensed], span[btn_txt] {
+	div[btn], div[btc], img[btn_ico], img[btn_ico_condensed], span[btn_txt], span[check_box_ico], span[check_box_txt] {
 		cursor				: pointer;
 	}
 

@@ -61,6 +61,9 @@
 		margin				: 0;
 		padding				: 0;
 		width				: 100%;
+	}
+
+	div {
 		float				: left;
 		overflow			: hidden;
 	}
@@ -118,6 +121,19 @@
 		height				: auto;
 	}
 
+	img[check_box_ico] {
+		width				: 32px;
+		height				: 32px;
+		float				: none;
+		vertical-align		: middle;
+	}
+
+	span[check_box_txt] {
+		float				: none;
+		width				: auto;
+		height				: auto;
+	}
+
 	html > body > div[plist],
 	html > body > div[pinfo],
 	html > body > div[pcart] {
@@ -143,7 +159,7 @@
 		background-size		: contain;
 		background-repeat	: no-repeat;
 		background-position	: center;
-		background-image	: url(/resources/assets/logo.jpg)/*, linear-gradient(transparent, gold)*/;
+		background-image	: url('/resources/assets/logo.jpg')/*, linear-gradient(transparent, gold)*/;
 	}
 
 	html > body > div[top] > div[cart_informer] {
@@ -255,30 +271,75 @@
 		top					: 165px;
 		left				: 3%;
 		width				: 93%;
-		height				: calc(98% - 165px);
+		max-height			: calc(98% - 165px);
 		float				: none;
 		border				: 3px solid #dfba3c;
 		border-radius		: 7px;
 		box-shadow			: none;
-		background-color	: rgba(255, 255, 255, .9);
+		background-color	: rgba(255, 255, 255, .92);
 		background-size		: contain;
 		background-repeat	: no-repeat;
 		background-position	: center;
 		display				: none;
-		font-size			: 16px;
-		font-weight			: normal;
+		text-overflow		: ellipsis;
+		text-decoration		: none;
+		text-transform		: uppercase;
 		text-align			: center;
 		vertical-align		: middle;
 
 		-moz-column-count	: 2;
 		-moz-column-gap		: 8px;
 		-moz-column-width	: auto;
-		-moz-column-rule	: thick inset blue;
-		-moz-column-fill	: auto;
+		-moz-column-rule	: dotted 8px #dfba3c;
+		-moz-column-fill	: balance;
 	}
 
-	html > body > div[categories] > div[selections_frame] > div[uuid] {
+	html > body > div[categories] > div[selections_frame] > div[property] {
+		font-size			: 28px;
+		font-weight			: bold;
+		float				: none;
+		margin-bottom		: 16px;
 	}
+
+	html > body > div[categories] > div[selections_frame] > div[property] > div[values] {
+		width				: 100%;
+		font-size			: 24px;
+		font-weight			: normal;
+		text-align			: left;
+		float				: none;
+		overflow			: auto;
+		margin-top			: 16px;
+
+		/*-moz-column-count	: 2;*/
+		-moz-column-gap		: 8px;
+		-moz-column-width	: auto;
+		-moz-column-fill	: balance;
+	}
+
+	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > p[value] {
+		margin-bottom		: 5px;
+	}
+
+	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > span[value] {
+		width				: auto;
+		margin-right		: 8px;
+	}
+
+	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > [value] > span[check_box_ico] {
+		background-image	: url('/resources/assets/check_box_uncheck.ico');
+		background-color	: transparent;
+		background-size		: contain;
+		background-repeat	: no-repeat;
+		background-position	: center;
+		width				: 32px;
+		height				: 32px;
+		padding-left		: 32px;
+	}
+
+	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > [value][checked] > span[check_box_ico] {
+		background-image	: url('/resources/assets/check_box_mix.ico');
+	}
+
 
 	html > body > div[btn][select_by_car] {
 		float				: right;
@@ -732,7 +793,7 @@
 		background-repeat	: no-repeat;
 		background-position	: center;
 		background-image	:
-								url(/resources/assets/mount.png),
+								url('/resources/assets/mount.png'),
 								linear-gradient(transparent, gold);
 								/*linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet),*/
 		position			: fixed;
