@@ -17,7 +17,10 @@ class HtmlPageState {
 			direction_				: 0,
 			selections_				: false,
 			selections_state_		: [],
-			selections_checked_		: false
+			selections_checked_		: false,
+			select_by_car_			: false,
+			select_by_car_state_	: [],
+			select_by_car_checked_	: false
 		};
 
 	}
@@ -131,8 +134,12 @@ class Render {
 
 	static debug(level, s = null) {
 
-		let element = xpath_eval_single('html/body/div[@debug]');
-		let p = xpath_eval_single('p[@debug' + level + ']', element);
+		let m = xpath_eval('html/body/div[@debug]');
+
+		if( m.length === 0 )
+			return;
+
+		let p = xpath_eval_single('p[@debug' + level + ']', m[0]);
 
 		p.innerHTML = s;
 		p.style.display = s !== null ? 'inline-block' : 'none';
@@ -301,11 +308,11 @@ class Render {
 			coefficients[0] = Math.max(coefficients[0], p.property_name.length);
 			coefficients[1] = Math.max(coefficients[1], p.value.toString().length);
 
-			html = html
-				+ '<p pproperty property_uuid="' + p.property_uuid + '" property_idx="' + p.property_idx + '" value_uuid="' + p.value_uuid + '" value_type="' + p.value_type + '">'
-				+ '<span pproperty_name>' + p.property_name + '</span>'
-				+ '<span pproperty_value>&nbsp;' + p.value + '</span>'
-				+ '</p>'
+			html = html + `
+				<div pproperty property_uuid="${p.property_uuid}" property_idx="${p.property_idx}" value_uuid="${p.value_uuid}" value_type="${p.value_type}">
+				<span pproperty_name>${p.property_name}</span>
+				<span pproperty_value>&nbsp;${p.value}</span>
+				</div>`
 			;
 
 		}
@@ -323,9 +330,9 @@ class Render {
 		proportions[0] = sprintf('%.2f%%', proportions[0]);
 		proportions[1] = sprintf('%.2f%%', proportions[1]);
 
-		for( let e of xpath_eval('div[@pmid]/div[@pproperties]/p[@pproperty]/span[@pproperty_name]', pinfo_element) )
+		for( let e of xpath_eval('div[@pmid]/div[@pproperties]/div[@pproperty]/span[@pproperty_name]', pinfo_element) )
 			e.style.width = proportions[0];
-		for( let e of xpath_eval('div[@pmid]/div[@pproperties]/p[@pproperty]/span[@pproperty_value]', pinfo_element) )
+		for( let e of xpath_eval('div[@pmid]/div[@pproperties]/div[@pproperty]/span[@pproperty_value]', pinfo_element) )
 			e.style.width = proportions[1];
 
 		xpath_eval_single('div[@pright]/p[@pprice]'		, pinfo_element).innerHTML	= 'Цена&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;' + Math.trunc(product.price) + '&nbsp;₽';
@@ -647,17 +654,16 @@ class Render {
 		for( let i = 0; i < data.setup.length; i++ ) {
 
 			let p = data.setup[i];
+			let cols = p.columns;
 
-			html = html
-				+ '<div property uuid=\"' + p.uuid + '\">'
-				+ '<div>' + p.display + '</div>'
-				+ '<div values style="-moz-column-count: '
-				+ (p.columns > 0 ? p.columns : 1)
-				+ (p.columns < 2 ? '; text-align: center' : '')
-				+ '">'
+			html = html + `
+				<div property uuid="${p.uuid}">
+				<div>${p.display}</div>
+				<div values ${cols === 0 ? 'one_column' : ''}
+					style="-moz-column-count: ${cols}${cols < 1 ? '; text-align: center' : ''}">`
 			;
 
-			let vtag = p.columns > 1 ? 'p' : 'span';
+			let br = p.columns > 1 ? '<br>' : '';
 
 			for( let j = 0; j < p.values.length; j++ ) {
 
@@ -667,11 +673,11 @@ class Render {
 
 				v.checked = val ? val.checked : false;
 
-				html = html
-					+ '<' + vtag + ' value uuid=\"' + v.uuid + '\"' + (v.checked ? ' checked' : '') + '>'
-					+ '<span check_box_ico></span>'
-					+ '<span check_box_txt>' + v.value + '</span>'
-					+ '</' + vtag + '>'
+				html = html + `
+					<div value uuid="${v.uuid}"${v.checked ? ' checked' : ''}>
+					<span ico check_box></span>
+					<span txt check_box>${v.value}</span>
+					</div>`
 				;
 
 			}
@@ -688,7 +694,7 @@ class Render {
 		let element = xpath_eval_single('html/body/div[@categories]/div[@selections_frame and @uuid=\'' + new_page_state.category_ + '\']');
 		element.innerHTML = html;
 
-		state.setup_events(xpath_eval('div[@property]/div[@values]/*[(self::p or self::span) and @value]', element));
+		state.setup_events(xpath_eval('div[@property]/div[@values]/div[@value]', element));
 
 	}
 
@@ -797,20 +803,11 @@ class Render {
 
 		let setup_categories_selections = function () {
 
-			if( new_page_state.category_ !== null_uuid ) {
+			let f = new_page_state.category_ !== null_uuid;
 
-				selsb.fadein();
-				carbb.fadein();
+			selsb.fade(f);
+			carbb.fade(f);
 
-			}
-			else {
-
-				selsb.fadeout();
-				carbb.fadeout();
-
-			}
-
-			let selections = false;
 			let e = xpath_eval_single('html/body/div[@categories]');
 
 			for( let cat_uuid in new_page_state.paging_state_by_category_ ) {
@@ -823,24 +820,37 @@ class Render {
 
 				if( new_page_state.paging_state_by_category_[cat_uuid].selections_ && cat_uuid === new_page_state.category_ ) {
 
-					s.fadein();
-
-					if( new_paging_state.selections_checked_ )
-						c.fadein();
-
-					selections = true;
+					s.fade(true);
+					c.fade(new_paging_state.selections_checked_);
 
 				}
 				else {
 
-					s.fadeout();
-					c.fadeout();
+					s.fade(false);
+					c.fade(false);
 
 				}
 
 			}
 
-			selsb.blink(selections);
+			selsb.blink(new_paging_state.selections_checked_);
+
+		};
+
+		let setup_categories_select_by_car = function () {
+
+			let e = xpath_eval_single('html/body/div[@select_by_car_frame]');
+			let c = xpath_eval_single('html/body/div[@clear_select_by_car]');
+
+			let f = new_page_state.category_ !== null_uuid;
+
+			selsb.fade(f);
+			carbb.fade(f);
+
+			e.fade(new_paging_state.select_by_car_);
+			c.fade(new_paging_state.select_by_car_checked_);
+
+			carbb.blink(new_paging_state.select_by_car_checked_);
 
 		};
 
@@ -909,11 +919,19 @@ class Render {
 
 			plist.fadein();
 			setup_categories_selections();
+			setup_categories_select_by_car();
 
 		}
-		else if( new_paging_state.selections_ !== cur_paging_state.selections_ ) {
+		else if( new_paging_state.selections_ !== cur_paging_state.selections_
+			|| new_paging_state.selections_checked_ !== cur_paging_state.selections_checked_ ) {
 
 			setup_categories_selections();
+
+		}
+		else if( new_paging_state.select_by_car_ !== cur_paging_state.select_by_car_
+			|| new_paging_state.select_by_car_checked_ !== cur_paging_state.select_by_car_checked_ ) {
+
+			setup_categories_select_by_car();
 
 		}
 
@@ -1434,6 +1452,10 @@ class HtmlPageEvents extends HtmlPageState {
 
 	btn_selections_handler(cur_page_state, cur_paging_state) {
 
+		// switch off select_by_car
+		if( cur_paging_state.select_by_car_ )
+			this.btn_selec_by_car_handler(cur_page_state, cur_paging_state);
+
 		if( cur_page_state.category_ !== null_uuid ) {
 
 			let [ new_page_state, new_paging_state ] = this.clone_page_state();
@@ -1489,7 +1511,7 @@ class HtmlPageEvents extends HtmlPageState {
 		if( checked ) {
 
 			if( !p.multi_select )
-				for( let q of xpath_eval('*[(self::p or self::span) and @value]', element.parentNode) )
+				for( let q of xpath_eval('div[@value]', element.parentNode) )
 					q.removeAttribute('checked');
 
 			element.setAttribute('checked', '');
@@ -1521,9 +1543,54 @@ class HtmlPageEvents extends HtmlPageState {
 		new_page_state.modified_ = true;
 
 		let path = 'html/body/div[@categories]/div[@selections_frame and @uuid=\'' + new_page_state.category_ + '\']';
-		path += '/div[@property]/div[@values]/*[(self::p or self::span) and @value and @checked]';
 
-		for( let e of xpath_eval(path) )
+		for( let e of xpath_eval(path + '/div[@property]/div[@values]/div[@value and @checked]') )
+			e.removeAttribute('checked');
+
+		element.fadeout();
+
+		return new_page_state;
+
+	}
+
+	btn_select_by_car_handler(cur_page_state, cur_paging_state) {
+
+		// switch off selections
+		if( cur_paging_state.selections_ )
+			this.btn_selections_handler(cur_page_state, cur_paging_state);
+
+		if( cur_page_state.category_ !== null_uuid ) {
+
+			let [ new_page_state, new_paging_state ] = this.clone_page_state();
+
+			new_paging_state.select_by_car_ = !cur_paging_state.select_by_car_;
+			new_page_state.modified_ = true;
+
+			if( new_paging_state.selections_ )
+				this.render_.rewrite_select_by_car(new_page_state);
+
+			return new_page_state;
+
+		}
+
+	}
+
+	btn_clear_select_by_car_handler(element) {
+
+		// TODO:
+		let [ new_page_state, new_paging_state ] = this.clone_page_state();
+		let new_selections_state = new_paging_state.selections_state_;
+
+		for( let p of new_selections_state )
+			for( let v of p.values )
+				v.checked = false;
+
+		new_paging_state.selections_checked_ = false;
+		new_page_state.modified_ = true;
+
+		let path = 'html/body/div[@categories]/div[@selections_frame and @uuid=\'' + new_page_state.category_ + '\']';
+
+		for( let e of xpath_eval(path + '/div[@property]/div[@values]/div[@value and @checked]') )
 			e.removeAttribute('checked');
 
 		element.fadeout();
@@ -1631,11 +1698,6 @@ class HtmlPageEvents extends HtmlPageState {
 					new_page_state = this.btn_back_handler();
 
 				}
-				else if( attrs.btn && attrs.selections ) {
-
-					new_page_state = this.btn_selections_handler(cur_page_state, cur_paging_state);
-
-				}
 				else if( attrs.pimg && element.ascend('pitem/ptable/plist') ) {
 
 					new_page_state = this.pimg_pitem_ptable_plist_handler(element);
@@ -1702,6 +1764,11 @@ class HtmlPageEvents extends HtmlPageState {
 					new_page_state = this.btn_cheque_cart_informer_handler(cur_page_state);
 
 				}
+				else if( attrs.btn && attrs.selections ) {
+
+					new_page_state = this.btn_selections_handler(cur_page_state, cur_paging_state);
+
+				}
 				else if( attrs.value && element.ascend('values/property/selections_frame') ) {
 
 					new_page_state = this.checkbox_values_property_selections_frame_handler(element);
@@ -1710,6 +1777,21 @@ class HtmlPageEvents extends HtmlPageState {
 				else if( attrs.btn && attrs.clear_selections ) {
 
 					new_page_state = this.btn_clear_selections_handler(element);
+
+				}
+				else if( attrs.btn && attrs.select_by_car ) {
+
+					new_page_state = this.btn_select_by_car_handler(cur_page_state, cur_paging_state);
+
+				}
+				/*else if( attrs.value && element.ascend('values/property/select_by_car_frame') ) {
+
+					new_page_state = this.checkbox_values_property_select_by_car_frame_handler(element);
+
+				}*/
+				else if( attrs.btn && attrs.clear_select_by_car ) {
+
+					new_page_state = this.btn_clear_select_by_car_handler(element);
 
 				}
 
@@ -1838,53 +1920,23 @@ class HtmlPageManager extends HtmlPageEvents {
 }
 //------------------------------------------------------------------------------
 function core() {
-/*
-	// https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
-	// http://www.html5rocks.com/en/tutorials/eventsource/basics/
-	// http://stackoverflow.com/questions/9070995/html5-server-sent-events-prototyping-ambiguous-error-and-repeated-polling
-	// http://stackoverflow.com/questions/14202191/broadcasting-messages-with-server-sent-events
-	// SSE Server-Side Events
-	msg_source = new EventSource('message.php');
-
-	msg_source.onmessage = function (e) {
-  		//let new_element = document.createElement('li');
-		//new_element.innerHTML = 'message: ' + e.data;
-		//eventList.appendChild(new_element);
-		Render.debug(7, 'message: ' + e.data);
-
-switch (mgs_source.readyState) {
-  case EventSource.CONNECTING:
-    // do something
-    break;
-  case EventSource.OPEN:
-    // do something
-    break;
-  case EventSource.CLOSED:
-    // do something
-    break;
-  default:
-    // this never happens
-    break;
-}
-
-	};
-
-	msg_source.addEventListener('ping', function (e) {
-		//let newElement = document.createElement("li");
-  		let obj = JSON.parse(e.data, JSON.dateParser);
-  		//newElement.innerHTML = "ping at " + obj.time;
-		//eventList.appendChild(newElement);
-		Render.debug(8, 'ping at ' + obj.time);
-	}, false);
-
-	msg_source.onerror = function (e) {
-		console.log('EventSource failed.', e);
-	};
-*/
 
 	let browser = get_browser();
 
 	if( navigator.userAgent.match(/altair$/i) ) {
+
+		let div = document.createElement('div');
+		div.setAttribute('debug', '');
+		div.innerHTML = `
+			<p debug0></p><p debug1></p>
+			<p debug2></p><p debug3></p>
+			<p debug4></p><p debug5></p>
+			<p debug6></p><p debug7></p>
+			<p debug8></p><p debug9></p>`
+		;
+
+		let body = document.getElementsByTagName('body')[0];
+		body.appendChild(div);
 
 		let lnk = document.createElement('link');
 		lnk.setAttribute('rel', 'stylesheet');

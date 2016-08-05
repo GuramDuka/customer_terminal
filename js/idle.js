@@ -157,6 +157,7 @@ class Idle {
 		this.away_timer_ = undefined;
 
 		this.away_time_ = 0;
+
 	}
 
 }

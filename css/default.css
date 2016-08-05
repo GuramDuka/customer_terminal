@@ -115,20 +115,17 @@
 		width				: 20px;
 	}
 
-	span[btn_txt] {
-		float				: none;
-		width				: auto;
-		height				: auto;
-	}
-
-	img[check_box_ico] {
+	span[ico] {
+		background-color	: transparent;
+		background-size		: contain;
+		background-repeat	: no-repeat;
+		background-position	: center;
 		width				: 32px;
 		height				: 32px;
-		float				: none;
-		vertical-align		: middle;
+		padding-left		: 32px;
 	}
 
-	span[check_box_txt] {
+	span[btn_txt], span[txt] {
 		float				: none;
 		width				: auto;
 		height				: auto;
@@ -277,15 +274,15 @@
 		padding-bottom		: 8px;
 		position			: fixed;
 		top					: 165px;
-		left				: calc(100% - 4.3%);
+		left				: calc(100% - 4.85%);
 	}
 
 	html > body > div[categories] > div[selections_frame] {
 		z-index				: 1000;
 		position			: fixed;
 		top					: 165px;
-		left				: 4%;
-		width				: 91%;
+		left				: 0.5%;
+		width				: 94%;
 		max-height			: calc(98% - 165px);
 		float				: none;
 		border				: 3px solid #dfba3c;
@@ -299,6 +296,7 @@
 		text-overflow		: ellipsis;
 		text-decoration		: none;
 		text-transform		: uppercase;
+		white-space			: nowrap;
 		text-align			: center;
 		vertical-align		: middle;
 
@@ -324,6 +322,7 @@
 		float				: none;
 		overflow			: auto;
 		margin-top			: 16px;
+		overflow			: hidden;
 
 		/*-moz-column-count	: 2;*/
 		-moz-column-gap		: 8px;
@@ -331,30 +330,28 @@
 		-moz-column-fill	: balance;
 	}
 
-	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > p[value] {
+	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > div[value] {
+		width				: auto;
 		margin-bottom		: 5px;
+		float				: none;
+		text-overflow		: ellipsis;
 	}
 
-	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > span[value] {
-		width				: auto;
+	html > body > div[categories] > div[selections_frame] > div[property] > div[values][one_column] > div[value] {
+		float				: left;
 		margin-right		: 8px;
 	}
 
-	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > [value] > span[check_box_ico] {
+	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > div[value] > span[check_box][ico] {
 		background-image	: url('/resources/assets/check_box_uncheck.ico');
-		background-color	: transparent;
-		background-size		: contain;
-		background-repeat	: no-repeat;
-		background-position	: center;
-		width				: 32px;
-		height				: 32px;
-		padding-left		: 32px;
 	}
 
-	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > [value][checked] > span[check_box_ico] {
+	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > div[value][checked] > span[check_box][ico] {
 		background-image	: url('/resources/assets/check_box_mix.ico');
 	}
 
+	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > div[value] > span[check_box][txt] {
+	}
 
 	html > body > div[btn][select_by_car] {
 		float				: right;
@@ -366,6 +363,78 @@
 	html > body > div[btn][select_by_car] > img[btn_ico] {
 		/* fix: shift up */
 		margin-top			: -1.1%;
+	}
+
+	html > body > div[btn][clear_select_by_car] {
+		z-index				: 1010;
+		float				: none;
+		width				: auto;
+		display				: none;
+		writing-mode		: vertical-rl;
+		height				: auto;
+		overflow			: auto;
+		padding-top			: 8px;
+		padding-bottom		: 8px;
+		position			: fixed;
+		top					: 165px;
+		left				: calc(100% - 4.85%);
+	}
+
+	html > body > div[select_by_car_frame] {
+		z-index				: 1000;
+		position			: fixed;
+		top					: 165px;
+		left				: 0.5%;
+		width				: 94%;
+		max-height			: calc(98% - 165px);
+		float				: none;
+		border				: 3px solid #dfba3c;
+		border-radius		: 7px;
+		box-shadow			: none;
+		background-color	: rgba(255, 255, 255, .92);
+		background-size		: contain;
+		background-repeat	: no-repeat;
+		background-position	: center;
+		display				: none;
+		text-overflow		: ellipsis;
+		text-decoration		: none;
+		text-transform		: uppercase;
+		white-space			: nowrap;
+		text-align			: center;
+		vertical-align		: middle;
+
+		-moz-column-count	: 4;
+		-moz-column-gap		: 8px;
+		-moz-column-width	: auto;
+		-moz-column-rule	: dotted 8px #dfba3c;
+		-moz-column-fill	: balance;
+	}
+
+	html > body > div[select_by_car_frame] > div[selector] {
+		float				: none;
+	}
+
+	html > body > div[select_by_car_frame] > div[selector] > span[label] {
+		font-size			: 28px;
+		font-weight			: bold;
+	}
+
+	html > body > div[select_by_car_frame] > div[selector] > span[value] {
+		font-size			: 16px;
+		font-weight			: normal;
+	}
+
+	html > body > div[select_by_car_frame] > div[selector] > span[search_field][ico] {
+		background-image	: url('/resources/assets/search_field.ico');
+	}
+
+	html > body > div[select_by_car_frame] > div[selector] > span[list_box][ico] {
+		background-image	: url('/resources/assets/list_box.ico');
+	}
+
+	html > body > div[select_by_car_frame] > div[selector] > div[values] {
+		float				: none;
+		text-align			: left;
 	}
 
 	html > body > div[pinfo] {
@@ -464,29 +533,30 @@
 		float				: none;
 	}
 
-	html > body > div[pinfo] > div[pmid] > div[pproperties] > p[pproperty] {
+	html > body > div[pinfo] > div[pmid] > div[pproperties] > div[pproperty] {
 		width				: 100%;
 		height				: auto;
 		float				: none;
 		white-space			: nowrap;
 		text-align			: left;
 		vertical-align		: middle;
+		text-overflow		: ellipsis;
 	}
 
-	html > body > div[pinfo] > div[pmid] > div[pproperties] > p[pproperty] > span[pproperty_name] {
+	html > body > div[pinfo] > div[pmid] > div[pproperties] > div[pproperty] > span[pproperty_name] {
 		float				: left;
 		width				: auto;
 		text-align			: left;
+		overflow			: hidden;
 		text-overflow		: ellipsis;
-		font-stretch		: ultra-condensed;
 	}
 
-	html > body > div[pinfo] > div[pmid] > div[pproperties] > p[pproperty] > span[pproperty_value] {
+	html > body > div[pinfo] > div[pmid] > div[pproperties] > div[pproperty] > span[pproperty_value] {
 		float				: left;
 		width				: auto;
 		text-align			: left;
+		overflow			: hidden;
 		text-overflow		: ellipsis;
-		font-stretch		: ultra-condensed;
 	}
 
 	html > body > div[pinfo] > div[pright] > p[pprice],

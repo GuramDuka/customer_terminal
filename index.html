@@ -14,13 +14,6 @@
 
 	</head>
 	<body>
-		<div debug>
-			<p debug0></p><p debug1></p>
-			<p debug2></p><p debug3></p>
-			<p debug4></p><p debug5></p>
-			<p debug6></p><p debug7></p>
-			<p debug8></p><p debug9></p>
-		</div>
 		<div top>
 			<div logo></div>
 			<div mag>
@@ -46,6 +39,40 @@
 			</div>
 		</div>
 		<div categories></div>
+		<div select_by_car_frame fadein>
+			<div selector manufacturer>
+				<span label>Производитель</span>
+				<span ico search_field></span>
+				<span ico list_box></span>
+				<span value></span>
+				<div values>1</div>
+			</div>
+			<div selector model>
+				<span label>Модель</span>
+				<span ico search_field></span>
+				<span ico list_box></span>
+				<span value></span>
+				<div values>1</div>
+			</div>
+			<div selector modification>
+				<span label>Модификация</span>
+				<span ico search_field></span>
+				<span ico list_box></span>
+				<span value></span>
+				<div values>1</div>
+			</div>
+			<div selector year>
+				<span label>Год выпуска</span>
+				<span ico search_field></span>
+				<span ico list_box></span>
+				<span value></span>
+				<div values>1</div>
+			</div>
+		</div>
+		<div btn clear_select_by_car>
+			<img btn_ico src="/resources/assets/filter_clear.ico">
+			<span btn_txt>ОЧИСТИТЬ</span>
+		</div>
 		<div btn back>
 			<img btn_ico src="/resources/assets/arrows/arrow_undo.ico">
 			<span btn_txt>НАЗАД</span>
@@ -136,8 +163,9 @@
 		<div alert fadein></div>
 		<iframe cheque_print src="/resources/assets/print/cheque_template.html"></iframe>
 
-		<script type="text/javascript" src="js/startup.js"></script>
+		<script type="text/javascript" src="js/misc.js"></script>
 		<script type="text/javascript" src="js/idle.js"></script>
+		<script type="text/javascript" src="js/sseq.js"></script>
 		<script type="text/javascript" src="js/core.js"></script>
 
 		<!--<script type="text/javascript" src="js/prefetch.js"></script>-->
