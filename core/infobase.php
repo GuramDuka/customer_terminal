@@ -591,7 +591,9 @@ EOT
 
 			if( config::$explain ) {
 
-				$result = $this->query('EXPLAIN QUERY PLAN ' . $sql);
+				$sql = "\n" . $sql;
+
+				$result = $this->query('EXPLAIN QUERY PLAN' . $sql);
 
 				$s = "${sql}";
 

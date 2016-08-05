@@ -41,31 +41,40 @@ class pager_handler extends handler {
 
 			$offset = $pgno * $pgsz;
 			$limit = "LIMIT ${pgsz} OFFSET ${offset}";
-			$sql = '';
+			$sql = <<<EOT
+				SELECT DISTINCT
+					p.*
+				FROM
+					${category_table} AS p
+EOT
+			;
 
-			foreach( $selections as $p ) {
+			foreach( $selections as $i => $p ) {
 
 				$property_uuid = strtoupper(str_replace('-', '', $p['uuid']));
-				$bind_values['property_uuid'] = uuid2bin($p['uuid']);
+				$bind_values["property_${i}_uuid"] = uuid2bin($p['uuid']);
 
-				foreach( $p['values'] as $v ) {
+				$s = '';
+
+				foreach( $p['values'] as $j => $v ) {
 
 					$value_uuid = strtoupper(str_replace('-', '', $v['uuid']));
-					$bind_values['value_uuid'] = uuid2bin($v['uuid']);
+					$bind_values["value_${i}_${j}_uuid"] = uuid2bin($v['uuid']);
 
-					$sql = <<<EOT
-						SELECT DISTINCT
-							p.*
-						FROM
-							${category_table} AS p
-								INNER JOIN properties_registry AS r
-								ON p.${order}_${direction}_uuid = r.object_uuid
-									AND r.property_uuid = :property_uuid
-									AND r.value_uuid = :value_uuid
-EOT
-					;
+					$s .= ", :value_${i}_${j}_uuid";
 
 				}
+
+				$s = substr($s, 2);
+
+				$sql .= <<<EOT
+
+							INNER JOIN properties_registry AS r${i}
+							ON p.${order}_${direction}_uuid = r${i}.object_uuid
+								AND r${i}.property_uuid = :property_${i}_uuid
+								AND r${i}.value_uuid IN (${s})
+EOT
+				;
 
 			}
 

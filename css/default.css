@@ -262,15 +262,30 @@
 
 	html > body > div[btn][selections] > img[btn_ico] {
 		/* fix: shift up */
-		margin-top			: -2.1%;
+		margin-top			: -1.1%;
+	}
+
+	html > body > div[categories] > div[btn][clear_selections] {
+		z-index				: 1010;
+		float				: none;
+		width				: auto;
+		display				: none;
+		writing-mode		: vertical-rl;
+		height				: auto;
+		overflow			: auto;
+		padding-top			: 8px;
+		padding-bottom		: 8px;
+		position			: fixed;
+		top					: 165px;
+		left				: calc(100% - 4.3%);
 	}
 
 	html > body > div[categories] > div[selections_frame] {
 		z-index				: 1000;
 		position			: fixed;
 		top					: 165px;
-		left				: 3%;
-		width				: 93%;
+		left				: 4%;
+		width				: 91%;
 		max-height			: calc(98% - 165px);
 		float				: none;
 		border				: 3px solid #dfba3c;

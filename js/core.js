@@ -16,7 +16,8 @@ class HtmlPageState {
 			order_					: 1,
 			direction_				: 0,
 			selections_				: false,
-			selections_state_		: []
+			selections_state_		: [],
+			selections_checked_		: false
 		};
 
 	}
@@ -636,160 +637,6 @@ class Render {
 
 	}
 
-	show_new_page_state(new_page_state = null) {
-
-		let zero = new_page_state === null;
-		let state = this.state_;
-		let cur_state = state.page_state_;
-		let cur_paging_state = cur_state.paging_state_by_category_[cur_state.category_];
-
-		if( new_page_state === null )
-			new_page_state = cur_state;
-
-		let new_paging_state = new_page_state.paging_state_by_category_[new_page_state.category_];
-
-		let plist = xpath_eval_single('html/body/div[@plist]');
-		let pinfo = xpath_eval_single('html/body/div[@pinfo]');
-		let backb = xpath_eval_single('html/body/div[@btn and @back]');
-		let selsb = xpath_eval_single('html/body/div[@btn and @selections]');
-		let carbb = xpath_eval_single('html/body/div[@btn and @select_by_car]');
-		let pcart = xpath_eval_single('html/body/div[@pcart]');
-		let pctrl = xpath_eval_single('html/body/div[@pcontrols]');
-		let pcrin = xpath_eval_single('html/body/div[@top]/div[@cart_informer]');
-		let catsb = xpath_eval('html/body/div[@categories]/div[@btc]');
-
-		if( new_page_state.cart_.length > 0 && (cur_state.cart_.length === 0 || zero) )
-			pcrin.fadein();
-
-		if( new_page_state.cart_.length === 0 && cur_state.cart_.length > 0 )
-			pcrin.fadeout();
-
-		let setup_categories_selections = function () {
-
-			if( new_page_state.category_ !== null_uuid ) {
-
-				selsb.fadein();
-				carbb.fadein();
-
-			}
-			else {
-
-				selsb.fadeout();
-				carbb.fadeout();
-
-			}
-
-			let selections = false;
-			let e = xpath_eval_single('html/body/div[@categories]');
-
-			for( let cat_uuid in new_page_state.paging_state_by_category_ ) {
-
-				if( cat_uuid === null_uuid )
-					continue;
-
-				let s = xpath_eval_single('div[@selections_frame and @uuid=\'' + cat_uuid + '\']', e);
-
-				if( new_page_state.paging_state_by_category_[cat_uuid].selections_ && cat_uuid === new_page_state.category_ ) {
-
-					s.fadein();
-					selections = true;
-
-				}
-				else {
-
-					s.fadeout();
-
-				}
-
-			}
-
-			// bug: css by attr not applied after display, reset background image
-			// TODO: not work
-			for( let s of xpath_eval('div[@selections_frame]/div[@property]/div[@values]/p[@value]/span[@check_box_ico]', e) ) {
-				let b = s.style.backgroundImage;
-				s.style.backgroundImage = '';
-				s.style.backgroundImage = b;
-			}				
-
-			selsb.blink(selections);
-
-		};
-
-		let to_cart = function () {
-
-			backb.fadein();
-			pcart.fadein();
-			plist.fadeout();
-			pctrl.fadeout();
-			pinfo.fadeout();
-			selsb.fadeout();
-			carbb.fadeout();
-
-			for( let e of catsb )
-				e.fadeout();
-
-			for( let e of xpath_eval('html/body/div[@categories]/div[@selections_frame]') )
-				e.fadeout();
-
-		};
-
-		let to_list = function () {
-
-			backb.fadeout();
-			pcart.fadeout();
-			plist.fadein();
-			pctrl.fadein();
-			pinfo.fadeout();
-
-			for( let e of catsb )
-				e.fadein();
-
-			setup_categories_selections();
-
-		};
-
-		let to_info = function () {
-
-			backb.fadein();
-			pcart.fadeout();
-			plist.fadeout();
-			pctrl.fadeout();
-			pinfo.fadein();
-			selsb.fadeout();
-			carbb.fadeout();
-
-			for( let e of catsb )
-				e.fadeout();
-
-			for( let e of xpath_eval('html/body/div[@categories]/div[@selections_frame]') )
-				e.fadeout();
-
-		};
-
-		if( new_page_state.cart_edit_ !== cur_state.cart_edit_ || new_page_state.product_ !== cur_state.product_ ) {
-
-			if( new_page_state.cart_edit_ )
-				to_cart();
-			else if( new_page_state.product_ === null_uuid )
-				to_list();
-			else
-				to_info();
-
-		}
-		else if( new_page_state.category_ !== cur_state.category_ ) {
-
-			plist.fadein();
-			setup_categories_selections();
-
-		}
-		else if( new_paging_state.selections_ !== cur_paging_state.selections_ ) {
-
-			setup_categories_selections();
-
-		}
-
-	}
-
 	assemble_selections(new_page_state, data) {
 
 		let state = this.state_;
@@ -803,7 +650,7 @@ class Render {
 
 			html = html
 				+ '<div property uuid=\"' + p.uuid + '\">'
-				+ '<p>' + p.display + '</p>'
+				+ '<div>' + p.display + '</div>'
 				+ '<div values style="-moz-column-count: '
 				+ (p.columns > 0 ? p.columns : 1)
 				+ (p.columns < 2 ? '; text-align: center' : '')
@@ -821,8 +668,8 @@ class Render {
 				v.checked = val ? val.checked : false;
 
 				html = html
-					+ '<' + vtag + ' value uuid=\"' + v.uuid + '\">'
-					+ '<span check_box_ico' + (v.checked ? ' checked' : '') + '></span>'
+					+ '<' + vtag + ' value uuid=\"' + v.uuid + '\"' + (v.checked ? ' checked' : '') + '>'
+					+ '<span check_box_ico></span>'
 					+ '<span check_box_txt>' + v.value + '</span>'
 					+ '</' + vtag + '>'
 				;
@@ -898,11 +745,16 @@ class Render {
 
 			}
 
-			html +=
-				'<div btc uuid="' + c.uuid + '"'
-					+ (c.uuid === new_page_state.category_ ? ' blink' : '')
-				+ '>' + c.name +'</div>'
-				+ '<div selections_frame fadein uuid="' + c.uuid + '"' + '></div>'
+			html = html + `
+				<div btc uuid="${c.uuid}"
+			 		${c.uuid === new_page_state.category_ ? ' blink' : ''}>
+					${c.name}
+				</div>
+				<div selections_frame fadein uuid="${c.uuid}"></div>
+				<div btn clear_selections uuid="${c.uuid}">
+					<img btn_ico src="/resources/assets/filter_clear.ico">
+					<span btn_txt>ОЧИСТИТЬ</span>
+				</div>`
 			;
 
 		}
@@ -911,7 +763,159 @@ class Render {
 
 		// set events for new a[@btc] elements
 		state.setup_animation_events(xpath_eval('//*[@fadein or @fadeout]', element));
-		state.setup_events(xpath_eval('div[@btc]', element));
+		state.setup_events(xpath_eval('div[@btc or @btn]', element));
+
+	}
+
+	show_new_page_state(new_page_state = null) {
+
+		let zero = new_page_state === null;
+		let state = this.state_;
+		let cur_state = state.page_state_;
+		let cur_paging_state = cur_state.paging_state_by_category_[cur_state.category_];
+
+		if( new_page_state === null )
+			new_page_state = cur_state;
+
+		let new_paging_state = new_page_state.paging_state_by_category_[new_page_state.category_];
+
+		let plist = xpath_eval_single('html/body/div[@plist]');
+		let pinfo = xpath_eval_single('html/body/div[@pinfo]');
+		let backb = xpath_eval_single('html/body/div[@btn and @back]');
+		let selsb = xpath_eval_single('html/body/div[@btn and @selections]');
+		let carbb = xpath_eval_single('html/body/div[@btn and @select_by_car]');
+		let pcart = xpath_eval_single('html/body/div[@pcart]');
+		let pctrl = xpath_eval_single('html/body/div[@pcontrols]');
+		let pcrin = xpath_eval_single('html/body/div[@top]/div[@cart_informer]');
+		let catsb = xpath_eval('html/body/div[@categories]/div[@btc]');
+
+		if( new_page_state.cart_.length > 0 && (cur_state.cart_.length === 0 || zero) )
+			pcrin.fadein();
+
+		if( new_page_state.cart_.length === 0 && cur_state.cart_.length > 0 )
+			pcrin.fadeout();
+
+		let setup_categories_selections = function () {
+
+			if( new_page_state.category_ !== null_uuid ) {
+
+				selsb.fadein();
+				carbb.fadein();
+
+			}
+			else {
+
+				selsb.fadeout();
+				carbb.fadeout();
+
+			}
+
+			let selections = false;
+			let e = xpath_eval_single('html/body/div[@categories]');
+
+			for( let cat_uuid in new_page_state.paging_state_by_category_ ) {
+
+				if( cat_uuid === null_uuid )
+					continue;
+
+				let s = xpath_eval_single('div[@selections_frame and @uuid=\'' + cat_uuid + '\']', e);
+				let c = xpath_eval_single('div[@clear_selections and @uuid=\'' + cat_uuid + '\']', e);
+
+				if( new_page_state.paging_state_by_category_[cat_uuid].selections_ && cat_uuid === new_page_state.category_ ) {
+
+					s.fadein();
+
+					if( new_paging_state.selections_checked_ )
+						c.fadein();
+
+					selections = true;
+
+				}
+				else {
+
+					s.fadeout();
+					c.fadeout();
+
+				}
+
+			}
+
+			selsb.blink(selections);
+
+		};
+
+		let to_cart = function () {
+
+			backb.fadein();
+			pcart.fadein();
+			plist.fadeout();
+			pctrl.fadeout();
+			pinfo.fadeout();
+			selsb.fadeout();
+			carbb.fadeout();
+
+			for( let e of catsb )
+				e.fadeout();
+
+			for( let e of xpath_eval('html/body/div[@categories]/div[@selections_frame or @clear_selections]') )
+				e.fadeout();
+
+		};
+
+		let to_list = function () {
+
+			backb.fadeout();
+			pcart.fadeout();
+			plist.fadein();
+			pctrl.fadein();
+			pinfo.fadeout();
+
+			for( let e of catsb )
+				e.fadein();
+
+			setup_categories_selections();
+
+		};
+
+		let to_info = function () {
+
+			backb.fadein();
+			pcart.fadeout();
+			plist.fadeout();
+			pctrl.fadeout();
+			pinfo.fadein();
+			selsb.fadeout();
+			carbb.fadeout();
+
+			for( let e of catsb )
+				e.fadeout();
+
+			for( let e of xpath_eval('html/body/div[@categories]/div[@selections_frame or @clear_selections]') )
+				e.fadeout();
+
+		};
+
+		if( new_page_state.cart_edit_ !== cur_state.cart_edit_ || new_page_state.product_ !== cur_state.product_ ) {
+
+			if( new_page_state.cart_edit_ )
+				to_cart();
+			else if( new_page_state.product_ === null_uuid )
+				to_list();
+			else
+				to_info();
+
+		}
+		else if( new_page_state.category_ !== cur_state.category_ ) {
+
+			plist.fadein();
+			setup_categories_selections();
+
+		}
+		else if( new_paging_state.selections_ !== cur_paging_state.selections_ ) {
+
+			setup_categories_selections();
+
+		}
 
 	}
 
@@ -1455,26 +1459,23 @@ class HtmlPageEvents extends HtmlPageState {
 		let value_uuid		= element.attributes.uuid.value;
 		let checked, p, v;
 
-		for( p of new_selections_state ) {
+		new_paging_state.selections_checked_ = false;
 
-			if( p.uuid !== property_uuid )
-				continue;
+		for( let pp of new_selections_state )
+			for( let vv of pp.values ) {
 
-			for( v of p.values ) {
+				if( pp.uuid === property_uuid && vv.uuid === value_uuid ) {
 
-				if( v.uuid !== value_uuid )
-					continue;
+					p = pp;
+					v = vv;
+					checked = v.checked = !v.checked;
 
-				checked = v.checked = !v.checked;
+				}
 
-				break;
+				if( vv.checked )
+					new_paging_state.selections_checked_ = true;
 
 			}
-
-			if( checked !== undefined )
-				break;
-
-		}
 
 		if( checked && !p.multi_select )
 			for( let q of p.values )
@@ -1499,6 +1500,33 @@ class HtmlPageEvents extends HtmlPageState {
 			element.removeAttribute('checked');
 
 		}
+
+		let e = xpath_eval_single('html/body/div[@categories]/div[@clear_selections and @uuid=\'' + new_page_state.category_ + '\']');
+		e.fade(new_paging_state.selections_checked_);
+
+		return new_page_state;
+
+	}
+
+	btn_clear_selections_handler(element) {
+
+		let [ new_page_state, new_paging_state ] = this.clone_page_state();
+		let new_selections_state = new_paging_state.selections_state_;
+
+		for( let p of new_selections_state )
+			for( let v of p.values )
+				v.checked = false;
+
+		new_paging_state.selections_checked_ = false;
+		new_page_state.modified_ = true;
+
+		let path = 'html/body/div[@categories]/div[@selections_frame and @uuid=\'' + new_page_state.category_ + '\']';
+		path += '/div[@property]/div[@values]/*[(self::p or self::span) and @value and @checked]';
+
+		for( let e of xpath_eval(path) )
+			e.removeAttribute('checked');
+
+		element.fadeout();
 
 		return new_page_state;
 
@@ -1677,6 +1705,11 @@ class HtmlPageEvents extends HtmlPageState {
 				else if( attrs.value && element.ascend('values/property/selections_frame') ) {
 
 					new_page_state = this.checkbox_values_property_selections_frame_handler(element);
+
+				}
+				else if( attrs.btn && attrs.clear_selections ) {
+
+					new_page_state = this.btn_clear_selections_handler(element);
 
 				}
 
