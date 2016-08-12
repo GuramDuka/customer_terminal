@@ -32,9 +32,6 @@ function rewrite_pages($infobase) {
 
 	if( $r->fetchArray(SQLITE3_NUM) || config::$force_rewrite_pages ) {
 
-		$infobase->commit_immediate_transaction();
-		$infobase->begin_immediate_transaction();
-
 		// create temp tables
 
 		$infobase->exec(<<<'EOT'
@@ -93,9 +90,6 @@ EOT
 
 		}
 
-		$infobase->commit_immediate_transaction();
-		$infobase->begin_immediate_transaction();
-
 		// fetch all categories
 		$sql = <<<'EOT'
 			SELECT
@@ -117,14 +111,10 @@ EOT
 		while( $r = $result->fetchArray(SQLITE3_NUM) )
 			$categories[] = $r[0];
 
-		$infobase->commit_immediate_transaction();
-
 		foreach( $categories as $category_uuid ) {
 
 			// fetch categories hierarchy
 			if( $category_uuid !== null ) {
-
-				$infobase->begin_immediate_transaction();
 
 				$timer->restart();
 
@@ -163,9 +153,6 @@ EOT
 
 				}
 
-				$infobase->commit_immediate_transaction();
-				$infobase->begin_immediate_transaction();
-
 				$timer->restart();
 
 				$infobase->exec('DELETE FROM cf_products');
@@ -195,8 +182,6 @@ EOT
 
 				}
 
-				$infobase->commit_immediate_transaction();
-
 			}
 
 			// CREATE TABLE IF NOT EXISTS products_${category_uuid}_pages AS
@@ -204,12 +189,8 @@ EOT
 			// FROM products_pages
 			// WHERE pgnon IS NULL;
 
-			$infobase->begin_immediate_transaction();
-
 			$category_table = 'products_' . uuid2table_name(bin2uuid($category_uuid)) . 'pages';
 			$infobase->exec($infobase->create_table_products_pages($category_table));
-
-			$infobase->commit_immediate_transaction();
 
 			// create variables in this scope // foreach( $categories as $category_uuid )
 			$v = [];
@@ -224,8 +205,6 @@ EOT
 
 			foreach( $orders as $order )
 				foreach( $directions as $direction ) {
-
-				$infobase->begin_immediate_transaction();
 
 				$timer->restart();
 
@@ -274,8 +253,6 @@ EOT
 
 				}
 
-				$infobase->commit_immediate_transaction();
-
 			}
 
 			$v = [];
@@ -314,8 +291,6 @@ EOT
 
 				}
 
-			$infobase->begin_immediate_transaction();
-
 			$timer->restart();
 
 			for( $j = -1, $i = 0; ; $i++ ) {
@@ -352,25 +327,13 @@ EOT
 
 				$st->execute();
 
-				$ellapsed = $timer->last_nano_time();
-
-				if( bccomp($ellapsed, config::$sqlite_tx_duration) >= 0 ) {
-
-					$infobase->commit_immediate_transaction();
-					$infobase->begin_immediate_transaction();
-
-					if( config::$log_sqlite_tx_duration )
-	    				error_log('sqlite tx duration reached, ellapsed: ' . $timer->ellapsed_string($ellapsed));
-
-				}
+				$infobase->sqlite_tx_duration($timer, __FILE__, __LINE__);
 
 			}
 
 			$st = $infobase->prepare("DELETE FROM ${category_table} WHERE pgnon > :pgnon");
 			$st->bindParam(':pgnon', $pgnon);
 			$st->execute();
-
-			$infobase->commit_immediate_transaction();
 
 			$pgupd += $pgnon < 0 ? 0 : ($pgnon >> 4) + 1;
 
@@ -381,11 +344,15 @@ EOT
 
 			}
 
+			$infobase->sqlite_tx_duration($timer, __FILE__, __LINE__);
+
 		}
 
 		$infobase->exec("DELETE FROM dirties WHERE entity = '${entity}'");
 
 	}
+
+	$infobase->commit_immediate_transaction();
 
 	if( $pgupd !== 0 ) {
 

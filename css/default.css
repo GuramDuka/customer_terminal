@@ -26,7 +26,7 @@
 	font-style	: normal;
 }
 
-@media screen {
+@media screen /*(max-device-width: 1280px) and (device-aspect-ratio: 4/3)*/ {
 
 	* {
 		z-index				: 100;
@@ -320,7 +320,6 @@
 		font-weight			: normal;
 		text-align			: left;
 		float				: none;
-		overflow			: auto;
 		margin-top			: 16px;
 		overflow			: hidden;
 
@@ -380,7 +379,7 @@
 		left				: calc(100% - 4.85%);
 	}
 
-	html > body > div[select_by_car_frame] {
+	html > body > div[categories] > div[select_by_car_frame] {
 		z-index				: 1000;
 		position			: fixed;
 		top					: 165px;
@@ -402,7 +401,41 @@
 		white-space			: nowrap;
 		text-align			: center;
 		vertical-align		: middle;
+	}
 
+	html > body > div[categories] > div[select_by_car_frame] > div[selector][manufacturer],
+	html > body > div[categories] > div[select_by_car_frame] > div[selector][model],
+	html > body > div[categories] > div[select_by_car_frame] > div[selector][modification],
+	html > body > div[categories] > div[select_by_car_frame] > div[selector][year] {
+		float				: left;
+		width				: 24.5%;
+	}
+
+	html > body > div[categories] > div[select_by_car_frame] > div[selector][year] {
+		float				: right;
+	}
+
+	html > body > div[categories] > div[select_by_car_frame] > div[selector] > span[search_field][ico] {
+		background-image	: url('/resources/assets/search_field.ico');
+	}
+
+	html > body > div[categories] > div[select_by_car_frame] > div[selector] > span[list_box][ico] {
+		background-image	: url('/resources/assets/list_box.ico');
+	}
+
+	html > body > div[categories] > div[select_by_car_frame] > div[selector] > span[label] {
+		font-size			: 28px;
+		font-weight			: bold;
+	}
+
+	html > body > div[categories] > div[select_by_car_frame] > div[selector] > span[value] {
+		float				: none;
+		font-size			: 16px;
+		font-weight			: normal;
+	}
+
+	html > body > div[categories] > div[select_by_car_frame] > div[selector][values] {
+		float				: none;
 		-moz-column-count	: 4;
 		-moz-column-gap		: 8px;
 		-moz-column-width	: auto;
@@ -410,30 +443,9 @@
 		-moz-column-fill	: balance;
 	}
 
-	html > body > div[select_by_car_frame] > div[selector] {
+	html > body > div[categories] > div[select_by_car_frame] > div[selector][values] > div[value] {
 		float				: none;
-	}
-
-	html > body > div[select_by_car_frame] > div[selector] > span[label] {
-		font-size			: 28px;
-		font-weight			: bold;
-	}
-
-	html > body > div[select_by_car_frame] > div[selector] > span[value] {
-		font-size			: 16px;
-		font-weight			: normal;
-	}
-
-	html > body > div[select_by_car_frame] > div[selector] > span[search_field][ico] {
-		background-image	: url('/resources/assets/search_field.ico');
-	}
-
-	html > body > div[select_by_car_frame] > div[selector] > span[list_box][ico] {
-		background-image	: url('/resources/assets/list_box.ico');
-	}
-
-	html > body > div[select_by_car_frame] > div[selector] > div[values] {
-		float				: none;
+		width				: auto;
 		text-align			: left;
 	}
 

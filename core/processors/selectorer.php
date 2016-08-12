@@ -167,9 +167,6 @@ EOT
 
 	}
 
-	protected function handle_select() {
-	}
-
 	protected function handle_request() {
 
 		$timer = new \nano_timer;
@@ -194,9 +191,6 @@ EOT
 			}
 
 		}
-
-		if( @$select !== null )
-			$this->handle_select();
 
 		$this->infobase_->commit_immediate_transaction();
 

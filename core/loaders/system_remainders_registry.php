@@ -220,17 +220,8 @@ EOT
 
 			$st_totals_add->execute();
 
-			$ellapsed = $timer->last_nano_time();
-
-			if( bccomp($ellapsed, config::$sqlite_tx_duration) >= 0 ) {
-
-				$this->infobase_->commit_immediate_transaction();
-				$this->infobase_->begin_immediate_transaction();
-
-				if( config::$log_sqlite_tx_duration )
-	    			error_log('sqlite tx duration reached, ellapsed: ' . $timer->ellapsed_string($ellapsed));
-
-			}
+			// slow update on big recordsets, disable restart tx
+			//$this->infobase_->sqlite_tx_duration($timer, __FILE__, __LINE__);
 
 		}
 

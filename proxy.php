@@ -38,6 +38,9 @@ class proxy_handler extends srv1c\handler {
 				],
 				'selectorer' => [
 					'selectorer'	=> true
+				],
+				'by_car_selectorer' => [
+					'by_car_selectorer'	=> true
 				]
 			];
 

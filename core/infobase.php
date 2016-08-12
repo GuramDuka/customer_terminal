@@ -235,6 +235,31 @@ EOT
 EOT
 		);
 
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'cars_order_by_parent'), -4)
+			. ' ON cars (parent_uuid)'
+		);
+
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'cars_order_by_parent_manufacturer'), -4)
+			. ' ON cars (parent_uuid, manufacturer_uuid)'
+		);
+
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'cars_order_by_parent_manufacturer_model'), -4)
+			. ' ON cars (parent_uuid, manufacturer_uuid, model_uuid)'
+		);
+
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'cars_order_by_parent_modification_model'), -4)
+			. ' ON cars (parent_uuid, manufacturer_uuid, model_uuid, modification_uuid)'
+		);
+
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'cars_order_by_parent_modification_model_year'), -4)
+			. ' ON cars (parent_uuid, manufacturer_uuid, model_uuid, modification_uuid, year_uuid)'
+		);
+
 		$this->exec(<<<'EOT'
 			CREATE VIRTUAL TABLE IF NOT EXISTS cars_fts USING fts4 (uuid BLOB, name TEXT, notindexed=uuid)
 EOT
@@ -271,8 +296,8 @@ EOT
 EOT
 		);
 
-		$dimensions = [ 'manufacturer' => '_uuid', 'model' => '_uuid', 'modification' => '_uuid', 'year' => '_uuid' ];
-		$this->create_unique_indexes_on_registry('cars', $dimensions);
+		//$dimensions = [ 'manufacturer' => '_uuid', 'model' => '_uuid', 'modification' => '_uuid', 'year' => '_uuid' ];
+		//$this->create_unique_indexes_on_registry('cars', $dimensions);
 
 		// регистр категории объектов
 		$this->exec(<<<'EOT'
@@ -583,6 +608,18 @@ EOT
 		$dimensions = [ 'category' => '_uuid', 'property' => '_uuid' ];
 		$this->create_unique_indexes_on_registry('products_selection_by_properties_setup_registry', $dimensions);
 
+		// регистр Настройки выбора автомобиля
+		$this->exec(<<<'EOT'
+			CREATE TABLE IF NOT EXISTS products_selection_by_car_setup_registry (
+				category_uuid	BLOB,
+				car_group_uuid	BLOB
+			)
+EOT
+		);
+
+		$dimensions = [ 'category' => '_uuid', 'car_group' => '_uuid' ];
+		$this->create_unique_indexes_on_registry('products_selection_by_car_setup_registry', $dimensions);
+
 	}
 
 	public function dump_plan($sql) {
@@ -674,6 +711,24 @@ EOT
 				array_push($dims, array_shift($dims));
 
 			}
+
+		}
+
+	}
+
+	public function sqlite_tx_duration($timer, $src_file_name, $src_line_number) {
+
+		$ellapsed = $timer->last_nano_time();
+
+		if( bccomp($ellapsed, config::$sqlite_tx_duration) >= 0 ) {
+
+			$timer->reset();
+
+			$this->commit_immediate_transaction();
+			$this->begin_immediate_transaction();
+
+			if( config::$log_sqlite_tx_duration )
+   				error_log('sqlite tx duration reached, ellapsed: ' . $timer->ellapsed_string($ellapsed)/* . " ${src_file_name}, ${src_line_number}"*/);
 
 		}
 

@@ -4,19 +4,15 @@ namespace srv1c {
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------
-class cars_selections_registry_loader extends objects_loader {
+class products_selection_by_car_setup_registry_loader extends objects_loader {
 
 	public function load_objects() {
 
 		if( $this->objects_ === null || count($this->objects_) === 0 )
 			return;
 
-		$all_fields = [ 'car_uuid', 'category_uuid', 'idx' ];
+		$all_fields = [ 'category_uuid', 'car_group_uuid' ];
 		$dimensions = array_merge($all_fields, []);
-
-		for( $i = 0; $i < config::$cars_selections_registry_max_values_on_row; $i++ )
-			$all_fields[] = "value${i}_uuid";
-
 		$fields = [];
 		$fields_uuid = [];
 
@@ -67,7 +63,7 @@ class cars_selections_registry_loader extends objects_loader {
 
 				$sql = <<<EOT
 					DELETE FROM
-						cars_selections_registry
+						products_selection_by_car_setup_registry
 					WHERE
 						1
 						${where}
@@ -107,7 +103,7 @@ EOT
 					$gf = implode(', ', $all_fields);
 					$gv = implode(', :', $all_fields);
 
-					$st = $this->infobase_->prepare("INSERT INTO cars_selections_registry (${gf}) VALUES (:${gv})");
+					$st = $this->infobase_->prepare("INSERT INTO products_selection_by_car_setup_registry (${gf}) VALUES (:${gv})");
 
 					foreach( $fields_uuid as $field )
 						$st->bindParam(":${field}", $$field, SQLITE3_BLOB);
@@ -133,7 +129,7 @@ EOT
 			$cnt = count($this->objects_);
 			$rps = $seconds != 0 ? bcdiv($cnt, $seconds, 2) : $cnt;
 
-	    	error_log(sprintf('%u', $cnt) . ' cars selections registry updated, ' . $rps . ' rps, ellapsed: ' . $timer->ellapsed_string($ellapsed));
+	    	error_log(sprintf('%u', $cnt) . ' products selection by car setup registry updated, ' . $rps . ' rps, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 		}
 

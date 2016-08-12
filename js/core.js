@@ -720,6 +720,55 @@ class Render {
 
 	}
 
+	assemble_select_by_car(new_page_state, data) {
+
+		let state = this.state_;
+		let new_paging_state = new_page_state.paging_state_by_category_[new_page_state.category_];
+		let selections_state = new_paging_state.selections_state_;
+		let html = '';
+
+		for( let i = 0; i < data.values.length; i++ ) {
+
+			let v = data.values[i];
+
+			html = html + `
+				<div value uuid="${v.uuid}">
+				${v.value}
+				</div>`
+			;
+
+		}
+
+		new_paging_state.select_by_car_state_ = data.values;
+
+		let element = xpath_eval_single('html/body/div[@categories]/div[@select_by_car_frame and @uuid=\'' + new_page_state.category_ + '\']');
+		element.innerHTML = html;
+
+		state.setup_events(xpath_eval('div[@property]/div[@values]/div[@value]', element));
+
+	}
+
+	rewrite_select_by_car(new_page_state = null) {
+
+		let state = this.state_;
+
+		if( new_page_state === null )
+			new_page_state = state.page_state_;
+
+		let new_paging_state = new_page_state.paging_state_by_category_[new_page_state.category_];
+
+		let request = {
+			'module'	: 'by_car_selectorer',
+			'handler'	: 'by_car_selectorer',
+			'category'	: new_page_state.category_ !== null_uuid ? new_page_state.category_ : null
+		};
+
+		let data = post_json_sync('proxy.php', request);
+
+		this.assemble_select_by_car(new_page_state, data);
+
+	}
+
 	rewrite_category(new_page_state = null) {
 
 		let state = this.state_;
@@ -760,6 +809,31 @@ class Render {
 				<div btn clear_selections uuid="${c.uuid}">
 					<img btn_ico src="/resources/assets/filter_clear.ico">
 					<span btn_txt>ОЧИСТИТЬ</span>
+				</div>`
+			;
+
+			html = html + `
+				<div select_by_car_frame fadein uuid="${c.uuid}">
+					<div selector manufacturer>
+						<span ico search_field></span>
+						<span ico list_box></span>
+						<span label>Производитель</span>
+						<span value></span>
+					</div>
+					<div selector model>
+						<span label>Модель</span>
+						<span value></span>
+					</div>
+					<div selector modification>
+						<span label>Модификация</span>
+						<span value></span>
+					</div>
+					<div selector year>
+						<span label>Год выпуска</span>
+						<span value></span>
+					</div>
+					<div selector values>
+					</div>
 				</div>`
 			;
 
@@ -839,10 +913,9 @@ class Render {
 
 		let setup_categories_select_by_car = function () {
 
-			let e = xpath_eval_single('html/body/div[@select_by_car_frame]');
-			let c = xpath_eval_single('html/body/div[@clear_select_by_car]');
-
 			let f = new_page_state.category_ !== null_uuid;
+			let e = xpath_eval_single('html/body/div[@categories]');
+			let s = xpath_eval_single('div[@select_by_car_frame and @uuid=\'' + new_page_state.category_ + '\']', e);
 
 			selsb.fade(f);
 			carbb.fade(f);
@@ -1452,10 +1525,6 @@ class HtmlPageEvents extends HtmlPageState {
 
 	btn_selections_handler(cur_page_state, cur_paging_state) {
 
-		// switch off select_by_car
-		if( cur_paging_state.select_by_car_ )
-			this.btn_selec_by_car_handler(cur_page_state, cur_paging_state);
-
 		if( cur_page_state.category_ !== null_uuid ) {
 
 			let [ new_page_state, new_paging_state ] = this.clone_page_state();
@@ -1588,7 +1657,7 @@ class HtmlPageEvents extends HtmlPageState {
 		new_paging_state.selections_checked_ = false;
 		new_page_state.modified_ = true;
 
-		let path = 'html/body/div[@categories]/div[@selections_frame and @uuid=\'' + new_page_state.category_ + '\']';
+		let path = 'html/body/div[@categories]/div[@select_by_car_frame and @uuid=\'' + new_page_state.category_ + '\']';
 
 		for( let e of xpath_eval(path + '/div[@property]/div[@values]/div[@value and @checked]') )
 			e.removeAttribute('checked');

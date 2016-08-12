@@ -10,6 +10,7 @@ class nano_timer {
 	protected $counter_;
 	protected $freq_;
 	protected $nano_mult_;
+	protected $nano_sum_;
 
 	public function __construct($start = true) {
 
@@ -20,7 +21,7 @@ class nano_timer {
 		$this->nano_mult_ = 1000000000;
 
 		if( $start )
-			$this->counter_->start();
+			$this->start();
 
 	}
 
@@ -36,26 +37,45 @@ class nano_timer {
 
 	}
 
-	public function restart() {
+	public function start() {
 
 		if( $this->counter_->isRunning() )
 			$this->counter_->stop();
 
 		$this->counter_->start();
+		$this->nano_sum_ = 0;
 
 	}
 
-	public function last_nano_time($restart = true) {
+	public function stop() {
 
-		if( $restart )
+		if( $this->counter_->isRunning() )
 			$this->counter_->stop();
 
-		$t = bcdiv(bcmul($this->counter_->getLastElapsedTicks(), $this->nano_mult_), $this->freq_);
+	}
 
-		if( $restart )
-			$this->counter_->start();
+	public function restart() {
 
-		return $t;
+		$this->stop();
+		$this->start();
+
+	}
+
+	public function reset() {
+
+		$this->nano_sum_ = 0;
+
+	}
+
+	public function last_nano_time() {
+
+		$this->counter_->stop();
+		$e = $this->counter_->getLastElapsedTicks();
+		$this->counter_->start();
+
+		$this->nano_sum_ = bcadd($this->nano_sum_, $e);
+
+		return bcdiv(bcmul($this->nano_sum_, $this->nano_mult_), $this->freq_);
 
 	}
 
