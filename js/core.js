@@ -19,7 +19,7 @@ class HtmlPageState {
 			selections_state_		: [],
 			selections_checked_		: false,
 			select_by_car_			: false,
-			select_by_car_state_	: [],
+			select_by_car_state_	: {},
 			select_by_car_checked_	: false
 		};
 
@@ -549,6 +549,11 @@ class Render {
 		if( selections.length !== 0 )
 			request.selections = selections;
 
+		let select_by_car_state = new_paging_state.select_by_car_state_;
+
+		if( select_by_car_state.car )
+			request.car = select_by_car_state.car;
+
 		let data = post_json_sync('proxy.php', request);
 		//state.ellapsed_ += data.ellapsed;
 
@@ -660,7 +665,7 @@ class Render {
 				<div property uuid="${p.uuid}">
 				<div>${p.display}</div>
 				<div values ${cols === 0 ? 'one_column' : ''}
-					style="-moz-column-count: ${cols}${cols < 1 ? '; text-align: center' : ''}">`
+					${cols !== 0 ? ' style="-moz-column-count: ' + cols + '"' : ''}>`
 			;
 
 			let br = p.columns > 1 ? '<br>' : '';
@@ -724,7 +729,7 @@ class Render {
 
 		let state = this.state_;
 		let new_paging_state = new_page_state.paging_state_by_category_[new_page_state.category_];
-		let selections_state = new_paging_state.selections_state_;
+		let select_by_car_state = new_paging_state.select_by_car_state_;
 		let html = '';
 
 		for( let i = 0; i < data.values.length; i++ ) {
@@ -739,12 +744,21 @@ class Render {
 
 		}
 
-		new_paging_state.select_by_car_state_ = data.values;
+		new_paging_state.select_by_car_state_.values = data.values;
 
-		let element = xpath_eval_single('html/body/div[@categories]/div[@select_by_car_frame and @uuid=\'' + new_page_state.category_ + '\']');
-		element.innerHTML = html;
+		if( data.car )
+			new_paging_state.select_by_car_state_.car = data.car;
 
-		state.setup_events(xpath_eval('div[@property]/div[@values]/div[@value]', element));
+		let frame = xpath_eval_single('html/body/div[@categories]/div[@select_by_car_frame and @uuid=\'' + new_page_state.category_ + '\']');
+		let e = xpath_eval_single('div[@values]', frame);
+		e.innerHTML = html;
+
+		state.setup_events(xpath_eval('div[@value]', e));
+
+		xpath_eval_single('div[@manufacturer]/span[@value]'	, frame).innerText = select_by_car_state.manufacturer	? select_by_car_state.manufacturer.value	: '';
+		xpath_eval_single('div[@model]/span[@value]'		, frame).innerText = select_by_car_state.model			? select_by_car_state.model.value			: '';
+		xpath_eval_single('div[@modification]/span[@value]'	, frame).innerText = select_by_car_state.modification	? select_by_car_state.modification.value	: '';
+		xpath_eval_single('div[@year]/span[@value]'			, frame).innerText = select_by_car_state.year			? select_by_car_state.year.value			: '';
 
 	}
 
@@ -756,12 +770,22 @@ class Render {
 			new_page_state = state.page_state_;
 
 		let new_paging_state = new_page_state.paging_state_by_category_[new_page_state.category_];
+		let select_by_car_state = new_paging_state.select_by_car_state_;
 
 		let request = {
 			'module'	: 'by_car_selectorer',
 			'handler'	: 'by_car_selectorer',
 			'category'	: new_page_state.category_ !== null_uuid ? new_page_state.category_ : null
 		};
+
+		if( select_by_car_state.manufacturer )
+			request.manufacturer = select_by_car_state.manufacturer.uuid;
+		if( select_by_car_state.model )
+			request.model = select_by_car_state.model.uuid;
+		if( select_by_car_state.modification )
+			request.modification = select_by_car_state.modification.uuid;
+		if( select_by_car_state.year )
+			request.year = select_by_car_state.year.uuid;
 
 		let data = post_json_sync('proxy.php', request);
 
@@ -815,25 +839,32 @@ class Render {
 			html = html + `
 				<div select_by_car_frame fadein uuid="${c.uuid}">
 					<div selector manufacturer>
-						<span ico search_field></span>
-						<span ico list_box></span>
+						<!--<span ico search_field></span>
+						<span ico list_box></span>-->
 						<span label>Производитель</span>
+						<img arrow src="/resources/assets/arrows/arrow_right.ico">
 						<span value></span>
 					</div>
 					<div selector model>
 						<span label>Модель</span>
+						<img arrow src="/resources/assets/arrows/arrow_right.ico">
 						<span value></span>
 					</div>
 					<div selector modification>
 						<span label>Модификация</span>
+						<img arrow src="/resources/assets/arrows/arrow_right.ico">
 						<span value></span>
 					</div>
 					<div selector year>
 						<span label>Год выпуска</span>
+						<img arrow src="/resources/assets/arrows/arrow_right.ico">
 						<span value></span>
 					</div>
-					<div selector values>
-					</div>
+					<div selector values fadein></div>
+				</div>
+				<div btn clear_select_by_car uuid="${c.uuid}">
+					<img btn_ico src="/resources/assets/car_clear.ico">
+					<span btn_txt>ОЧИСТИТЬ</span>
 				</div>`
 			;
 
@@ -914,14 +945,45 @@ class Render {
 		let setup_categories_select_by_car = function () {
 
 			let f = new_page_state.category_ !== null_uuid;
-			let e = xpath_eval_single('html/body/div[@categories]');
-			let s = xpath_eval_single('div[@select_by_car_frame and @uuid=\'' + new_page_state.category_ + '\']', e);
 
 			selsb.fade(f);
 			carbb.fade(f);
 
-			e.fade(new_paging_state.select_by_car_);
-			c.fade(new_paging_state.select_by_car_checked_);
+			let e = xpath_eval_single('html/body/div[@categories]');
+
+			for( let cat_uuid in new_page_state.paging_state_by_category_ ) {
+
+				if( cat_uuid === null_uuid )
+					continue;
+
+				let s = xpath_eval_single('div[@select_by_car_frame and @uuid=\'' + cat_uuid + '\']', e);
+				let c = xpath_eval_single('div[@clear_select_by_car and @uuid=\'' + cat_uuid + '\']', e);
+
+				let new_paging_state = new_page_state.paging_state_by_category_[cat_uuid];
+
+				if( new_paging_state.select_by_car_ && cat_uuid === new_page_state.category_ ) {
+
+					s.fade(true);
+
+					let select_by_car_state = new_paging_state.select_by_car_state_;
+
+					f = new_paging_state.select_by_car_checked_
+						|| select_by_car_state.manufacturer
+						|| select_by_car_state.model
+						|| select_by_car_state.modification
+						|| select_by_car_state.year;
+
+					c.fade(f);
+					
+				}
+				else {
+
+					s.fade(false);
+					c.fade(false);
+
+				}
+
+			}
 
 			carbb.blink(new_paging_state.select_by_car_checked_);
 
@@ -988,21 +1050,31 @@ class Render {
 				to_info();
 
 		}
-		else if( new_page_state.category_ !== cur_state.category_ ) {
+
+		if( new_page_state.category_ !== cur_state.category_ ) {
 
 			plist.fadein();
 			setup_categories_selections();
 			setup_categories_select_by_car();
 
 		}
-		else if( new_paging_state.selections_ !== cur_paging_state.selections_
+
+		if( new_paging_state.selections_ !== cur_paging_state.selections_
 			|| new_paging_state.selections_checked_ !== cur_paging_state.selections_checked_ ) {
 
 			setup_categories_selections();
 
 		}
-		else if( new_paging_state.select_by_car_ !== cur_paging_state.select_by_car_
-			|| new_paging_state.select_by_car_checked_ !== cur_paging_state.select_by_car_checked_ ) {
+
+		let cur_select_by_car_state = cur_paging_state.select_by_car_state_;
+		let new_select_by_car_state = new_paging_state.select_by_car_state_;
+		
+		if( new_paging_state.select_by_car_ !== cur_paging_state.select_by_car_
+			|| new_paging_state.select_by_car_checked_ !== cur_paging_state.select_by_car_checked_
+			|| new_select_by_car_state.manufacturer !== cur_select_by_car_state.manufacturer
+			|| new_select_by_car_state.model != cur_select_by_car_state.model
+			|| new_select_by_car_state.modification !== cur_select_by_car_state.modification
+			|| new_select_by_car_state.year !== cur_select_by_car_state.year ) {
 
 			setup_categories_select_by_car();
 
@@ -1471,26 +1543,48 @@ class HtmlPageEvents extends HtmlPageState {
 
 				// success, print cheque
 
-				let iframe_content = xpath_eval_single('html/body/iframe[@cheque_print]').contentWindow;
-				let iframe	= iframe_content.document;
+				for( let ncopy = 1; ncopy <= 2; ncopy++ ) {
 
-				let head	= xpath_eval_single('html/body/div[@head]', iframe, iframe);
-				xpath_eval_single('p[@node_name]'			, head, iframe).innerHTML = data.order.name;
-				xpath_eval_single('p[@uuid]'				, head, iframe).innerHTML = data.order.uuid;
-				xpath_eval_single('p[@number]'				, head, iframe).innerHTML = 'Заказ&nbsp;:&nbsp;' + data.order.number;
-				xpath_eval_single('p[@date]'				, head, iframe).innerHTML = 'Время&nbsp;:&nbsp;' + data.order.date.toLocaleFormat('%d.%M.%Y %H:%M:%S');
-				xpath_eval_single('p[@barcode]'				, head, iframe).innerHTML = 'EAN13&nbsp;:&nbsp;' + data.order.barcode;
+					let iframe_content = xpath_eval_single('html/body/iframe[@cheque_print and @copy=\'' + ncopy + '\']').contentWindow;
+					let iframe	= iframe_content.document;
 
-				let table	= xpath_eval_single('html/body/div[@table]', iframe, iframe);
-				xpath_eval_single('p[@totals]/span[@txt]'	, table, iframe).innerHTML = 'Сумма&nbsp;:';
-				xpath_eval_single('p[@totals]/span[@sum]'	, table, iframe).innerHTML = data.order.totals + '&nbsp;₽';
+					let head	= xpath_eval_single('html/body/div[@head]', iframe, iframe);
+					xpath_eval_single('p[@node_name]'			, head, iframe).innerHTML = data.order.name;
+					xpath_eval_single('p[@uuid]'				, head, iframe).innerHTML = data.order.uuid;
+					xpath_eval_single('p[@number]'				, head, iframe).innerHTML = 'Заказ&nbsp;:&nbsp;' + data.order.number;
+					xpath_eval_single('p[@date]'				, head, iframe).innerHTML = 'Время&nbsp;:&nbsp;' + data.order.date.toLocaleFormat('%d.%m.%Y %H:%M:%S');
+					xpath_eval_single('p[@barcode]'				, head, iframe).innerHTML = 'EAN13&nbsp;:&nbsp;' + data.order.barcode;
 
-				let tail	= xpath_eval_single('html/body/div[@tail]', iframe, iframe);
-				xpath_eval_single('p[@barcode]'				, tail, iframe).innerHTML = data.order.barcode_eangnivc;
+					let table = xpath_eval_single('html/body/div[@table]', iframe, iframe);
+					let html = '';
 
-				// http://stackoverflow.com/a/11823629
-				// Open about:config then change the pref dom.successive_dialog_time_limit to zero integer
-				iframe_content.print();
+					for( let i = 0; i < new_page_state.cart_.length; i++ ) {
+
+						let e = new_page_state.cart_[i];
+
+						html = html + `
+							<p product>
+							${i + 1}. ${e.name + ' [' + e.code + ']'} ${Math.trunc(e.price) + '₽'} ${e.buy_quantity + '&nbsp;шт'}
+							<span psum>&nbsp;=${Math.trunc(e.price) * e.buy_quantity + '₽'}</span>
+							</p>`
+						;
+
+					}
+
+					table.innerHTML = html;
+
+					let footer = xpath_eval_single('html/body/div[@footer]', iframe, iframe);
+					xpath_eval_single('p[@totals]/span[@txt]'	, footer, iframe).innerHTML = 'Сумма:';
+					xpath_eval_single('p[@totals]/span[@sum]'	, footer, iframe).innerHTML = data.order.totals + '₽';
+
+					let tail = xpath_eval_single('html/body/div[@tail]', iframe, iframe);
+					xpath_eval_single('p[@barcode]'				, tail, iframe).innerHTML = data.order.barcode_eangnivc;
+
+					// http://stackoverflow.com/a/11823629
+					// Open about:config then change the pref dom.successive_dialog_time_limit to zero integer
+					iframe_content.print();
+
+				}
 
 				// successfully, clear cart now
 				for( let e of new_page_state.cart_ ) {
@@ -1531,6 +1625,9 @@ class HtmlPageEvents extends HtmlPageState {
 
 			new_paging_state.selections_ = !cur_paging_state.selections_;
 			new_page_state.modified_ = true;
+
+			if( new_paging_state.select_by_car_ )
+				new_paging_state.select_by_car_ = false;
 
 			if( new_paging_state.selections_ )
 				this.render_.rewrite_selections(new_page_state);
@@ -1624,10 +1721,6 @@ class HtmlPageEvents extends HtmlPageState {
 
 	btn_select_by_car_handler(cur_page_state, cur_paging_state) {
 
-		// switch off selections
-		if( cur_paging_state.selections_ )
-			this.btn_selections_handler(cur_page_state, cur_paging_state);
-
 		if( cur_page_state.category_ !== null_uuid ) {
 
 			let [ new_page_state, new_paging_state ] = this.clone_page_state();
@@ -1636,6 +1729,9 @@ class HtmlPageEvents extends HtmlPageState {
 			new_page_state.modified_ = true;
 
 			if( new_paging_state.selections_ )
+				new_paging_state.selections_ = false;
+
+			if( new_paging_state.select_by_car_ )
 				this.render_.rewrite_select_by_car(new_page_state);
 
 			return new_page_state;
@@ -1644,25 +1740,84 @@ class HtmlPageEvents extends HtmlPageState {
 
 	}
 
-	btn_clear_select_by_car_handler(element) {
+	values_select_by_car_frame_handler(cur_page_state, cur_paging_state, element) {
 
-		// TODO:
 		let [ new_page_state, new_paging_state ] = this.clone_page_state();
-		let new_selections_state = new_paging_state.selections_state_;
+		let select_by_car_state = new_paging_state.select_by_car_state_;
 
-		for( let p of new_selections_state )
-			for( let v of p.values )
-				v.checked = false;
+		if( select_by_car_state.manufacturer ) {
 
-		new_paging_state.selections_checked_ = false;
+			if( select_by_car_state.model ) {
+			
+				if( select_by_car_state.modification ) {
+
+					let uuid = element.attributes.uuid.value;
+
+					select_by_car_state.year = select_by_car_state.values.find(e => e.uuid === uuid);
+					new_paging_state.select_by_car_checked_ = true;
+
+				}
+				else {
+
+					let uuid = element.attributes.uuid.value;
+
+					select_by_car_state.modification = select_by_car_state.values.find(e => e.uuid === uuid);
+
+				}
+
+			}
+			else {
+
+				let uuid = element.attributes.uuid.value;
+
+				select_by_car_state.model = select_by_car_state.values.find(e => e.uuid === uuid);
+
+			}
+
+		}
+		else {
+
+			let uuid = element.attributes.uuid.value;
+
+			select_by_car_state.manufacturer = select_by_car_state.values.find(e => e.uuid === uuid);
+
+		}
+
 		new_page_state.modified_ = true;
 
-		let path = 'html/body/div[@categories]/div[@select_by_car_frame and @uuid=\'' + new_page_state.category_ + '\']';
+		this.render_.rewrite_select_by_car(new_page_state);
 
-		for( let e of xpath_eval(path + '/div[@property]/div[@values]/div[@value and @checked]') )
-			e.removeAttribute('checked');
+		if( !cur_paging_state.select_by_car_checked_ && new_paging_state.select_by_car_checked_ )
+			this.render_.rewrite_page(new_page_state);
 
-		element.fadeout();
+		let e = xpath_eval_single('html/body/div[@categories]/div[@clear_select_by_car and @uuid=\'' + new_page_state.category_ + '\']');
+		e.fade(new_paging_state.select_by_car_checked_);
+
+		return new_page_state;
+
+	}
+
+	btn_clear_select_by_car_handler(cur_page_state, cur_paging_state, element) {
+
+		let [ new_page_state, new_paging_state ] = this.clone_page_state();
+		let new_selections_state = new_paging_state.selections_state_;
+		let select_by_car_state = new_paging_state.select_by_car_state_;
+
+		select_by_car_state.manufacturer = undefined;
+		select_by_car_state.model = undefined;
+		select_by_car_state.modification = undefined;
+		select_by_car_state.year = undefined;
+
+		if( select_by_car_state.car )
+			select_by_car_state_.car = undefined;
+
+		new_paging_state.select_by_car_checked_ = false;
+		new_page_state.modified_ = true;
+
+		this.render_.rewrite_select_by_car(new_page_state);
+
+		if( cur_paging_state.select_by_car_checked_ )
+			this.render_.rewrite_page(new_page_state);
 
 		return new_page_state;
 
@@ -1838,7 +1993,7 @@ class HtmlPageEvents extends HtmlPageState {
 					new_page_state = this.btn_selections_handler(cur_page_state, cur_paging_state);
 
 				}
-				else if( attrs.value && element.ascend('values/property/selections_frame') ) {
+				else if( attrs.value && element.ascend('values/property/selections_frame/categories') ) {
 
 					new_page_state = this.checkbox_values_property_selections_frame_handler(element);
 
@@ -1853,14 +2008,14 @@ class HtmlPageEvents extends HtmlPageState {
 					new_page_state = this.btn_select_by_car_handler(cur_page_state, cur_paging_state);
 
 				}
-				/*else if( attrs.value && element.ascend('values/property/select_by_car_frame') ) {
+				else if( attrs.value && element.ascend('values/select_by_car_frame/categories') ) {
 
-					new_page_state = this.checkbox_values_property_select_by_car_frame_handler(element);
+					new_page_state = this.values_select_by_car_frame_handler(cur_page_state, cur_paging_state, element);
 
-				}*/
+				}
 				else if( attrs.btn && attrs.clear_select_by_car ) {
 
-					new_page_state = this.btn_clear_select_by_car_handler(element);
+					new_page_state = this.btn_clear_select_by_car_handler(cur_page_state, cur_paging_state, element);
 
 				}
 

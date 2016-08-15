@@ -16,6 +16,7 @@ namespace srv1c {
 //------------------------------------------------------------------------------
 class config extends \config {
 
+	public static $sqlite_busy_timeout							= 180000;	// 180 seconds
 	public static $sqlite_tx_duration							= 50000000;	// in nanoseconds, 1000ns == 1micros, 1000000ns == 1ms, 1000000000ns = 1s. 50ms by default
 	public static $log_sqlite_tx_duration						= false;
 	public static $sqlite_page_size								= 4096;

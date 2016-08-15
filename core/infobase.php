@@ -33,7 +33,7 @@ class infobase extends \SQLite3 {
 		parent::close();
 		parent::open($ib_file_name, $flags | SQLITE3_OPEN_CREATE);
 		// must not use SQLITE3_OPEN_SHAREDCACHE and immediately after opening your database connection, you could do this:
-		$this->busyTimeout(180000);
+		$this->busyTimeout(config::$sqlite_busy_timeout);
 
 		$this->enableExceptions(true);
 
@@ -562,7 +562,12 @@ EOT
 EOT
 		);
 
-		$this->create_unique_indexes_on_registry('system_remainders_records_registry', $dimensions);
+		//$this->create_unique_indexes_on_registry('system_remainders_records_registry', $dimensions);
+
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'system_remainders_records_registry_by_dims'), -4)
+			. ' ON system_remainders_records_registry (infobase_uuid, product_uuid, storage_uuid, organization_uuid, recipient_uuid, package_id_uuid)'
+		);
 
 		$this->exec(
 			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'system_remainders_records_registry_by_shop_product'), -4)

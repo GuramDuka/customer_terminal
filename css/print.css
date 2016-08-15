@@ -86,19 +86,33 @@
 		display				: none;
 	}
 
-	html > body > div[table] > p[totals] {
+	html > body > div[table] > p[product] {
+		width				: 100%;
+		font-size			: 12px;
+		white-space			: normal;
+	}
+
+	html > body > div[table] > p[product] > span[psum] {
+		width				: auto;
+		float				: right;
+		font-weight			: bold;
+		font-size			: 14px;
+	}
+
+	html > body > div[footer] > p[totals] {
 		font-size			: 18px;
 	}
 
-	html > body > div[table] > p[totals] > span[txt] {
+	html > body > div[footer] > p[totals] > span[txt] {
 		width				: auto;
 		float				: left;
+		font-size			: 28px;
 	}
 
-	html > body > div[table] > p[totals] > span[sum] {
+	html > body > div[footer] > p[totals] > span[sum] {
 		width				: auto;
 		font-weight			: bold;
-		font-size			: 32px;
+		font-size			: 28px;
 		float				: right;
 	}
 

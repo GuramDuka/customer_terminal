@@ -28,6 +28,7 @@ class pager_handler extends handler {
 
 		$this->infobase_->begin_immediate_transaction();
 
+		$category_uuid = uuid2bin($category);
 		$table = $category_table = 'products_' . uuid2table_name($category) . 'pages';
 
 		$bind_values = [
@@ -37,7 +38,9 @@ class pager_handler extends handler {
 
 		$limit = $before = '';
 
-		if( @$selections !== null ) {
+		$car_uuid = uuid2bin(@$car);
+
+		if( @$selections !== null || @$car !== null ) {
 
 			$offset = $pgno * $pgsz;
 			$limit = "LIMIT ${pgsz} OFFSET ${offset}";
@@ -48,6 +51,8 @@ class pager_handler extends handler {
 					${category_table} AS p
 EOT
 			;
+
+			if( @$selections === null ) $selections = [];
 
 			foreach( $selections as $i => $p ) {
 
@@ -81,17 +86,69 @@ EOT
 			$before = <<<EOT
 				WITH cte AS (
 					${sql}
-				),
-				cte2 AS (
-					SELECT
-						count(*) AS objects
-					FROM
-						cte
 				)
 EOT
 			;
 
 			$table = 'cte';
+
+			if( @$car !== null ) {
+
+				$sql .= <<<EOT
+					, car_sels_props_all AS (
+						SELECT
+							p.*,
+							r.*
+						FROM
+							cte AS p
+								INNER JOIN cars_selections_registry AS rs
+								ON rs.car_uuid = :car_uuid
+									AND rs.category_uuid = :category_uuid
+					)
+					, car_sels_props AS (
+						SELECT DISTINCT
+							f.*
+						FROM
+							car_sels_props_all AS f
+					)
+EOT
+				;
+
+				for( $i = 0; i < config::$cars_selections_registry_max_values_on_row; $i++ )
+					$sql .= <<<EOT
+						LEFT JOIN properties_registry AS r${i}
+						ON f.${order}_${direction}_uuid = r${i}.object_uuid
+							AND f.value${i}_uuid = r${i}.value_uuid
+EOT
+					;
+
+				$sql .= <<<'EOT'
+					WHERE
+EOT
+				;
+
+				for( $i = 0; i < config::$cars_selections_registry_max_values_on_row; $i++ ) {
+
+					$sql .= ($i > 0 ? ' AND ' : '') . <<<EOT
+						f.value${i}_uuid IS NOT NULL AND r${i}.value_uuid IS NOT NULL
+EOT
+					;
+
+				}
+
+				$table = 'car_sels_props';
+
+			}
+
+			$before .= <<<EOT
+				, cnt AS (
+					SELECT
+						count(*) AS objects
+					FROM
+						${table}
+				)
+EOT
+			;
 
 		}
 
@@ -107,7 +164,7 @@ EOT
 				p.${order}_${direction}_remainder		AS remainder,
 				p.${order}_${direction}_reserve			AS reserve, c.objects
 			FROM
-				${table} AS p, cte2 AS c
+				${table} AS p, cnt AS c
 			WHERE
 				p.pgnon BETWEEN :pgnon0 AND :pgnon1
 			ORDER BY
@@ -116,7 +173,7 @@ EOT
 EOT
 		;
 
-		if( @$selections !== null ) {
+		if( @$selections !== null || @$car !== null ) {
 
 			$sql = str_replace('p.pgnon BETWEEN :pgnon0 AND :pgnon1', '1', $sql);
 
@@ -124,7 +181,7 @@ EOT
 		else {
 
 			$sql = str_replace(', c.objects', '', $sql);
-			$sql = str_replace(', cte2 AS c', '', $sql);
+			$sql = str_replace(', cnt AS c', '', $sql);
 
 		}
 
@@ -133,6 +190,8 @@ EOT
 		$timer->restart();
 
 		$st = $this->infobase_->prepare($sql);
+
+		$st->bindValue(":car_uuid", $car_uuid, SQLITE3_BLOB);
 
 		foreach( $bind_values as $k => $v )
 			if( substr($k, -4) === 'uuid' )

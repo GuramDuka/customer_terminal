@@ -99,6 +99,9 @@ EOT
 				uuid
 			FROM
 				categories
+			WHERE
+				display
+					AND selection
 EOT
 		;
 
@@ -126,7 +129,8 @@ EOT
 					cte1 AS (SELECT uuid FROM categories WHERE parent_uuid IN (SELECT uuid FROM cte0)),
 					cte2 AS (SELECT uuid FROM categories WHERE parent_uuid IN (SELECT uuid FROM cte1)),
 					cte3 AS (SELECT uuid FROM categories WHERE parent_uuid IN (SELECT uuid FROM cte2)),
-					cte4 AS (SELECT uuid FROM categories WHERE parent_uuid IN (SELECT uuid FROM cte3))
+					cte4 AS (SELECT uuid FROM categories WHERE parent_uuid IN (SELECT uuid FROM cte3)),
+					cte5 AS (SELECT uuid FROM categories WHERE parent_uuid IN (SELECT uuid FROM cte4))
 	
 					INSERT INTO f_categories
 					SELECT uuid FROM cte0
@@ -138,6 +142,8 @@ EOT
 					SELECT uuid FROM cte3
 					UNION ALL
 					SELECT uuid FROM cte4
+					UNION ALL
+					SELECT uuid FROM cte5
 EOT
 				;
 

@@ -160,6 +160,8 @@ EOT
 
 			if( $property_name === 'Наименование портал' )
 				continue;
+			if( $property_name === 'Не выгружать на сайт' )
+				continue;
 
 			$properties[] = [
 				'property_uuid'	=> bin2uuid($property_uuid),
