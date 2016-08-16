@@ -37,7 +37,8 @@ class loader_handler extends handler {
 			'properties_values',
 			'properties_assignments',
 			'products_selection_by_properties_setup_registry',
-			'products_selection_by_car_setup_registry'
+			'products_selection_by_car_setup_registry',
+			'products_properties_by_car_setup_registry'
 		];
 
 		foreach( $loaders as $loader_name ) {

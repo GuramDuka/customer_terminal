@@ -14,6 +14,43 @@ class pager_handler extends handler {
 
 	protected $infobase_;
 
+	protected function get_properties_x_list($category_uuid) {
+
+		$sql = <<<EOT
+			SELECT
+				property_uuid
+			FROM
+				products_properties_by_car_setup_registry
+			WHERE
+				category_uuid = :category_uuid
+				AND enabled
+EOT
+		;
+
+		$this->infobase_->dump_plan($sql);
+
+		$st = $this->infobase_->prepare($sql);
+
+		$st->bindValue(":category_uuid", $category_uuid, SQLITE3_BLOB);
+
+		$result = $st->execute();
+
+		$xlist = '';
+
+		while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
+
+			extract($r);
+
+			$v = bin2uuid($property_uuid, '');
+
+			$xlist .= ", x'${v}'";
+
+		}
+
+		return substr($xlist, 2);
+
+	}
+
 	protected function handle_request() {
 
 		$timer = new \nano_timer;
@@ -29,16 +66,21 @@ class pager_handler extends handler {
 		$this->infobase_->begin_immediate_transaction();
 
 		$category_uuid = uuid2bin($category);
+		$category_x = bin2uuid($category_uuid, '');
 		$table = $category_table = 'products_' . uuid2table_name($category) . 'pages';
-
-		$bind_values = [
-			'pgnon0' => $pgno << 4,
-			'pgnon1' => ($pgno << 4) + ((1 << 4) - 1)
-		];
 
 		$limit = $before = '';
 
-		$car_uuid = uuid2bin(@$car);
+		$car = @$car;
+		$car_uuid = uuid2bin($car);
+		$car_x = bin2uuid($car_uuid, '');
+
+		$bind_values = [
+			'pgnon0'		=> $pgno << 4,
+			'pgnon1'		=> ($pgno << 4) + ((1 << 4) - 1),
+			'car_uuid'		=> $car_uuid,
+			'category_uuid'	=> $category_uuid
+		];
 
 		if( @$selections !== null || @$car !== null ) {
 
@@ -94,53 +136,88 @@ EOT
 
 			if( @$car !== null ) {
 
-				$sql .= <<<EOT
+				$sql = <<<EOT
 					, car_sels_props_all AS (
 						SELECT
-							p.*,
-							r.*
+							*
 						FROM
 							cte AS p
-								INNER JOIN cars_selections_registry AS rs
-								ON rs.car_uuid = :car_uuid
-									AND rs.category_uuid = :category_uuid
+								INNER JOIN cars_selections_registry AS r
+								ON r.car_uuid = :car_uuid					/* x'${car_x}' */
+									AND r.category_uuid = :category_uuid	/* x'${category_x}' */
 					)
-					, car_sels_props AS (
-						SELECT DISTINCT
-							f.*
+					, car_products AS (
+						SELECT
+							*
 						FROM
 							car_sels_props_all AS f
-					)
 EOT
 				;
 
-				for( $i = 0; i < config::$cars_selections_registry_max_values_on_row; $i++ )
+				for( $i = 0; $i < config::$cars_selections_registry_max_values_on_row; $i++ )
 					$sql .= <<<EOT
+
 						LEFT JOIN properties_registry AS r${i}
 						ON f.${order}_${direction}_uuid = r${i}.object_uuid
+							AND f.property${i}_uuid = r${i}.property_uuid
 							AND f.value${i}_uuid = r${i}.value_uuid
 EOT
 					;
 
 				$sql .= <<<'EOT'
+
 					WHERE
 EOT
 				;
 
-				for( $i = 0; i < config::$cars_selections_registry_max_values_on_row; $i++ ) {
+				$properties_x_list = $this->get_properties_x_list($category_uuid);
 
-					$sql .= ($i > 0 ? ' AND ' : '') . <<<EOT
-						f.value${i}_uuid IS NOT NULL AND r${i}.value_uuid IS NOT NULL
+				for( $i = 0; $i < config::$cars_selections_registry_max_values_on_row; $i++ ) {
+
+					if( $i > 0 )
+						$sql .= <<<EOT
+
+							AND
+EOT
+					;
+
+					$sql .= <<<EOT
+						(
+							f.value${i}_uuid = r${i}.value_uuid
+							OR (
+								CASE
+									WHEN f.property${i}_uuid IN (${properties_x_list}) THEN
+										f.value${i}_uuid
+									ELSE
+										NULL
+								END IS NULL
+								AND
+								CASE
+									WHEN r${i}.property_uuid IN (${properties_x_list}) THEN
+										r${i}.value_uuid
+								ELSE
+									NULL
+								END IS NULL
+							)
+						)
 EOT
 					;
 
 				}
 
-				$table = 'car_sels_props';
+				$sql .= <<<'EOT'
+
+					)
+EOT
+				;
+
+				$before .= $sql;
+				$table = 'car_products';
 
 			}
 
 			$before .= <<<EOT
+
 				, cnt AS (
 					SELECT
 						count(*) AS objects
@@ -190,8 +267,6 @@ EOT
 		$timer->restart();
 
 		$st = $this->infobase_->prepare($sql);
-
-		$st->bindValue(":car_uuid", $car_uuid, SQLITE3_BLOB);
 
 		foreach( $bind_values as $k => $v )
 			if( substr($k, -4) === 'uuid' )

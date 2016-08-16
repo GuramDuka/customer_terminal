@@ -1809,7 +1809,7 @@ class HtmlPageEvents extends HtmlPageState {
 		select_by_car_state.year = undefined;
 
 		if( select_by_car_state.car )
-			select_by_car_state_.car = undefined;
+			select_by_car_state.car = undefined;
 
 		new_paging_state.select_by_car_checked_ = false;
 		new_page_state.modified_ = true;

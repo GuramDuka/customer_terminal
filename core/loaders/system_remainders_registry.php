@@ -221,7 +221,7 @@ EOT
 			$st_totals_add->execute();
 
 			// slow update on big recordsets, disable restart tx
-			//$this->infobase_->sqlite_tx_duration($timer, __FILE__, __LINE__);
+			$this->infobase_->sqlite_tx_duration($timer, __FILE__, __LINE__);
 
 		}
 

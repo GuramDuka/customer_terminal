@@ -424,6 +424,7 @@ EOT
 		for( $i = 0; $i < config::$cars_selections_registry_max_values_on_row; $i++ )
 			$sql .= <<<EOT
 				,
+				property${i}_uuid	BLOB,
 				value${i}_uuid		BLOB
 EOT
 		;
@@ -440,13 +441,6 @@ EOT
 
 		$dimensions = [ 'car' => '_uuid', 'category' => '_uuid', 'idx' => '' ];
 		$this->create_unique_indexes_on_registry('cars_selections_registry', $dimensions);
-
-		// need only if select cars by products
-		/*for( $i = 0; $i < config::$cars_selections_registry_max_values_on_row; $i++ )
-			$this->exec(
-				'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', "cars_selections_registry_by_value${i}"), -4)
-				. " ON cars_selections_registry (value${i}_uuid)"
-			);*/
 
 		$this->exec(<<<'EOT'
 			CREATE TABLE IF NOT EXISTS images (
@@ -625,13 +619,26 @@ EOT
 		$dimensions = [ 'category' => '_uuid', 'car_group' => '_uuid' ];
 		$this->create_unique_indexes_on_registry('products_selection_by_car_setup_registry', $dimensions);
 
+		// регистр Настройки подбора по автомобилю терминала покупателя
+		$this->exec(<<<'EOT'
+			CREATE TABLE IF NOT EXISTS products_properties_by_car_setup_registry (
+				category_uuid	BLOB,
+				property_uuid	BLOB,
+				enabled			INTEGER
+			)
+EOT
+		);
+
+		$dimensions = [ 'category' => '_uuid', 'property' => '_uuid' ];
+		$this->create_unique_indexes_on_registry('products_properties_by_car_setup_registry', $dimensions);
+
 	}
 
-	public function dump_plan($sql) {
+	public function dump_plan($sql, $force = false) {
 
 		try {
 
-			if( config::$explain ) {
+			if( $force || config::$explain ) {
 
 				$sql = "\n" . $sql;
 
