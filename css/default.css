@@ -147,6 +147,14 @@
 		height				: inherit;
 		text-align			: left;
 		float				: left;
+		font-size			: 22px;
+		font-weight			: bolder;
+		text-overflow		: ellipsis;
+		text-decoration		: none;
+		text-transform		: uppercase;
+		max-width			: 20%;
+		color				: darkblue;
+		margin-left			: 16px;
 	}
 
 	html > body > div[top] > div[logo] {
@@ -386,7 +394,7 @@
 		top					: 165px;
 		left				: 0.5%;
 		width				: 94%;
-		min-height			: 158px;
+		min-height			: 185px;
 		max-height			: calc(98% - 165px);
 		float				: none;
 		border				: 3px solid #dfba3c;
@@ -410,11 +418,10 @@
 	html > body > div[categories] > div[select_by_car_frame] > div[selector][modification],
 	html > body > div[categories] > div[select_by_car_frame] > div[selector][year] {
 		float				: left;
-		width				: 24.5%;
+		width				: auto;
 	}
 
 	html > body > div[categories] > div[select_by_car_frame] > div[selector][year] {
-		float				: right;
 	}
 
 	html > body > div[categories] > div[select_by_car_frame] > div[selector] > span[search_field][ico] {
@@ -426,8 +433,9 @@
 	}
 
 	html > body > div[categories] > div[select_by_car_frame] > div[selector] > span[label] {
-		font-size			: 28px;
+		font-size			: 20px;
 		font-weight			: bold;
+		margin-left			: 8px;
 	}
 
 	html > body > div[categories] > div[select_by_car_frame] > div[selector] > img[arrow] {
@@ -441,14 +449,14 @@
 
 	html > body > div[categories] > div[select_by_car_frame] > div[selector] > span[value] {
 		float				: none;
-		font-size			: 28px;
+		font-size			: 20px;
 		font-weight			: bold;
 		color				: darkblue;
 	}
 
 	html > body > div[categories] > div[select_by_car_frame] > div[selector][values] {
 		float				: left;
-		-moz-column-count	: 9;
+		-moz-column-count	: 6;
 		-moz-column-gap		: 8px;
 		-moz-column-width	: auto;
 		/*-moz-column-rule	: dotted 8px #dfba3c;*/

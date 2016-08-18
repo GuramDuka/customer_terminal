@@ -2,66 +2,119 @@
 //------------------------------------------------------------------------------
 namespace { // global
 //------------------------------------------------------------------------------
-define('APP_DIR', realpath(__DIR__ . DIRECTORY_SEPARATOR
-	. '..' . DIRECTORY_SEPARATOR . '..') . DIRECTORY_SEPARATOR);
-define('CORE_DIR', APP_DIR . 'core' . DIRECTORY_SEPARATOR);
-//------------------------------------------------------------------------------
 require_once CORE_DIR . 'startup.php';
 require_once CORE_DIR . 'except.php';
+require_once CORE_DIR . 'utils.php';
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------
-try {
+class events_trigger {
 
-	$start_time = micro_time();
+	protected $events_ = [];
 
-    $pipe = APP_DIR .'mq-' . $mq_channel;
-    $pipe_handle = fopen($pipe, 'c+b');
+	public function __construct() {
+	}
 
-	runtime_exception::throw_false($pipe_handle);
+	public function event($data /* json string */) {
 
-    if( $pipe_handle === false ){
+		$this->events_[] = $data;
 
-      mkdir(dirname($pipe), 0755, true);
-      $pipe_handle = fopen($pipe, 'c+b');
+	}
 
-    }
+	public function fire() {
 
-    if( flock($pipe_handle, LOCK_EX | ($record[1] > 0 ? LOCK_NB : 0)) ){
-      fseek($handle,0);
-        ftruncate($handle,0);
+		$infobase = new SQLite3(APP_DIR . 'data' . DIRECTORY_SEPARATOR . 'events.sqlite');
+		$infobase->busyTimeout(180000);	// 180 seconds
+		$infobase->enableExceptions(true);
+		$infobase->exec('PRAGMA page_size = 4096');
+		$infobase->exec('PRAGMA journal_mode = WAL');
+		$infobase->exec('PRAGMA count_changes = OFF');
+		$infobase->exec('PRAGMA auto_vacuum = NONE');
+		$infobase->exec('PRAGMA cache_size = -8192');
+		$infobase->exec('PRAGMA synchronous = NORMAL');
+		$infobase->exec('PRAGMA temp_store = MEMORY');
 
-		$mq_subscribers = [
-		];
+		$infobase->exec('BEGIN /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION');
 
-	    $subscriber_pipe = APP_DIR .'mq-' . $mq_channel . '-' . $subscriber;
-    	$subscriber_pipe_handle = fopen($subscriber_pipe, 'c+b');
+		$infobase->exec(<<<'EOT'
+			CREATE TABLE IF NOT EXISTS events (
+				timestamp	INTEGER,
+				event		TEXT
+			) /*WITHOUT ROWID*/
+EOT
+		);
 
-		if (!flock($fp, LOCK_EX | LOCK_NB, $wouldblock)) {
-                if ($wouldblock) {
-                    //Another process holds the lock!
-              
-                } else {
-                    //Couldn't lock for another reason, e.g. no such file
-            
-                }
-            } else {
-                //Lock obtained
+		$index_name = 'i' . substr(hash('haval256,3', 'events_by_timestamp'), -4);
 
-                startJob();
-            }
+		$infobase->exec(<<<EOT
+			CREATE INDEX IF NOT EXISTS ${index_name} ON events (timestamp)
+EOT
+		);
 
-      flock($pipe_handle, LOCK_UN);
-      fclose($pipe_handle);
+		$timestamp = $event = null;
+		$st = $infobase->prepare('INSERT INTO events (timestamp, event) VALUES (:timestamp, :event)');
+		$st->bindParam(':timestamp'	, $timestamp);
+		$st->bindParam(':event'		, $event);
+
+		foreach( $this->events_ as $event ) {
+
+			$timestamp = time();
+			$st->execute();
+
+		}
+
+		$infobase->exec('COMMIT TRANSACTION');
+
 	}
 
 }
-catch( Throwable $e ) {
 
-    error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . $e->getTraceAsString());
-    header(':', true, 500);
+/*
 
-}
+		$read = $write = [];
+
+		try {
+
+			$context = new \ZMQContext();
+			//  Socket to talk to server
+			$requester = new \ZMQSocket($context, \ZMQ::SOCKET_REQ);
+			$requester->connect(config::$zmq_socket);
+
+	    	//  Wait for next request from client
+			$poll = new \ZMQPoll();
+        	$poll->add($requester, \ZMQ::POLL_IN | \ZMQ::POLL_OUT);
+
+	        //$events = $poll->poll($read, $write, 1000);
+
+			//error_log(var_export($read, true) . "\n" . var_export($write, true));
+
+    		$requester->send(json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+	        $events = $poll->poll($read, $write, 1000);
+			error_log(var_export($read, true) . "\n" . var_export($write, true));
+
+	        foreach( $read as $r ) {
+
+			   	$reply = $r->recv();
+
+				if( $reply !== 'received' )
+    				throw new \ErrorException('Invalid reply', 1);
+
+			}
+
+		}
+		catch( \Throwable $e ) {
+
+    		error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . __LINE__);
+			throw $e;
+
+		}
+		catch( \ZMQSocketException $e ) {
+
+    		error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . __LINE__);
+			throw $e;
+
+		}*/
 //------------------------------------------------------------------------------
 } // global namespace
 //------------------------------------------------------------------------------

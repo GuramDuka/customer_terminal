@@ -3,13 +3,15 @@ AddCharset UTF-8 .html
 AddCharset UTF-8 .css
 AddCharset UTF-8 .js
 
-php_value enable_post_data_reading 0
-php_value memory_limit 2000M
-php_value post_max_size 1999M
-php_value upload_max_filesize 1999M
-php_value max_execution_time 300
-php_value max_input_time 300
-php_value default_socket_timeout 180
+<IfModule php7_module>
+	php_value enable_post_data_reading 0
+	php_value memory_limit 2000M
+	php_value post_max_size 1999M
+	php_value upload_max_filesize 1999M
+	php_value max_execution_time 300
+	php_value max_input_time 300
+	php_value default_socket_timeout 180
+</IfModule>
 
 Header set Access-Control-Allow-Origin "*"
 Header set Access-Control-Allow-Credentials true

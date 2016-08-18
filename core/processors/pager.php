@@ -157,10 +157,14 @@ EOT
 				for( $i = 0; $i < config::$cars_selections_registry_max_values_on_row; $i++ )
 					$sql .= <<<EOT
 
+						/*LEFT JOIN properties_values AS v${i}
+						ON f.value${i}_uuid = v${i}.uuid*/
 						LEFT JOIN properties_registry AS r${i}
 						ON f.${order}_${direction}_uuid = r${i}.object_uuid
 							AND f.property${i}_uuid = r${i}.property_uuid
 							AND f.value${i}_uuid = r${i}.value_uuid
+						/*LEFT JOIN properties_values AS n${i}
+						ON r${i}.value_uuid = n${i}.uuid*/
 EOT
 					;
 
@@ -177,27 +181,28 @@ EOT
 					if( $i > 0 )
 						$sql .= <<<EOT
 
-							AND
+						AND
+
 EOT
 					;
 
 					$sql .= <<<EOT
 						(
-							f.value${i}_uuid = r${i}.value_uuid
+							(
+								f.value${i}_uuid IS NOT NULL
+								AND r${i}.value_uuid IS NOT NULL
+								AND f.property${i}_uuid IN (${properties_x_list})
+								AND r${i}.property_uuid IN (${properties_x_list})
+							)
 							OR (
-								CASE
-									WHEN f.property${i}_uuid IN (${properties_x_list}) THEN
-										f.value${i}_uuid
-									ELSE
-										NULL
-								END IS NULL
-								AND
-								CASE
-									WHEN r${i}.property_uuid IN (${properties_x_list}) THEN
-										r${i}.value_uuid
-								ELSE
-									NULL
-								END IS NULL
+								(
+									f.value${i}_uuid IS NULL
+									OR f.property${i}_uuid NOT IN (${properties_x_list})
+								)
+								AND	(
+									r${i}.value_uuid IS NULL
+									OR r${i}.property_uuid NOT IN (${properties_x_list})
+								)
 							)
 						)
 EOT
@@ -207,7 +212,8 @@ EOT
 
 				$sql .= <<<'EOT'
 
-					)
+				)
+
 EOT
 				;
 

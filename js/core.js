@@ -1002,7 +1002,7 @@ class Render {
 			for( let e of catsb )
 				e.fadeout();
 
-			for( let e of xpath_eval('html/body/div[@categories]/div[@selections_frame or @clear_selections]') )
+			for( let e of xpath_eval('html/body/div[@categories]/div[@selections_frame or @clear_selections or @select_by_car_frame or @clear_select_by_car]') )
 				e.fadeout();
 
 		};
@@ -1014,11 +1014,14 @@ class Render {
 			plist.fadein();
 			pctrl.fadein();
 			pinfo.fadeout();
+			selsb.fadeout();
+			carbb.fadeout();
 
 			for( let e of catsb )
 				e.fadein();
 
 			setup_categories_selections();
+			setup_categories_select_by_car();
 
 		};
 
@@ -1035,7 +1038,7 @@ class Render {
 			for( let e of catsb )
 				e.fadeout();
 
-			for( let e of xpath_eval('html/body/div[@categories]/div[@selections_frame or @clear_selections]') )
+			for( let e of xpath_eval('html/body/div[@categories]/div[@selections_frame or @clear_selections or @select_by_car_frame or @clear_select_by_car]') )
 				e.fadeout();
 
 		};
@@ -1696,7 +1699,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 	}
 
-	btn_clear_selections_handler(element) {
+	btn_clear_selections_handler(cur_page_state, cur_paging_state, element) {
 
 		let [ new_page_state, new_paging_state ] = this.clone_page_state();
 		let new_selections_state = new_paging_state.selections_state_;
@@ -1707,6 +1710,8 @@ class HtmlPageEvents extends HtmlPageState {
 
 		new_paging_state.selections_checked_ = false;
 		new_page_state.modified_ = true;
+
+		this.render_.rewrite_page(new_page_state);
 
 		let path = 'html/body/div[@categories]/div[@selections_frame and @uuid=\'' + new_page_state.category_ + '\']';
 
@@ -2000,7 +2005,7 @@ class HtmlPageEvents extends HtmlPageState {
 				}
 				else if( attrs.btn && attrs.clear_selections ) {
 
-					new_page_state = this.btn_clear_selections_handler(element);
+					new_page_state = this.btn_clear_selections_handler(cur_page_state, cur_paging_state, element);
 
 				}
 				else if( attrs.btn && attrs.select_by_car ) {
@@ -2110,6 +2115,28 @@ class HtmlPageEvents extends HtmlPageState {
 
 	}
 
+	sse_handler(e) {
+
+		console.log('message: ' + e.data + ', last-event-id: ' + e.lastEventId);
+		let data = JSON.parse(e.data, JSON.dateParser);
+
+		switch( this.sseq_.readyState ) {
+			case EventSource.CONNECTING	:
+				// do something
+				break;
+			case EventSource.OPEN		:
+				// do something
+				break;
+			case EventSource.CLOSED		:
+				// do something
+				break;
+			default						:
+				// this never happens
+				break;
+		}
+
+	}
+
 }
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
@@ -2138,6 +2165,10 @@ class HtmlPageManager extends HtmlPageEvents {
 		this.render_.rewrite_cart();
 		this.render_.show_new_page_state();
 		this.render_.debug_ellapsed(0, 'BOOT:&nbsp;');
+
+		this.sseq_ = new ServerSentEvents({ url : '/resources/core/mq/sse_server.php'});
+		this.sseq_.message = e => this.sse_handler(e);
+		this.sseq_.start();
 
 	}
 

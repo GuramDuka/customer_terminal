@@ -165,6 +165,27 @@ EOT;
 
 		}
 
+		$timer = new \nano_timer;
+
+		$msg = [
+			'entities'	=> [ 'products' ],
+			'products'	=> []
+		];
+
+		foreach( $this->objects_ as $object )
+			$msg['products'][] = $object['uuid'];
+
+		$trigger = new \events_trigger;
+		$trigger->event(json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+		$trigger->fire();
+
+		if( config::$log_timing ) {
+
+			list($ellapsed) = $timer->nano_time();
+	    	error_log('products trigger fired, ellapsed: ' . $timer->ellapsed_string($ellapsed));
+
+		}
+
 	}
 
 };

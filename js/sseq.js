@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------
-class sseq {
+class ServerSentEvents {
 
 /*
 	// https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
@@ -22,62 +22,81 @@ class sseq {
 
 	constructor(params) {
 
-		this.oneshot_ = false;
-		this.timeout_ = 3000;
+		this.start_ = function () {
+
+			try {
+
+				this.msg_source_ = new EventSource(this.url_);
+				this.msg_source_.onmessage	= e => this.message(e);
+				this.msg_source_.onerror	= e => this.error(e);
+
+			}
+			catch( e ) {
+
+				console.log(e);
+				this.sseq_timer_ = setTimeout(this.start_, 100);
+
+			}
+
+		};
 
 		if( params ) {
 
-			if( params.oneshot )
-				this.oneshot_ = params.oneshot;
+			if( params.url )
+				this.url_ = params.url;
 
-			if( params.away )
-				this.away_ = params.away;
+			if( params.start )
+				this.start_ = params.start;
 
-			if( params.back )
-				this.back_ = params.back;
-
-			if( params.timeout )
-				this.timeout = params.timeout;
-
-			this.start();
+			if( this.start_ )
+				this.start();
 
 		}
 
 	}
 
+	message(e) {
+
+  		//let new_element = document.createElement('li');
+		//new_element.innerHTML = 'message: ' + e.data;
+		//eventList.appendChild(new_element);
+		console.log('message: ' + e.data + ', last-event-id: ' + e.lastEventId);
+
+		switch( this.msg_source_.readyState ) {
+			case EventSource.CONNECTING	:
+				// do something
+				break;
+			case EventSource.OPEN		:
+				// do something
+				break;
+			case EventSource.CLOSED		:
+				// do something
+				break;
+			default						:
+				// this never happens
+				break;
+		}
+
+	}
+
+	error(e) {
+		//console.log('EventSource failed.', e);
+	};
+
 	start() {
 
-		this.msg_source_ = new EventSource('/resources/core/mq/message.php');
-		this.msg_source_.onmessage = function (e) {
-
-	  		//let new_element = document.createElement('li');
-			//new_element.innerHTML = 'message: ' + e.data;
-			//eventList.appendChild(new_element);
-
-			switch( mgs_source.readyState ) {
-				case EventSource.CONNECTING	:
-					// do something
-					break;
-				case EventSource.OPEN		:
-					// do something
-					break;
-				case EventSource.CLOSED		:
-					// do something
-					break;
-				default						:
-					// this never happens
-					break;
-			}
-
-		};
-
-		this.msg_source_.onerror = function (e) {
-			console.log('EventSource failed.', e);
-		};
+		this.start_();
 
 	}
 
 	stop() {
+
+		if( this.msg_source_ ) {
+
+			this.msg_source_.close();
+			this.msg_source_ = undefined;
+
+		}
 
 	}
 

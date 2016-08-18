@@ -30,6 +30,7 @@ class remainders_registry_loader extends objects_loader {
 		$st_totals_add = null;
 		$st_totals_sub = null;
 		$st_totals_del = null;
+		$st_zero_totals_del = null;
 
 		$st_totals_op = <<<'EOT'
 			REPLACE INTO
@@ -148,6 +149,32 @@ EOT
 			}
 
 			$st_totals_add->execute();
+
+			// delete zero quantity totals records
+			if( $st_zero_totals_del === null ) {
+
+				$sql = <<<'EOT'
+					DELETE FROM
+						remainders_registry
+					WHERE
+						product_uuid IN (
+							SELECT
+								product_uuid
+							FROM
+								remainders_records_registry
+							WHERE
+								recorder_uuid = :recorder_uuid
+						)
+						AND quantity = 0
+EOT
+				;
+
+				$st_zero_totals_del = $this->infobase_->prepare($sql);
+				$st_zero_totals_del->bindParam(':recorder_uuid', $recorder_uuid, SQLITE3_BLOB);
+
+			}
+
+			$st_zero_totals_del->execute();
 
 			$this->infobase_->sqlite_tx_duration($timer, __FILE__, __LINE__);
 

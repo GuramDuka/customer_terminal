@@ -7,6 +7,7 @@ class config {
 	public static $debug										= false;
 	public static $log_request									= false;
 	public static $log_response									= false;
+	public static $zmq_socket									= 'tcp://127.0.0.1:65481';
 
 };
 //------------------------------------------------------------------------------
@@ -24,9 +25,9 @@ class config extends \config {
 	public static $log_loader_request							= false;
 	public static $explain										= false;
 	public static $rewrite_pages_timing							= false;
-	public static $pager_timing									= true;
+	public static $pager_timing									= false;
 	public static $producter_timing								= false;
-	public static $cart_timing									= true;
+	public static $cart_timing									= false;
 	public static $log_timing									= true;
 	public static $page_size									= 6;
 	public static $convert_images								= false;

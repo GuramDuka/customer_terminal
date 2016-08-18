@@ -153,6 +153,11 @@ EOT
 			. ' ON products (name)'
 		);
 
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'products_order_by_uuid_base_image_uuid'), -4)
+			. ' ON products (uuid, base_image_uuid)'
+		);
+
 		$this->exec(<<<'EOT'
 			CREATE VIRTUAL TABLE IF NOT EXISTS products_fts USING fts4 (uuid BLOB, name TEXT, notindexed=uuid)
 EOT
@@ -508,11 +513,6 @@ EOT
 				quantity		NUMERIC
 			) WITHOUT ROWID
 EOT
-		);
-
-		$this->exec(
-			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'remainders_registry_by_product_quantity'), -4)
-			. ' ON remainders_registry (product_uuid, quantity)'
 		);
 
 		$this->exec(<<<'EOT'
