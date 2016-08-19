@@ -878,12 +878,22 @@ function post_json(path, data, success, error) {
 
 		if( this.readyState === XMLHttpRequest.DONE ) {
 			if( this.status === 200 ) {
+
 				if( success )
 					success(JSON.parse(this.responseText, JSON.dateParser));
+
 			}
 			else if( error ) {
-				error(this);
+
+				error(xhr.status.toString() + ' ' + xhr.statusText + "\n" + xhr.responseText, this);
+
 			}
+			else {
+
+				console.log(xhr.status.toString() + ' ' + xhr.statusText + "\n" + xhr.responseText);
+
+			}
+
 		}
 
 	};

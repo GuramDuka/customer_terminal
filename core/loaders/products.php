@@ -95,6 +95,8 @@ EOT;
 			else
 				$fields[] = $field;
 
+		$event = [];
+
 		$this->infobase_->begin_immediate_transaction();
 
 		$timer = new \nano_timer;
@@ -109,6 +111,8 @@ EOT;
 				$$field = null;
 
 			extract($object);
+
+			$event[$uuid] = null;
 
 			foreach( $fields_uuid as $field )
 				$$field = uuid2bin(@$$field);
@@ -165,21 +169,14 @@ EOT;
 
 		}
 
-		$timer = new \nano_timer;
-
-		$msg = [
-			'entities'	=> [ 'products' ],
-			'products'	=> []
-		];
-
-		foreach( $this->objects_ as $object )
-			$msg['products'][] = $object['uuid'];
+		$timer->start();
 
 		$trigger = new \events_trigger;
-		$trigger->event(json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+		$event = [ 'products' => array_keys($event) ];
+		$trigger->event(json_encode($event, JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION));
 		$trigger->fire();
 
-		if( config::$log_timing ) {
+		if( config::$log_trigger_timing ) {
 
 			list($ellapsed) = $timer->nano_time();
 	    	error_log('products trigger fired, ellapsed: ' . $timer->ellapsed_string($ellapsed));

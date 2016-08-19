@@ -41,6 +41,9 @@ class proxy_handler extends srv1c\handler {
 				],
 				'by_car_selectorer' => [
 					'by_car_selectorer'	=> true
+				],
+				'eventer' => [
+					'eventer'		=> true
 				]
 			];
 

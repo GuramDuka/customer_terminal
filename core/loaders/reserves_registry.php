@@ -21,12 +21,15 @@ class reserves_registry_loader extends objects_loader {
 			else
 				$fields[] = $field;
 
+		$event = [];
+
 		$this->infobase_->begin_immediate_transaction();
 
 		$timer = new \nano_timer;
 
 		$st_records_ins = null;
 		$st_records_del = null;
+		$st_records_sel = null;
 		$st_totals_add = null;
 		$st_totals_sub = null;
 		$st_totals_del = null;
@@ -93,6 +96,27 @@ EOT
 
 			$st_totals_del->execute();
 
+			if( $st_records_sel === null ) {
+
+				$st_records_sel = $this->infobase_->prepare(<<<'EOT'
+					SELECT DISTINCT
+						product_uuid
+					FROM
+						reserves_records_registry
+					WHERE
+						recorder_uuid = :recorder_uuid
+EOT
+				);
+
+				$st_records_sel->bindParam(':recorder_uuid', $recorder_uuid, SQLITE3_BLOB);
+
+			}
+
+			$result = $st_records_sel->execute();
+
+			while( ($record = $result->fetchArray(SQLITE3_NUM)) )
+				$event[bin2uuid($record[0])] = null;
+
 			if( $st_records_del === null ) {
 
 				$st_records_del = $this->infobase_->prepare(<<<'EOT'
@@ -117,6 +141,8 @@ EOT
 						$$field = null;
 
 					extract($record);
+
+					$event[$product_uuid] = null;
 
 					foreach( $fields_uuid as $field )
 						$$field = uuid2bin(@$$field);
@@ -192,6 +218,20 @@ EOT
 			$rps = $seconds != 0 ? bcdiv($cnt, $seconds, 2) : $cnt;
 
 		    error_log(sprintf('%u', $cnt) . ' reserves registry updated, ' . $rps . ' rps, ellapsed: ' . $timer->ellapsed_string($ellapsed));
+
+		}
+
+		$timer->start();
+
+		$trigger = new \events_trigger;
+		$event = [ 'reserves' => array_keys($event) ];
+		$trigger->event(json_encode($event, JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION));
+		$trigger->fire();
+
+		if( config::$log_trigger_timing ) {
+
+			list($ellapsed) = $timer->nano_time();
+	    	error_log('reserves trigger fired, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 		}
 

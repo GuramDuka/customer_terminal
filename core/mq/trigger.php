@@ -5,6 +5,7 @@ namespace { // global
 require_once CORE_DIR . 'startup.php';
 require_once CORE_DIR . 'except.php';
 require_once CORE_DIR . 'utils.php';
+require_once CORE_DIR . 'mq' . DIRECTORY_SEPARATOR . 'infobase.php';
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------
@@ -23,38 +24,21 @@ class events_trigger {
 
 	public function fire() {
 
-		$infobase = new SQLite3(APP_DIR . 'data' . DIRECTORY_SEPARATOR . 'events.sqlite');
-		$infobase->busyTimeout(180000);	// 180 seconds
-		$infobase->enableExceptions(true);
-		$infobase->exec('PRAGMA page_size = 4096');
-		$infobase->exec('PRAGMA journal_mode = WAL');
-		$infobase->exec('PRAGMA count_changes = OFF');
-		$infobase->exec('PRAGMA auto_vacuum = NONE');
-		$infobase->exec('PRAGMA cache_size = -8192');
-		$infobase->exec('PRAGMA synchronous = NORMAL');
-		$infobase->exec('PRAGMA temp_store = MEMORY');
+		$infobase = get_trigger_infobase();
 
-		$infobase->exec('BEGIN /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION');
-
-		$infobase->exec(<<<'EOT'
-			CREATE TABLE IF NOT EXISTS events (
-				timestamp	INTEGER,
-				event		TEXT
-			) /*WITHOUT ROWID*/
-EOT
-		);
-
-		$index_name = 'i' . substr(hash('haval256,3', 'events_by_timestamp'), -4);
-
-		$infobase->exec(<<<EOT
-			CREATE INDEX IF NOT EXISTS ${index_name} ON events (timestamp)
-EOT
-		);
+		$infobase->exec('BEGIN IMMEDIATE /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION');
 
 		$timestamp = $event = null;
-		$st = $infobase->prepare('INSERT INTO events (timestamp, event) VALUES (:timestamp, :event)');
+		$st = $infobase->prepare('INSERT INTO events (timestamp, ready, event) VALUES (:timestamp, 0, :event)');
 		$st->bindParam(':timestamp'	, $timestamp);
 		$st->bindParam(':event'		, $event);
+
+		//ob_start();
+		//debug_print_backtrace();
+		//$trace = ob_get_contents();
+		//ob_end_clean();
+
+		//error_log(var_export($this->events_, true) . "\n" . $trace);
 
 		foreach( $this->events_ as $event ) {
 
@@ -67,54 +51,19 @@ EOT
 
 	}
 
+	public function push() {
+
+		$infobase = get_trigger_infobase();
+
+		$infobase->exec('BEGIN IMMEDIATE /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION');
+
+		$infobase->exec('UPDATE events SET ready = 1 WHERE NOT ready');
+
+		$infobase->exec('COMMIT TRANSACTION');
+
+	}
+
 }
-
-/*
-
-		$read = $write = [];
-
-		try {
-
-			$context = new \ZMQContext();
-			//  Socket to talk to server
-			$requester = new \ZMQSocket($context, \ZMQ::SOCKET_REQ);
-			$requester->connect(config::$zmq_socket);
-
-	    	//  Wait for next request from client
-			$poll = new \ZMQPoll();
-        	$poll->add($requester, \ZMQ::POLL_IN | \ZMQ::POLL_OUT);
-
-	        //$events = $poll->poll($read, $write, 1000);
-
-			//error_log(var_export($read, true) . "\n" . var_export($write, true));
-
-    		$requester->send(json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-
-	        $events = $poll->poll($read, $write, 1000);
-			error_log(var_export($read, true) . "\n" . var_export($write, true));
-
-	        foreach( $read as $r ) {
-
-			   	$reply = $r->recv();
-
-				if( $reply !== 'received' )
-    				throw new \ErrorException('Invalid reply', 1);
-
-			}
-
-		}
-		catch( \Throwable $e ) {
-
-    		error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . __LINE__);
-			throw $e;
-
-		}
-		catch( \ZMQSocketException $e ) {
-
-    		error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . __LINE__);
-			throw $e;
-
-		}*/
 //------------------------------------------------------------------------------
 } // global namespace
 //------------------------------------------------------------------------------

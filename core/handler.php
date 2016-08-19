@@ -72,7 +72,7 @@ abstract class handler {
 
 	public function get_json() {
 
-		return json_encode($this->response_, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT/* | JSON_HEX_QUOT | JSON_HEX_APOS*/);
+		return json_encode($this->response_, JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT/* | JSON_HEX_QUOT | JSON_HEX_APOS*/);
 
 	}
 

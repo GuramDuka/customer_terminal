@@ -177,6 +177,8 @@ class images_loader extends objects_loader {
 			else
 				$fields[] = $field;
 
+		$event = [];
+
 		$this->infobase_->begin_immediate_transaction();
 
 		$timer = new \nano_timer;
@@ -191,6 +193,8 @@ class images_loader extends objects_loader {
 				$$field = null;
 
 			extract($object);
+
+			$event[$uuid] = null;
 
 			foreach( $fields_uuid as $field )
 				$$field = uuid2bin(@$$field);
@@ -239,6 +243,20 @@ class images_loader extends objects_loader {
 			$rps = $seconds != 0 ? bcdiv($cnt, $seconds, 2) : $cnt;
 
 		    error_log(sprintf('%u', $cnt) . ' images updated, ' . $rps . ' rps, ellapsed: ' . $timer->ellapsed_string($ellapsed));
+
+		}
+
+		$timer->start();
+
+		$trigger = new \events_trigger;
+		$event = [ 'images' => array_keys($event) ];
+		$trigger->event(json_encode($event, JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION));
+		$trigger->fire();
+
+		if( config::$log_trigger_timing ) {
+
+			list($ellapsed) = $timer->nano_time();
+    		error_log('images trigger fired, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 		}
 

@@ -27,8 +27,8 @@ class ServerSentEvents {
 			try {
 
 				this.msg_source_ = new EventSource(this.url_);
-				this.msg_source_.onmessage	= e => this.message(e);
-				this.msg_source_.onerror	= e => this.error(e);
+				this.msg_source_.onmessage	= e => this.message_(e);
+				this.msg_source_.onerror	= e => this.error_(e);
 
 			}
 			catch( e ) {
@@ -40,10 +40,26 @@ class ServerSentEvents {
 
 		};
 
+		this.stop_ = function () {
+
+			if( this.msg_source_ ) {
+
+				this.msg_source_.close();
+				this.msg_source_ = undefined;
+
+			}
+
+		};
+
+		this.onerror_restart_ = true;
+
 		if( params ) {
 
 			if( params.url )
 				this.url_ = params.url;
+
+			if( params.onerror_restart )
+				this.onerror_restart_ = params.onerror_restart;
 
 			if( params.start )
 				this.start_ = params.start;
@@ -55,11 +71,15 @@ class ServerSentEvents {
 
 	}
 
-	message(e) {
+	message_(e) {
+
+		if( this.message )
+			return this.message(e);
 
   		//let new_element = document.createElement('li');
 		//new_element.innerHTML = 'message: ' + e.data;
 		//eventList.appendChild(new_element);
+
 		console.log('message: ' + e.data + ', last-event-id: ' + e.lastEventId);
 
 		switch( this.msg_source_.readyState ) {
@@ -79,8 +99,19 @@ class ServerSentEvents {
 
 	}
 
-	error(e) {
+	error_(e) {
+
 		//console.log('EventSource failed.', e);
+		if( this.onerror_restart_ ) {
+
+			this.stop_();
+			this.start_();
+
+		}
+
+		if( this.error )
+			return this.error(e);
+
 	};
 
 	start() {
@@ -91,12 +122,7 @@ class ServerSentEvents {
 
 	stop() {
 
-		if( this.msg_source_ ) {
-
-			this.msg_source_.close();
-			this.msg_source_ = undefined;
-
-		}
+		this.stop_();
 
 	}
 

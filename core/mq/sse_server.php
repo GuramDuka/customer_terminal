@@ -9,12 +9,13 @@ define('CORE_DIR', APP_DIR . 'core' . DIRECTORY_SEPARATOR);
 require_once CORE_DIR . 'startup.php';
 require_once CORE_DIR . 'except.php';
 require_once CORE_DIR . 'utils.php';
-require_once CORE_DIR . 'infobase.php';
+require_once CORE_DIR . 'mq' . DIRECTORY_SEPARATOR . 'infobase.php';
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------
-$max_time = 30;
-ini_set('max_execution_time', $max_time + 2);
+$max_time = 25;
+ini_set('max_execution_time', $max_time + 5);
+ini_set('zlib.output_compression', 'Off');
 $max_time *= 1000000;
 $start = micro_time();
 //------------------------------------------------------------------------------
@@ -30,6 +31,9 @@ try {
 			$last_event_id = intval($request_headers['Last-Event-ID']);
 
 	}
+
+	ob_implicit_flush(true);
+	ob_end_flush();
 
 	header('Content-Type: text/event-stream');
 	header('Cache-Control: no-cache');
@@ -74,7 +78,7 @@ try {
 
 	}*/
 
-	$context = null;
+	/*$context = null;
 	$responder = null;
 
 	while( micro_time() - $start < $max_time ) {
@@ -82,7 +86,7 @@ try {
 		$context = new ZMQContext(1, false);
 
 		//  Socket to talk to clients
-		$responder = new ZMQSocket($context, ZMQ::SOCKET_REP/*, 'server', function (ZMQSocket $socket, $persistent_id = null) {
+		$responder = new ZMQSocket($context, ZMQ::SOCKET_REP, 'server', function (ZMQSocket $socket, $persistent_id = null) {
 
 	    	if( $persistent_id === 'server' ) {
         		$socket->bind(config::$zmq_socket, true);
@@ -91,7 +95,7 @@ try {
         		//$socket->connect("tcp://localhost:12122");
 			}
 
-		}*/);
+		});
 
 		try {
 
@@ -117,12 +121,38 @@ try {
 
 	//error_log('sse handler started');
 
-	$read = $write = [];
+	$read = $write = [];*/
+
+	$infobase = get_trigger_infobase();
+
+	$st = $infobase->prepare(<<<'EOT'
+		SELECT
+			rowid,
+			timestamp,
+			event
+		FROM
+			events
+		WHERE
+			ready
+			AND NOT sent
+		ORDER BY
+			timestamp,
+			rowid
+EOT
+	);
+
+	$rowid = null;
+
+	$st_upd = $infobase->prepare('UPDATE events SET sent = 1 WHERE rowid = :rowid');
+	$st_upd->bindParam(':rowid', $rowid);
+
+	$st_del = $infobase->prepare('DELETE FROM events WHERE rowid = :rowid');
+	$st_del->bindParam(':rowid', $rowid);
 
 	while( micro_time() - $start < $max_time ) {
 
     	//  Wait for next request from client
-		$poll = new ZMQPoll();
+		/*$poll = new ZMQPoll();
         $poll->add($responder, ZMQ::POLL_IN | ZMQ::POLL_OUT);
 
         $events = $poll->poll($read, $write, 1000);
@@ -155,10 +185,48 @@ try {
 	    	//  Send reply back to client
 	    	$responder->send('received');
 
+		}*/
+
+		// Optional: kill all other output buffering
+		while( ob_get_level() > 0 )
+		    ob_end_clean();
+
+		$infobase->exec('BEGIN IMMEDIATE /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION');
+
+		$result = $st->execute();
+
+		while( ($record = $result->fetchArray(SQLITE3_ASSOC)) && micro_time() - $start < $max_time ) {
+
+			extract($record);
+
+			$event = str_replace("\n", '', $event);
+			$event = str_replace("\r", '', $event);
+
+			//error_log("${rowid}, ${timestamp}, ${event}");
+
+			++$last_event_id;
+
+			echo "retry: 100\ndata: ${event}\nid: ${last_event_id}\n\n";
+
+			//ob_flush();
+			//flush();
+
+			$st_upd->execute();
+			//$st_del->execute();
+
 		}
 
-		ob_flush();
-		flush();
+		//if( $all_records_processed )
+		//	$st_e->execute();
+
+		//echo "retry: 100\n";
+		//echo 'data: {"timestamp": "' . date(DATE_ISO8601) . '"}' . "\n";
+		//echo 'id: ' . (++$last_event_id) . "\n";
+		//echo "\n\n";
+
+		$infobase->exec('COMMIT TRANSACTION');
+
+		time_nanosleep(1, 0); // 1s
 
 	}
 

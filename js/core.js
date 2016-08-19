@@ -219,7 +219,7 @@ class Render {
 		for( let a of items ) {
 
 			let i = parseInt(a.attributes.pitem.value, 10);
-			let uuid = '', name = '', img_url = '', price = '', quantity = '';
+			let uuid = '', name = '', img_uuid = '', img_url = '', price = '', quantity = '';
 
 			if( i < products.length ) {
 
@@ -227,6 +227,7 @@ class Render {
 
 				uuid		= product.uuid;
 				name		= product.name + ' [' + product.code + ']';
+				img_uuid 	= product.img;
 				img_url 	= product.img_url;
 				price		= Math.trunc(product.price) + '&nbsp;₽';
 				quantity	= this.get_remainder(product) + this.get_reserve(product);
@@ -247,8 +248,10 @@ class Render {
 				a.removeAttribute('reserve');
 			}
 
+			let img = xpath_eval_single('div[@pimg]', a);
+			img.setAttribute('uuid', img_uuid);
+			img.style.backgroundImage = 'url(' + img_url + ')';
 
-			xpath_eval_single('div[@pimg]'		, a).style.backgroundImage = 'url(' + img_url + ')';
 			xpath_eval_single('p[@pname]'		, a).innerHTML	= name;
 			xpath_eval_single('p[@pprice]'		, a).innerHTML	= price;
 			xpath_eval_single('p[@pquantity]'	, a).innerHTML	= quantity;
@@ -2115,25 +2118,156 @@ class HtmlPageEvents extends HtmlPageState {
 
 	}
 
-	sse_handler(e) {
+	sse_handler_(e) {
 
-		console.log('message: ' + e.data + ', last-event-id: ' + e.lastEventId);
-		let data = JSON.parse(e.data, JSON.dateParser);
+		if( e.data ) {
 
-		switch( this.sseq_.readyState ) {
-			case EventSource.CONNECTING	:
-				// do something
-				break;
-			case EventSource.OPEN		:
-				// do something
-				break;
-			case EventSource.CLOSED		:
-				// do something
-				break;
-			default						:
-				// this never happens
-				break;
+			//console.log('message: ' + e.data + ', last-event-id: ' + e.lastEventId);
+			let data = JSON.parse(e.data, JSON.dateParser);
+
+			//if( data.timestamp )
+			//	console.log(data.timestamp + ', last-event-id: ' + e.lastEventId);
+			let reload = false;
+			let ptable = xpath_eval_single('html/body/div[@plist]/div[@ptable]');
+			let walk = function (uuids) {
+
+				for( let uuid of uuids ) {
+
+					let items = xpath_eval('div[@pitem and @uuid=\'' + uuid + '\']', ptable);
+
+					if( items.length === 0 )
+						continue;
+
+					reload = true;
+
+				}
+
+			};
+
+			if( data.products )
+				walk(data.products);
+
+			if( data.prices )
+				walk(data.prices);
+
+			if( data.remainders )
+				walk(data.remainders);
+
+			if( data.reserves )
+				walk(data.reserves);
+
+			if( reload ) {
+
+				this.render_.rewrite_page();
+
+				let date = new Date;
+				console.log(date.toLocaleFormat('%d.%m.%Y %H:%M:%S') + ': products on current page changed, reloaded');
+
+			}
+
 		}
+
+	}
+
+	sse_start() {
+		this.sseq_timer_ = setTimeout(() => this.sse_handler(), 1000);
+	}
+
+	sse_success_handler(events) {
+
+		try {
+
+			let ids = [];
+			let reload = false;
+			let table = xpath_eval_single('html/body/div[@plist]/div[@ptable]');
+			let m = {};
+
+			for( let e of xpath_eval('div[@pitem]', table) )
+				m[e.attributes.uuid.value] = true;
+
+			for( let e of xpath_eval('div[@pitem]/div[@pimg]', table) )
+				m[e.attributes.uuid.value] = true;
+
+			let walk = function (uuids) {
+
+				for( let uuid of uuids )
+					if( m[uuid] )
+						reload = true;
+
+			};
+
+			for( let e of events ) {
+
+				if( e.products )
+					walk(e.products);
+
+				if( e.prices )
+					walk(e.prices);
+
+				if( e.remainders )
+					walk(e.remainders);
+
+				if( e.reserves )
+					walk(e.reserves);
+
+				if( e.images )
+					walk(e.images);
+
+				ids.push(e.id);
+
+			}
+
+			if( reload ) {
+
+				this.render_.rewrite_page();
+
+				let date = new Date;
+				console.log(date.toLocaleFormat('%d.%m.%Y %H:%M:%S') + ': products on current page changed, reloaded');
+
+			}
+
+			let request = {
+				'module'	: 'eventer',
+				'handler'	: 'eventer',
+				'received'	: ids
+			};
+
+			post_json('proxy.php',request);
+
+		}
+		catch( e ) {
+
+			console.log(e.message + "\n" + e.stack);
+			this.sse_start();
+			throw e;
+
+		}
+
+		this.sse_start();
+
+	}
+
+	sse_error_handler(msg, xhr) {
+
+		console.log(msg);
+		this.sse_start();
+
+	}
+
+	sse_handler() {
+
+		let request = {
+			'module'	: 'eventer',
+			'handler'	: 'eventer',
+			'get'		: true
+		};
+
+		post_json(
+			'proxy.php',
+			request,
+			(data)		=> this.sse_success_handler(data.events),
+			(msg, xhr)	=> this.sse_error_handler(msg, xhr)
+		);
 
 	}
 
@@ -2166,9 +2300,11 @@ class HtmlPageManager extends HtmlPageEvents {
 		this.render_.show_new_page_state();
 		this.render_.debug_ellapsed(0, 'BOOT:&nbsp;');
 
-		this.sseq_ = new ServerSentEvents({ url : '/resources/core/mq/sse_server.php'});
-		this.sseq_.message = e => this.sse_handler(e);
-		this.sseq_.start();
+		//this.sseq_ = new ServerSentEvents({ url : '/resources/core/mq/sse_server.php'});
+		//this.sseq_.message = e => this.sse_handler_(e);
+		//this.sseq_.start();
+
+		this.sse_start();
 
 	}
 

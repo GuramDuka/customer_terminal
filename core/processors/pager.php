@@ -296,6 +296,7 @@ EOT
 				'price'		=> $price,
 				'remainder'	=> $remainder,
 				'reserve'	=> $reserve,
+				'img'		=> bin2uuid($base_image_uuid),
 				'img_url'	=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext), ENT_HTML5)
 			];
 
