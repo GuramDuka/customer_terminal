@@ -911,7 +911,7 @@ class Render {
 
 		let setup_categories_selections = function () {
 
-			let f = new_page_state.category_ !== null_uuid;
+			let f = new_page_state.category_ !== null_uuid && new_page_state.product_ === null_uuid;
 
 			selsb.fade(f);
 			carbb.fade(f);
@@ -947,7 +947,7 @@ class Render {
 
 		let setup_categories_select_by_car = function () {
 
-			let f = new_page_state.category_ !== null_uuid;
+			let f = new_page_state.category_ !== null_uuid && new_page_state.product_ === null_uuid;
 
 			selsb.fade(f);
 			carbb.fade(f);
