@@ -8,6 +8,7 @@ define('CORE_DIR', APP_DIR . 'core' . DIRECTORY_SEPARATOR);
 require_once CORE_DIR . 'startup.php';
 require_once CORE_DIR . 'utils.php';
 require_once CORE_DIR . 'infobase.php';
+require_once CORE_DIR . 'mq' . DIRECTORY_SEPARATOR . 'infobase.php';
 //------------------------------------------------------------------------------
 try {
 
@@ -27,14 +28,18 @@ try {
 
 	}
 
+	$tinfobase = get_trigger_infobase();
+
 	$timer->restart();
 	$infobase->exec('VACUUM');
+	$tinfobase->exec('VACUUM');
 	$ellapsed = $timer->last_nano_time();
 
     error_log('SQLITE VACUUM, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 	$timer->restart();
 	$infobase->exec('ANALYZE');
+	$tinfobase->exec('ANALYZE');
 	$ellapsed = $timer->last_nano_time();
 
     error_log('SQLITE ANAYLYZE, ellapsed: ' . $timer->ellapsed_string($ellapsed));

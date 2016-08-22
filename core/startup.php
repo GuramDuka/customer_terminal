@@ -44,6 +44,37 @@ set_error_handler('e_handler', E_WARNING | E_NOTICE/*E_ALL*/);
 //------------------------------------------------------------------------------
 require_once CORE_DIR . 'config.php';
 //------------------------------------------------------------------------------
+function rotate_logs() {
+
+	$pi = pathinfo(LOG_FILE);
+	$dir = $pi['dirname'];
+	$ext = mb_strtolower($pi['extension']);
+
+	$a = scandir($dir, SCANDIR_SORT_DESCENDING);
+	$b = [];
+
+	foreach( $a as $index => $file_name ) {
+
+		if( $file_name === '.' || $file_name === '..' )
+			continue;
+
+		$path_name = $dir . DIRECTORY_SEPARATOR . $file_name;
+		$fi = pathinfo($path_name);
+
+		if( mb_strtolower($fi['extension']) !== $ext )
+			continue;
+
+		$b[] = $path_name;
+
+	}
+
+	for( $i = count($b) - 1; $i >= config::$log_files && $i >= 0; $i-- )
+		unlink($b[$i]);
+
+}
+//------------------------------------------------------------------------------
+rotate_logs();
+//------------------------------------------------------------------------------
 } // global namespace
 //------------------------------------------------------------------------------
 ?>

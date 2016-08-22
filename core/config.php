@@ -5,6 +5,7 @@ namespace { // global
 class config {
 
 	public static $debug										= false;
+	public static $log_files									= 10;
 	public static $log_request									= false;
 	public static $log_response									= false;
 	//public static $zmq_socket									= 'tcp://127.0.0.1:65481';
