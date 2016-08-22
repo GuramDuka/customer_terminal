@@ -25,6 +25,7 @@ ini_set('error_log'					, LOG_FILE);
 ini_set('log_errors'				, 'On');
 ini_set('display_errors'			, 'On');
 ini_set('display_startup_errors'	, 'On');
+ini_set('zlib.output_compression'	, 'Off');
 //------------------------------------------------------------------------------
 require_once CORE_DIR . 'version.php';
 //------------------------------------------------------------------------------

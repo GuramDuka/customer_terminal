@@ -60,12 +60,16 @@ class Idle {
 		this.timeout_handler_call_	= () => this.timeout_handler();
 
 		this.oneshot_ = false;
+		this.retry_ = false;
 		this.timeout_ = 3000;
 
 		if( params ) {
 
 			if( params.oneshot )
 				this.oneshot_ = params.oneshot;
+
+			if( params.retry )
+				this.retry_ = params.retry;
 
 			if( params.away )
 				this.away_ = params.away;
@@ -124,8 +128,16 @@ class Idle {
 			if( this.away_ )
 				this.away_();
 
-			if( this.oneshot_ )
+			if( this.oneshot_ ) {
+
 				this.stop();
+
+			}
+			else if( this.retry_ ) {
+
+				this.setup_away_timer(this.timeout_);
+
+			}
 
 		}
 		else {
@@ -144,7 +156,10 @@ class Idle {
 		for( let event of this.events )
 			window.addEventListener(event, this.activity_handler_call_, true);
 
-		this.setup_away_timer(this.timeout = timeout);
+		if( timeout )
+			this.timeout = timeout;
+
+		this.setup_away_timer(this.timeout_);
 
 	}
 

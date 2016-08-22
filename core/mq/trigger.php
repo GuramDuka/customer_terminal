@@ -24,6 +24,7 @@ class events_trigger {
 
 	public function fire() {
 
+		config::$sqlite_cache_size = 4096;
 		$infobase = get_trigger_infobase();
 
 		$infobase->exec('BEGIN IMMEDIATE /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION');

@@ -10,9 +10,14 @@ require_once CORE_DIR . 'utils.php';
 require_once CORE_DIR . 'infobase.php';
 require_once CORE_DIR . 'mq' . DIRECTORY_SEPARATOR . 'infobase.php';
 //------------------------------------------------------------------------------
+ini_set('max_execution_time', 600);
+//------------------------------------------------------------------------------
 try {
 
 	$timer = new \nano_timer;
+
+	config::$sqlite_cache_size = 262144;
+	config::$sqlite_temp_store = 'FILE';
 
 	$infobase = new srv1c\infobase;
 	$infobase->set_create_if_not_exists(false);

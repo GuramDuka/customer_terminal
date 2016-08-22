@@ -123,6 +123,7 @@ try {
 
 	$read = $write = [];*/
 
+	config::$sqlite_cache_size = 4096;
 	$infobase = get_trigger_infobase();
 
 	$st = $infobase->prepare(<<<'EOT'

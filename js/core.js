@@ -2271,6 +2271,15 @@ class HtmlPageEvents extends HtmlPageState {
 
 	}
 
+	idle_away_reload_handler() {
+
+		this.render_.rewrite_page();
+
+		let date = new Date;
+		console.log(date.toLocaleFormat('%d.%m.%Y %H:%M:%S') + ': current page reloaded on user idle away');
+
+	}
+
 }
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
@@ -2305,6 +2314,15 @@ class HtmlPageManager extends HtmlPageEvents {
 		//this.sseq_.start();
 
 		this.sse_start();
+
+		this.idle_away_reloader_ =
+			new Idle({
+				oneshot	: false,
+				retry	: true,
+				start	: true,
+				timeout	: 60000, // 60s
+				away	: () => this.idle_away_reload_handler()
+			});
 
 	}
 

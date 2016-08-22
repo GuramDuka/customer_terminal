@@ -791,9 +791,10 @@ function sleep(ms) {
 //------------------------------------------------------------------------------
 function mili_time() {
 
-	let t = new Date();
+	let t = new Date;
 
-	return t.getUTCSeconds() * 1000 + t.getUTCMilliseconds();
+	return t.getTime();
+	//return t.getUTCSeconds() * 1000 + t.getUTCMilliseconds();
 	//return window.performance.timing.navigationStart + window.performance.now();
 
 }

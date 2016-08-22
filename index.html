@@ -132,16 +132,38 @@
 		<iframe cheque_print copy="1" src="/resources/assets/print/cheque_template.html"></iframe>
 		<iframe cheque_print copy="2" src="/resources/assets/print/cheque_template.html"></iframe>
 
+		<!--
 		<script type="text/javascript" src="js/misc.js"></script>
 		<script type="text/javascript" src="js/idle.js"></script>
 		<script type="text/javascript" src="js/sseq.js"></script>
 		<script type="text/javascript" src="js/core.js"></script>
+		-->
 
-		<!--<script type="text/javascript" src="js/prefetch.js"></script>-->
-		<!--<script type="text/javascript" src="js/refresh.js"></script>-->
+		<!--
+		<script type="text/javascript" src="js/prefetch.js"></script>
+		<script type="text/javascript" src="js/refresh.js"></script>
+		-->
 
 		<script type="text/javascript">
-			document.addEventListener('DOMContentLoaded', core);
+
+			// http://www.nczonline.net/blog/2009/07/28/the-best-way-to-load-external-javascript/
+			function load_script(url, callback) {
+
+				let script		= document.createElement('script');
+				script.type		= 'text/javascript';
+				script.onload	= callback;
+				script.src		= url;
+
+				document.getElementsByTagName('head')[0].appendChild(script);
+
+			}
+
+			load_script('js/misc.js',
+				() => load_script('js/idle.js',
+					() => load_script('js/sseq.js',
+						() => load_script('js/core.js', () => core()))));
+
+			//document.addEventListener('DOMContentLoaded', core);
 		</script>
 
 	</body>

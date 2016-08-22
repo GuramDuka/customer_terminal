@@ -11,13 +11,21 @@ function get_trigger_infobase() {
 	$infobase = new SQLite3(APP_DIR . 'data' . DIRECTORY_SEPARATOR . 'events.sqlite');
 	$infobase->busyTimeout(180000);	// 180 seconds
 	$infobase->enableExceptions(true);
-	$infobase->exec('PRAGMA page_size = 4096');
+
+	$pgsz = config::$sqlite_page_size;
+	$infobase->exec("PRAGMA page_size = ${pgsz}");
+
 	$infobase->exec('PRAGMA journal_mode = WAL');
 	$infobase->exec('PRAGMA count_changes = OFF');
 	$infobase->exec('PRAGMA auto_vacuum = NONE');
-	$infobase->exec('PRAGMA cache_size = -8192');
+
+	$cachesz = config::$sqlite_cache_size;
+	$infobase->exec("PRAGMA cache_size = -${cachesz}");
+
 	$infobase->exec('PRAGMA synchronous = NORMAL');
-	$infobase->exec('PRAGMA temp_store = MEMORY');
+
+	$temp_store = config::$sqlite_temp_store;
+	$infobase->exec("PRAGMA temp_store = ${temp_store}");
 
 	$infobase->exec(<<<'EOT'
 		CREATE TABLE IF NOT EXISTS events (
