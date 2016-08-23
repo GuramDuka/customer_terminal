@@ -203,7 +203,7 @@ EOT
 
 		extract($this->request_);
 
-		$this->infobase_->begin_immediate_transaction();
+		$this->infobase_->begin_transaction();
 
 		if( @$order !== null )
 			$this->handle_order($order);
@@ -278,7 +278,7 @@ EOT
 
 		}
 
-		$this->infobase_->commit_immediate_transaction();
+		$this->infobase_->commit_transaction();
 
 		$ellapsed = $timer->nano_time(false);
 

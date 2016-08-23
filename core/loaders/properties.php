@@ -21,7 +21,7 @@ class properties_loader extends objects_loader {
 			else
 				$fields[] = $field;
 
-		$this->infobase_->begin_immediate_transaction();
+		$this->infobase_->begin_transaction();
 
 		$timer = new \nano_timer;
 
@@ -76,7 +76,7 @@ class properties_loader extends objects_loader {
 
 		}
 
-		$this->infobase_->commit_immediate_transaction();
+		$this->infobase_->commit_transaction();
 
 		if( config::$log_timing ) {
 

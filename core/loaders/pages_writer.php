@@ -23,7 +23,7 @@ function rewrite_pages($infobase) {
 
 	$pgupd = 0;
 
-	$infobase->begin_immediate_transaction();
+	$infobase->begin_transaction();
 
 	$timer = new \nano_timer;
 	$tx_timer = new \nano_timer;
@@ -275,10 +275,10 @@ EOT
 			// WHERE pgnon IS NULL;
 
 			$category_table = 'products_' . uuid2table_name(bin2uuid($category_uuid)) . 'pages';
-			$infobase->exec("DROP TABLE IF EXISTS ${category_table}");
-			$infobase->exec($infobase->create_table_products_pages($category_table));
+			$new_category_table = "${category_table}_new";
+			$infobase->exec($infobase->products_pages_ddl($new_category_table));
 
-			$st = $infobase->prepare("INSERT INTO ${category_table} (${gf}) VALUES (${gv})");
+			$st = $infobase->prepare("INSERT INTO ${new_category_table} (${gf}) VALUES (${gv})");
 
 			extract($v);
 
@@ -336,7 +336,7 @@ EOT
 
 				$st->execute();
 
-				$infobase->sqlite_tx_duration($tx_timer, __FILE__, __LINE__);
+				//$infobase->sqlite_tx_duration($tx_timer, __FILE__, __LINE__);
 
 			}
 
@@ -349,7 +349,13 @@ EOT
 
 			}
 
-			$infobase->sqlite_tx_duration($tx_timer, __FILE__, __LINE__);
+			//$infobase->sqlite_tx_duration($tx_timer, __FILE__, __LINE__);
+
+			$infobase->commit_transaction();
+			$infobase->begin_transaction('IMMEDIATE');
+			$infobase->exec("DROP TABLE IF EXISTS ${category_table}");
+			$infobase->exec("ALTER TABLE ${new_category_table} RENAME TO ${category_table}");
+			$infobase->exec("ANALYZE ${category_table}");
 
 		}
 
@@ -357,7 +363,7 @@ EOT
 
 	}
 
-	$infobase->commit_immediate_transaction();
+	$infobase->commit_transaction();
 
 	if( $pgupd !== 0 ) {
 

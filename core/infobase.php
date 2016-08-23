@@ -93,13 +93,13 @@ class infobase extends \SQLite3 {
     }
 
 
-	public function begin_immediate_transaction($type = 'DEFERRED') {
+	public function begin_transaction($type = 'DEFERRED') {
 
 		$this->exec("BEGIN ${type} /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION");
 
 	}
 
-	public function commit_immediate_transaction() {
+	public function commit_transaction() {
 
 		$this->exec('COMMIT TRANSACTION');
 
@@ -582,7 +582,7 @@ EOT
 		$dimensions = [ 'shop' => '_uuid', 'product' => '_uuid' ];
 		$this->create_unique_indexes_on_registry('system_remainders_registry', $dimensions);
 
-		$this->exec($this->create_table_products_pages('products_pages'));
+		$this->exec($this->products_pages_ddl('products_pages'));
 
 		$this->exec(<<<'EOT'
 			CREATE TABLE IF NOT EXISTS cart (
@@ -664,7 +664,7 @@ EOT
 
 	}
 
-	public function create_table_products_pages($table_name) {
+	public function products_pages_ddl($table_name) {
 
 		$sql = '';
 
@@ -737,8 +737,8 @@ EOT
 
 			$timer->reset();
 
-			$this->commit_immediate_transaction();
-			$this->begin_immediate_transaction();
+			$this->commit_transaction();
+			$this->begin_transaction();
 
 			if( config::$log_sqlite_tx_duration )
    				error_log('sqlite tx duration reached, ellapsed: ' . $timer->ellapsed_string($ellapsed)/* . " ${src_file_name}, ${src_line_number}"*/);

@@ -24,7 +24,7 @@ class producter_handler extends handler {
 
 		$product_uuid = uuid2bin($product);
 
-		$infobase->begin_immediate_transaction();
+		$infobase->begin_transaction();
 
 		/*$infobase->exec(<<<EOT
 			CREATE TEMP TABLE IF NOT EXISTS t_properties (
@@ -291,7 +291,7 @@ EOT
 
 		}
 
-		$infobase->commit_immediate_transaction();
+		$infobase->commit_transaction();
 
 		$ellapsed = $timer->nano_time(false);
 

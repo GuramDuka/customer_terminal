@@ -27,7 +27,7 @@ class categorer_handler extends handler {
 		$parent_uuid = uuid2bin($parent);
 		$category_table = 'products_' . uuid2table_name($parent_uuid) . 'pages';
 
-		$this->infobase_->begin_immediate_transaction();
+		$this->infobase_->begin_transaction();
 
 		$where = $parent === null ? 'IS NULL' : '= :parent_uuid';
 
@@ -72,7 +72,7 @@ EOT
 
 		$this->response_['categories'] = $categories;
 
-		$this->infobase_->commit_immediate_transaction();
+		$this->infobase_->commit_transaction();
 
 		$ellapsed = $timer->nano_time(false);
 

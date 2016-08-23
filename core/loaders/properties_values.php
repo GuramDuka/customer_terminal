@@ -21,7 +21,7 @@ class properties_values_loader extends objects_loader {
 			else
 				$fields[] = $field;
 
-		$this->infobase_->begin_immediate_transaction();
+		$this->infobase_->begin_transaction();
 
 		$timer = new \nano_timer;
 
@@ -79,7 +79,7 @@ class properties_values_loader extends objects_loader {
 		$entity = $this->infobase_->escapeString('products_pages');
 		$this->infobase_->exec("REPLACE INTO dirties (entity) VALUES ('${entity}')");
 
-		$this->infobase_->commit_immediate_transaction();
+		$this->infobase_->commit_transaction();
 
 		if( config::$log_timing ) {
 

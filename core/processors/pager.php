@@ -63,7 +63,7 @@ EOT
 
 		extract($this->request_);
 
-		$this->infobase_->begin_immediate_transaction();
+		$this->infobase_->begin_transaction();
 
 		$category_uuid = uuid2bin($category);
 		$category_x = bin2uuid($category_uuid, '');
@@ -326,7 +326,7 @@ EOT
 
 		$this->response_['page_size'] = config::$page_size;
 
-		$this->infobase_->commit_immediate_transaction();
+		$this->infobase_->commit_transaction();
 
 		$ellapsed = $timer->nano_time(false);
 
