@@ -11,6 +11,7 @@ require_once CORE_DIR . 'mq' . DIRECTORY_SEPARATOR . 'infobase.php';
 //------------------------------------------------------------------------------
 function get_events() {
 
+	config::$sqlite_cache_size = 4096;
 	$infobase = get_trigger_infobase();
 
 	$st = $infobase->prepare(<<<'EOT'
@@ -53,6 +54,7 @@ EOT
 //------------------------------------------------------------------------------
 function confirm_receipt_events($events_ids) {
 
+	config::$sqlite_cache_size = 4096;
 	$infobase = get_trigger_infobase();
 
 	$rowid = null;

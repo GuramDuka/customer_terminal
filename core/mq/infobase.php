@@ -9,7 +9,7 @@ require_once CORE_DIR . 'utils.php';
 function get_trigger_infobase() {
 
 	$infobase = new SQLite3(APP_DIR . 'data' . DIRECTORY_SEPARATOR . 'events.sqlite');
-	$infobase->busyTimeout(180000);	// 180 seconds
+	$infobase->busyTimeout(config::$sqlite_busy_timeout);
 	$infobase->enableExceptions(true);
 
 	$pgsz = config::$sqlite_page_size;

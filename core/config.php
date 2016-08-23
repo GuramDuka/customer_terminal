@@ -9,7 +9,7 @@ class config {
 	public static $log_request									= false;
 	public static $log_response									= false;
 	//public static $zmq_socket									= 'tcp://127.0.0.1:65481';
-	public static $sqlite_busy_timeout							= 180000;	// 180 seconds
+	public static $sqlite_busy_timeout							= 1200000;	// 1200 seconds - 20 minutes
 	public static $sqlite_tx_duration							= 50000000;	// in nanoseconds, 1000ns == 1micros, 1000000ns == 1ms, 1000000000ns = 1s. 50ms by default
 	public static $sqlite_page_size								= 4096;
 	public static $sqlite_cache_size							= 262144;	// 131072, 262144, 524288
@@ -31,7 +31,7 @@ class config extends \config {
 	public static $producter_timing								= false;
 	public static $cart_timing									= false;
 	public static $log_timing									= true;
-	public static $log_trigger_timing							= true;
+	public static $log_trigger_timing							= false;
 	public static $page_size									= 6;
 	public static $convert_images								= false;
 	public static $images_format								= 'jpg';

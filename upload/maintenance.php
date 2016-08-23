@@ -10,8 +10,6 @@ require_once CORE_DIR . 'utils.php';
 require_once CORE_DIR . 'infobase.php';
 require_once CORE_DIR . 'mq' . DIRECTORY_SEPARATOR . 'infobase.php';
 //------------------------------------------------------------------------------
-ini_set('max_execution_time', 600);
-//------------------------------------------------------------------------------
 try {
 
 	$timer = new \nano_timer;
