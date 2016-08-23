@@ -162,6 +162,8 @@ EOT
 				continue;
 			if( $property_name === 'Не выгружать на сайт' )
 				continue;
+			if( $property_name === 'Первая страница' )
+				continue;
 
 			$properties[] = [
 				'property_uuid'	=> bin2uuid($property_uuid),

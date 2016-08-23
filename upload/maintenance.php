@@ -14,7 +14,7 @@ try {
 
 	$timer = new \nano_timer;
 
-	config::$sqlite_cache_size = 262144;
+	config::$sqlite_cache_size = 524288;
 	config::$sqlite_temp_store = 'FILE';
 
 	$infobase = new srv1c\infobase;

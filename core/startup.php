@@ -26,6 +26,7 @@ ini_set('log_errors'				, 'On');
 ini_set('display_errors'			, 'On');
 ini_set('display_startup_errors'	, 'On');
 ini_set('zlib.output_compression'	, 'Off');
+ini_set('zend.enable_gc'			, 0);
 //------------------------------------------------------------------------------
 require_once CORE_DIR . 'version.php';
 //------------------------------------------------------------------------------

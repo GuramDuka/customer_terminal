@@ -159,6 +159,9 @@ EOT;
 
 		$this->infobase_->commit_transaction();
 
+		if( config::$analyze_sqlite_tables )
+			$this->infobase_->exec('ANALYZE products');
+
 		if( config::$log_timing ) {
 
 			list($ellapsed, $seconds) = $timer->nano_time();

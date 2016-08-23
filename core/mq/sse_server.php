@@ -16,6 +16,7 @@ require_once CORE_DIR . 'mq' . DIRECTORY_SEPARATOR . 'infobase.php';
 $max_time = 25;
 ini_set('max_execution_time', $max_time + 5);
 ini_set('zlib.output_compression', 'Off');
+ini_set('zend.enable_gc', 1);
 $max_time *= 1000000;
 $start = micro_time();
 //------------------------------------------------------------------------------

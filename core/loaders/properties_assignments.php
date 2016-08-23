@@ -78,6 +78,9 @@ class properties_assignments_loader extends objects_loader {
 
 		$this->infobase_->commit_transaction();
 
+		if( config::$analyze_sqlite_tables )
+			$this->infobase_->exec('ANALYZE properties_assignments');
+
 		if( config::$log_timing ) {
 
 			list($ellapsed, $seconds) = $timer->nano_time();
