@@ -275,10 +275,9 @@ EOT
 			// WHERE pgnon IS NULL;
 
 			$category_table = 'products_' . uuid2table_name(bin2uuid($category_uuid)) . 'pages';
-			$new_category_table = "${category_table}_new";
-			$infobase->exec($infobase->products_pages_ddl($new_category_table));
+			$infobase->exec($infobase->products_pages_ddl($category_table));
 
-			$st = $infobase->prepare("INSERT INTO ${new_category_table} (${gf}) VALUES (${gv})");
+			$st = $infobase->prepare("REPLACE INTO ${category_table} (${gf}) VALUES (${gv})");
 
 			extract($v);
 
@@ -336,9 +335,9 @@ EOT
 
 				$st->execute();
 
-				$infobase->sqlite_tx_duration($tx_timer, __FILE__, __LINE__);
-
 			}
+
+			$infobase->exec("DELETE FROM ${category_table} WHERE pgnon > ${pgnon}");
 
 			$pgupd += $pgnon < 0 ? 0 : ($pgnon >> 4) + 1;
 
@@ -351,17 +350,8 @@ EOT
 
 			$infobase->sqlite_tx_duration($tx_timer, __FILE__, __LINE__);
 
-			$infobase->commit_transaction();
-			$infobase->begin_transaction('IMMEDIATE');
-
-			$infobase->exec("DROP TABLE IF EXISTS ${category_table}");
-			$infobase->exec("ALTER TABLE ${new_category_table} RENAME TO ${category_table}");
-
 			if( config::$analyze_sqlite_tables )
 				$infobase->exec("ANALYZE ${category_table}");
-
-			$infobase->commit_transaction();
-			$infobase->begin_transaction();
 
 		}
 
