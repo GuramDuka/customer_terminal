@@ -42,7 +42,7 @@ function e_handler($errno, $errstr, $errfile, $errline, array $errcontext) {
 
 }
 //------------------------------------------------------------------------------
-set_error_handler('e_handler', E_WARNING | E_NOTICE/*E_ALL*/);
+set_error_handler('e_handler', E_WARNING | E_NOTICE | E_ALL);
 //------------------------------------------------------------------------------
 require_once CORE_DIR . 'config.php';
 //------------------------------------------------------------------------------

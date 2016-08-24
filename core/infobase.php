@@ -134,12 +134,14 @@ EOT
 
 		$this->exec(<<<'EOT'
 			CREATE TABLE IF NOT EXISTS products (
-				uuid			BLOB PRIMARY KEY ON CONFLICT REPLACE,
-				marked			INTEGER,
-				code			INTEGER,
-				name			TEXT,
-				article			TEXT,
-				base_image_uuid	BLOB
+				uuid				BLOB PRIMARY KEY ON CONFLICT REPLACE,
+				marked				INTEGER,
+				code				INTEGER,
+				name				TEXT,
+				article				TEXT,
+				base_image_uuid		BLOB,
+				description			TEXT,
+				description_in_html	INTEGER
 			) WITHOUT ROWID
 EOT
 		);

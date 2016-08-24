@@ -320,12 +320,13 @@ class Render {
 
 		}
 
-		xpath_eval_single('div[@pmid]/div[@pproperties]', pinfo_element).innerHTML = html;
+        let pproperties_element = xpath_eval_single('div[@pmid]/div[@pproperties]', pinfo_element);
+		pproperties_element.innerHTML = html;
 
 		// 13 rows -> 350px on my display debug
 		// x rows  <- y px  on target display
 		let y = sscanf(getComputedStyle(pinfo_element).height, '%u')[0];
-		let x = y * 13 / 350;
+		let x = y * 10 / 350;
 		let e = xpath_eval_single('div[@pmid]/div[@pproperties]', pinfo_element);
 		e.style.MozColumnCount = Math.trunc(data.properties.length / x) + 1;
 
@@ -360,6 +361,13 @@ class Render {
 
 		for( let e of xpath_eval('div[@pright]/hr', pinfo_element) )
 			e.fade(data.remainders.length > 0);
+
+		e = xpath_eval_single('div[@pmid]/div[@pdescription]', pinfo_element);
+		//e.innerHTML = product.description ? product.description_in_html ? product.description : `<pre>${product.description}</pre>` : '';
+		e.innerHTML = product.description ? product.description : '';
+
+		// when description rollup then rolldown
+		pproperties_element.fadein();
 
 	}
 
@@ -1054,6 +1062,12 @@ class Render {
 				to_list();
 			else
 				to_info();
+
+		}
+
+		if( new_paging_state.pgno_ !== cur_paging_state.pgno_ ) {
+
+			plist.fadein();
 
 		}
 
@@ -2026,7 +2040,23 @@ class HtmlPageEvents extends HtmlPageState {
 					new_page_state = this.btn_clear_select_by_car_handler(cur_page_state, cur_paging_state, element);
 
 				}
+				else if( attrs.pdescription && element.ascend('pmid/pinfo') ) {
 
+					let e = xpath_eval_single('html/body/div[@pinfo]/div[@pmid]/div[@pproperties]');
+
+					if( e.style.display === 'none' ) {
+
+						e.fadein();
+
+					}
+					else {
+
+						e.fadeout();
+						element.fadein();
+
+					}
+
+				}
 				break;
 
 			case 'touchstart'	:
@@ -2296,6 +2326,7 @@ class HtmlPageManager extends HtmlPageEvents {
 		this.setup_events(xpath_eval('html/body/div[@btn]'));
 		this.setup_events(xpath_eval('html/body/div[@pcontrols]/div[@plist_controls or @psort_controls]/div[@btn]'));
 		this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pright]/div[@btn]'));
+		this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pmid]/div[@pdescription]'));
 		this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pimg]'));
 		this.setup_events(xpath_eval('html/body/div[@plargeimg or @alert]'));
 		this.setup_events(xpath_eval('html/body/div[@top]/div[@cart_informer]/div[@btn]'));

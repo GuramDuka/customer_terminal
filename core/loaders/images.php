@@ -113,7 +113,7 @@ class images_loader extends objects_loader {
 			catch( \Throwable $e ) {
 
 		    	error_log($e->getCode() . ', ' . $e->getMessage() . "\n" . $e->getTraceAsString());
-			    error_log('Unable decode image ' . $object->uuid);
+			    error_log('Unable decode image ' . $object['uuid']);
 
 				if( $ext !== null )
 					$name .= '.' . $ext;

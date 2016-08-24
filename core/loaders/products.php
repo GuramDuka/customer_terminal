@@ -85,7 +85,16 @@ EOT;
 		if( $this->objects_ === null || count($this->objects_) === 0 )
 			return;
 
-		$all_fields = [ 'uuid', 'marked', 'code', 'name', 'article', 'base_image_uuid' ];
+		$all_fields = [
+			'uuid',
+			'marked',
+			'code',
+			'name',
+			'article',
+			'base_image_uuid',
+			'description',
+			'description_in_html'
+		];
 		$fields = [];
 		$fields_uuid = [];
 

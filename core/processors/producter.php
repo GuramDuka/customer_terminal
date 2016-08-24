@@ -192,6 +192,8 @@ EOT
 				a.code					AS code,
 				a.name					AS name,
 				a.base_image_uuid		AS base_image_uuid,
+				a.description			AS description,
+				a.description_in_html	AS description_in_html,
 				i.ext					AS base_image_ext,
 				q.quantity				AS remainder,
 				p.price					AS price,
@@ -224,15 +226,31 @@ EOT
 
 			extract($r);
 
-			$this->response_['product'] = [
-				'uuid'		=> bin2uuid($uuid),
-				'code'		=> $code,
-				'name'		=> htmlspecialchars($name, ENT_HTML5),
-				'price'		=> $price,
-				'remainder'	=> $remainder,
-				'reserve'	=> $reserve,
-				'img_url'	=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext, false), ENT_HTML5)
+			$p = [
+				'uuid'					=> bin2uuid($uuid),
+				'code'					=> $code,
+				'name'					=> htmlspecialchars($name, ENT_HTML5),
+				'price'					=> $price,
+				'remainder'				=> $remainder,
+				'reserve'				=> $reserve,
+				'img_url'				=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext, false), ENT_HTML5)
 			];
+
+			if( $description !== null ) {
+
+				$description = str_replace("\r\n", "\n", $description);
+				$description = str_replace("\r", "\n", $description);
+				$description = htmlspecialchars($description, ENT_HTML5, false);
+
+				if( !$description_in_html )
+					$description = str_replace("\n", '<br>', $description);
+
+				$p['description']			= $description;
+				$p['description_in_html']	= $description_in_html ? true : false;
+
+			}
+
+			$this->response_['product'] = $p;
 
 		}
 
