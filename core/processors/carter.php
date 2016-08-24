@@ -64,7 +64,7 @@ EOT
 				'price'			=> $price,
 				'remainder'		=> $remainder,
 				'reserve'		=> $reserve,
-				'img_url'		=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext), ENT_HTML5)
+				'img_url'		=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext, true), ENT_HTML5)
 			];
 
 		}

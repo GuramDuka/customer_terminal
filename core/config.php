@@ -39,8 +39,15 @@ class config extends \config {
 	public static $images_interlace								= true;
 	public static $images_compression_quality					= 85;
 	public static $scale_images									= false;
-	public static $image_width									= 205;
+	public static $image_width									= 211;
 	public static $image_height									= 280;
+	public static $scale_canvas									= true;
+	public static $canvas_color									= 'white';
+	public static $canvas_width									= 400;
+	public static $canvas_height								= 400;
+	public static $canvas_format								= 'jpg';
+	public static $canvas_interlace								= true;
+	public static $canvas_compression_quality					= 95;
 	public static $force_create_infobase						= false;
 	public static $force_rewrite_pages							= false;
 	public static $cars_selections_registry_max_values_on_row	= 12;

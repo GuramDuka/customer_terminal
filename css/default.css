@@ -1022,13 +1022,18 @@
 		animation			: blink 0.6s cubic-bezier(1.0, 0, 0.7, 1.0) infinite alternate, fadein 200ms;
 	}
 
-	@keyframes fadeout {
+	/*@keyframes fadeout {
     	from { opacity: 1; }
 	    to   { opacity: 0; }
+	}*/
+
+	@keyframes fadeout {
+    	from { transform: scale(1.0); }
+	    to   { transform: scale(0.0); }
 	}
 
 	*[fadeout] {
-		animation			: fadeout 2000ms;
+		animation			: fadeout 500ms;
 	}
 
 	*[blink][fadeout] {

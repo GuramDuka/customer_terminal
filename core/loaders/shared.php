@@ -21,16 +21,72 @@ function get_image_path($uuid, $dir_sep = DIRECTORY_SEPARATOR, $range = 256) {
 
 }
 //------------------------------------------------------------------------------
-function get_image_url($base_image_uuid, $base_image_ext) {
+function get_image_url($base_image_uuid, $base_image_ext, $canvas = false) {
 
-	if( $base_image_uuid !== null )
-		return
-			'/resources/'
-			. get_image_path($base_image_uuid, '/')
-			. '/' . bin2uuid($base_image_uuid)
-			. '.' . (config::$convert_images ? config::$images_format : $base_image_ext);
+	$nopic = false;
+	$path_name = '/resources/';
+	$uuid = bin2uuid($base_image_uuid);
 
-	return '/resources/asserts/nopic.jpg';
+	if( $base_image_uuid !== null ) {
+
+		$ext = config::$convert_images ? config::$images_format : $base_image_ext;
+		$guid = str_replace('-', '+', $uuid);
+		$dir = APP_DIR . get_image_path($base_image_uuid);
+		$name = $dir . DIRECTORY_SEPARATOR;
+
+		if( $canvas ) {
+
+			if( file_exists($name . $uuid . '.' . config::$canvas_format) ) {
+
+				$ext = config::$canvas_format;
+
+			}
+			else if( file_exists($name . $guid . '.' . $ext) ) {
+
+				$uuid = $guid;
+
+			}
+			else if( !file_exists($name . $uuid . '.' . $ext) ) {
+
+				$nopic = true;
+
+			}
+
+		}
+		else {
+
+			if( file_exists($name . $guid . '.' . $ext) ) {
+
+				$uuid = $guid;
+
+			}
+			else if( file_exists($name . $uuid . '.' . config::$canvas_format) ) {
+
+				$ext = config::$canvas_format;
+
+			}
+			else if( !file_exists($name . $uuid . '.' . $ext) ) {
+
+				$nopic = true;
+
+			}
+
+		}
+
+		if( !$nopic )
+			$path_name .= get_image_path($base_image_uuid, '/') . '/' . $uuid . '.' . $ext;
+
+	}
+	else {
+
+		$nopic = true;
+
+	}
+
+	if( $nopic )
+		$path_name .= 'asserts/nopic.jpg';
+
+	return $path_name;
 
 }
 //------------------------------------------------------------------------------
