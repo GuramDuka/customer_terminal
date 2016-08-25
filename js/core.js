@@ -1598,7 +1598,7 @@ class HtmlPageEvents extends HtmlPageState {
 					xpath_eval_single('p[@totals]/span[@sum]'	, footer, iframe).innerHTML = data.order.totals + '₽';
 
 					let tail = xpath_eval_single('html/body/div[@tail]', iframe, iframe);
-					xpath_eval_single('p[@barcode]'				, tail, iframe).innerHTML = data.order.barcode_eangnivc;
+					xpath_eval_single('p[@barcode]'				, tail, iframe).innerText = data.order.barcode_eangnivc;
 
 					// http://stackoverflow.com/a/11823629
 					// Open about:config then change the pref dom.successive_dialog_time_limit to zero integer
