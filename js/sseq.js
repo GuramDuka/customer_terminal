@@ -55,16 +55,16 @@ class ServerSentEvents {
 
 		if( params ) {
 
-			if( params.url )
+			if( params.url !== undefined )
 				this.url_ = params.url;
 
-			if( params.onerror_restart )
+			if( params.onerror_restart !== undefined )
 				this.onerror_restart_ = params.onerror_restart;
 
-			if( params.start )
+			if( params.start !== undefined )
 				this.start_ = params.start;
 
-			if( this.start_ )
+			if( this.start_ !== undefined )
 				this.start();
 
 		}

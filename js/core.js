@@ -1597,8 +1597,15 @@ class HtmlPageEvents extends HtmlPageState {
 					xpath_eval_single('p[@totals]/span[@txt]'	, footer, iframe).innerHTML = 'Сумма:';
 					xpath_eval_single('p[@totals]/span[@sum]'	, footer, iframe).innerHTML = data.order.totals + '₽';
 
+					let barcode = data.order.barcode;
+					//barcode = data.order.barcode_eangnivc;
+
+					let barcode_render = new barcode_ean13_render({ width: 6.1 });
+
+					let barcode_html = barcode_render.draw_barcode(barcode);
+
 					let tail = xpath_eval_single('html/body/div[@tail]', iframe, iframe);
-					xpath_eval_single('p[@barcode]'				, tail, iframe).innerText = data.order.barcode_eangnivc;
+					xpath_eval_single('div[@barcode]', tail, iframe).innerHTML = barcode_html;
 
 					// http://stackoverflow.com/a/11823629
 					// Open about:config then change the pref dom.successive_dialog_time_limit to zero integer
@@ -2389,6 +2396,12 @@ function core() {
 	}
 
 	manager = new HtmlPageManager;
+
+	// TODO: debug only, need to remove
+	//let barcode_render = new barcode_ean13_render({ width: 7.62 });
+	//let barcode_html = barcode_render.draw_barcode('5099206021877');
+
+	//xpath_eval_single('html/body/div[@barcode]').innerHTML = barcode_html;
 
 }
 //------------------------------------------------------------------------------

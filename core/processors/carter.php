@@ -188,6 +188,7 @@ EOT
 		\invalid_json_exception::throw_json_error();
 
 		$data['name'] = $exchange_node_name;
+		//$data['barcode_eangnivc'] = htmlspecialchars($data['barcode_eangnivc'], ENT_HTML5);
 
 		$this->response_['order'] = $data;
 

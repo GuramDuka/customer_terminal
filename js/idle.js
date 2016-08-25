@@ -65,22 +65,22 @@ class Idle {
 
 		if( params ) {
 
-			if( params.oneshot )
+			if( params.oneshot !== undefined )
 				this.oneshot_ = params.oneshot;
 
-			if( params.retry )
+			if( params.retry !== undefined )
 				this.retry_ = params.retry;
 
-			if( params.away )
+			if( params.away !== undefined )
 				this.away_ = params.away;
 
-			if( params.back )
+			if( params.back !== undefined )
 				this.back_ = params.back;
 
-			if( params.timeout )
+			if( params.timeout !== undefined )
 				this.timeout = params.timeout;
 
-			if( params.start )
+			if( params.start !== undefined )
 				this.start();
 
 		}

@@ -1,4 +1,4 @@
-@font-face {
+/*@font-face {
 
 	font-family	: 'eangnivc';
 	src			: url('../assets/fonts/EanGnivc.eot');
@@ -12,7 +12,7 @@
 	font-style	: normal;
 
 }
-
+*/
 @font-face {
 
 	font-family	: 'PTMonoRegular';
@@ -40,7 +40,9 @@
 
 @media print {
 
-	* {
+	html > body,
+	html > body > div,
+	html > body > div > p {
 		margin				: 0;
 		padding				: 0;
 		background-color	: transparent;
@@ -116,9 +118,11 @@
 		float				: right;
 	}
 
-	html > body > div[tail] > p[barcode] {
-		font-family			: 'eangnivc';
-		font-size			: 60px;
+	html > body > div[tail] > div[barcode] {
+		/*font-family			: 'eangnivc';
+		font-weight			: normal;
+		font-style			: normal;
+		font-size			: 60px;*/
 		text-align			: center;
 	}
 
