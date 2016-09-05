@@ -157,14 +157,10 @@ EOT
 				for( $i = 0; $i < config::$cars_selections_registry_max_values_on_row; $i++ )
 					$sql .= <<<EOT
 
-						/*LEFT JOIN properties_values AS v${i}
-						ON f.value${i}_uuid = v${i}.uuid*/
 						LEFT JOIN properties_registry AS r${i}
 						ON f.${order}_${direction}_uuid = r${i}.object_uuid
 							AND f.property${i}_uuid = r${i}.property_uuid
 							AND f.value${i}_uuid = r${i}.value_uuid
-						/*LEFT JOIN properties_values AS n${i}
-						ON r${i}.value_uuid = n${i}.uuid*/
 EOT
 					;
 

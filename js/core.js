@@ -840,7 +840,7 @@ class Render {
 			 		${c.uuid === new_page_state.category_ ? ' blink' : ''}>
 					${c.name}
 				</div>
-				<div selections_frame fadein uuid="${c.uuid}"></div>
+				<div selections_frame fadein instant uuid="${c.uuid}"></div>
 				<div btn clear_selections uuid="${c.uuid}">
 					<img btn_ico src="/resources/assets/filter_clear.ico">
 					<span btn_txt>ОЧИСТИТЬ</span>
@@ -848,7 +848,7 @@ class Render {
 			;
 
 			html = html + `
-				<div select_by_car_frame fadein uuid="${c.uuid}">
+				<div select_by_car_frame fadein instant uuid="${c.uuid}">
 					<div selector manufacturer>
 						<!--<span ico search_field></span>
 						<span ico list_box></span>-->
@@ -871,7 +871,7 @@ class Render {
 						<img arrow src="/resources/assets/arrows/arrow_right.ico">
 						<span value></span>
 					</div>
-					<div selector values fadein></div>
+					<div selector values></div>
 				</div>
 				<div btn clear_select_by_car uuid="${c.uuid}">
 					<img btn_ico src="/resources/assets/car_clear.ico">
@@ -985,6 +985,9 @@ class Render {
 						|| select_by_car_state.year;
 
 					c.fade(f);
+
+					for( let a of xpath_eval('div[@selector and not(@values)]', s) )
+						a.fade(new_paging_state.select_by_car_checked_);
 					
 				}
 				else {
@@ -1812,6 +1815,9 @@ class HtmlPageEvents extends HtmlPageState {
 
 		}
 
+		if( new_paging_state.select_by_car_checked_ )
+			new_paging_state.select_by_car_ = false;
+
 		new_page_state.modified_ = true;
 
 		this.render_.rewrite_select_by_car(new_page_state);
@@ -2064,6 +2070,7 @@ class HtmlPageEvents extends HtmlPageState {
 					}
 
 				}
+
 				break;
 
 			case 'touchstart'	:
@@ -2089,6 +2096,17 @@ class HtmlPageEvents extends HtmlPageState {
 
 		// success rewrite page, save new state
 		if( new_page_state && new_page_state.modified_ ) {
+
+			/*if( !element.ascend('values/property/selections_frame/categories', true)
+				&& !element.ascend('values/select_by_car_frame/categories', true) ) {
+
+				let new_paging_state = new_page_state.paging_state_by_category_[new_page_state.category_];
+
+				new_paging_state.selections_	= new_paging_state.selections_ && !cur_paging_state.selections_;
+				new_paging_state.select_by_car_	= new_paging_state.select_by_car_ && !cur_paging_state.select_by_car_;
+				new_page_state.modified_ = true;
+
+			}*/
 
 			this.render_.show_new_page_state(new_page_state);
 
@@ -2220,10 +2238,12 @@ class HtmlPageEvents extends HtmlPageState {
 			let m = {};
 
 			for( let e of xpath_eval('div[@pitem]', table) )
-				m[e.attributes.uuid.value] = true;
+				if( e.attributes.uuid )
+					m[e.attributes.uuid.value] = true;
 
 			for( let e of xpath_eval('div[@pitem]/div[@pimg]', table) )
-				m[e.attributes.uuid.value] = true;
+				if( e.attributes.uuid )
+					m[e.attributes.uuid.value] = true;
 
 			let walk = function (uuids) {
 
@@ -2341,10 +2361,13 @@ class HtmlPageManager extends HtmlPageEvents {
 
 		this.render_ = new Render;
 		this.render_.state = this;
+
 		this.render_.rewrite_category();
+		this.render_.rewrite_page();
 		this.render_.rewrite_page();
 		this.render_.rewrite_cart();
 		this.render_.show_new_page_state();
+
 		this.render_.debug_ellapsed(0, 'BOOT:&nbsp;');
 
 		//this.sseq_ = new ServerSentEvents({ url : '/resources/core/mq/sse_server.php'});
@@ -2361,6 +2384,12 @@ class HtmlPageManager extends HtmlPageEvents {
 				timeout	: 60000, // 60s
 				away	: () => this.idle_away_reload_handler()
 			});
+
+		// switch to tyres category by default
+		let e = xpath_eval_single('html/body/div[@categories]/div[@btc and @uuid=\'83f528bc-481a-11e2-9a03-ace5647d95bd\']');
+		let evt = document.createEvent('MouseEvents');
+		evt.initMouseEvent('mouseup', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+		e.dispatchEvent(evt);
 
 	}
 

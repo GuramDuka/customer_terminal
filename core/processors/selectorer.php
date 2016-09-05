@@ -74,7 +74,8 @@ class selectorer_handler extends handler {
 			FROM
 				cte2 AS r
 					INNER JOIN properties_values AS v
-					ON r.value_uuid = v.uuid
+					ON r.property_uuid = v.property_uuid
+						AND r.value_uuid = v.uuid
 
 			ORDER BY
 				r.display_order, r.display

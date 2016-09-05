@@ -154,6 +154,14 @@ HTMLElement.prototype.fade = function (v, display = 'none') {
 
 };
 //------------------------------------------------------------------------------
+HTMLElement.prototype.display = function (v, display_values = [ 'none', 'inline-block' ] ) {
+
+	this.style.display = display_values[v ? 1 : 0];
+
+	return this;
+
+};
+//------------------------------------------------------------------------------
 HTMLElement.prototype.blink = function (v) {
 
 	if( this.attributes.blink )
@@ -166,16 +174,32 @@ HTMLElement.prototype.blink = function (v) {
 
 };
 //------------------------------------------------------------------------------
-HTMLElement.prototype.ascend = function (path) {
+HTMLElement.prototype.ascend = function (path, any = false) {
 
 	let a = path.split('/');
-	let p = this.parentNode;
+	let b = any ? a.length : 1;
 
-	for( let i = 0; i < a.length && p; i++, p = p.parentNode )
-		if( !p.attributes[a[i]] )
-			return false;
+	for( let j = 0; j < b; j++ ) {
 
-	return true;
+		let p = this.parentNode;
+		let i = j;
+
+		while( i < a.length ) {
+
+			if( !p.attributes[a[i]] )
+				break;
+
+			p = p.parentNode;
+			i++;
+
+		}
+
+		if( i === a.length )
+			return true;
+
+	}
+
+	return false;
 
 };
 //------------------------------------------------------------------------------

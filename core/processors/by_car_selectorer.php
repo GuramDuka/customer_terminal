@@ -82,6 +82,8 @@ EOT
 							${cmodification}
 						INNER JOIN properties_values AS v
 						ON c.${v}_uuid = v.uuid
+				WHERE
+					NOT c.marked
 EOT
 			;
 
