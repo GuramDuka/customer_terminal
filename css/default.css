@@ -134,7 +134,7 @@
 	html > body > div[plist],
 	html > body > div[pinfo],
 	html > body > div[pcart] {
-		height				: 720px;
+		height				: 750px;
 	}
 
 	html > body > div[top] {
@@ -740,7 +740,7 @@
 	}
 
 	html > body > div[plist] > div[ptable] {
-		height				: 90.5%;
+		height				: 99.5%;
 	}
 
 	html > body > div[plist] > div[ptable] > div[pitem] {

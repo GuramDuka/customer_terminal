@@ -60,8 +60,8 @@ abstract class handler {
 			$e = $ex;
 
 			$this->response_['errno'] = $e->getCode() !== 0 ? $e->getCode() : E_ERROR;
-			$this->response_['error'] = htmlspecialchars($e->getMessage(), ENT_HTML5);
-			$this->response_['stacktrace'] = htmlspecialchars($e->getTraceAsString(), ENT_HTML5);
+			$this->response_['error'] = $e->getMessage();
+			$this->response_['stacktrace'] = $e->getTraceAsString();
 
 		}
 
