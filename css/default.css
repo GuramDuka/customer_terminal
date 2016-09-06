@@ -310,7 +310,7 @@
 		vertical-align		: middle;
 
 		-moz-column-count	: 2;
-		-moz-column-gap		: 8px;
+		-moz-column-gap		: 4px;
 		-moz-column-width	: auto;
 		-moz-column-rule	: dotted 8px #dfba3c;
 		-moz-column-fill	: balance;
@@ -320,20 +320,20 @@
 		font-size			: 28px;
 		font-weight			: bold;
 		float				: none;
-		margin-bottom		: 16px;
+		margin-bottom		: 10px;
 	}
 
 	html > body > div[categories] > div[selections_frame] > div[property] > div[values] {
 		width				: 100%;
-		font-size			: 24px;
+		font-size			: 21px;
 		font-weight			: normal;
 		text-align			: left;
 		float				: none;
-		margin-top			: 16px;
+		margin-top			: 10px;
 		overflow			: hidden;
 
 		/*-moz-column-count	: 2;*/
-		-moz-column-gap		: 8px;
+		-moz-column-gap		: 4px;
 		-moz-column-width	: auto;
 		-moz-column-fill	: balance;
 	}
