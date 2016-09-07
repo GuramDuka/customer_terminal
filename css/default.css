@@ -26,6 +26,13 @@
 	font-style	: normal;
 }
 
+@font-face {
+	font-family	: "Attentica_4F_UltraLight";
+	src			: url('../assets/fonts/Attentica_4F_UltraLight.ttf');
+	font-weight	: normal;
+	font-style	: normal;
+}
+
 @media screen /*(max-device-width: 1280px) and (device-aspect-ratio: 4/3)*/ {
 
 	* {
@@ -52,7 +59,7 @@
 		border				: solid 0px black;
 		margin				: 0mm;
 		text-align			: center;
-		font-family			: "Arial", "Times New Roman";
+		font-family			: "Arial";
 		color				: black;
 		overflow			: hidden;
 	}
@@ -120,9 +127,11 @@
 		background-size		: contain;
 		background-repeat	: no-repeat;
 		background-position	: center;
-		width				: 32px;
-		height				: 32px;
-		padding-left		: 32px;
+		width				: auto;
+		height				: auto;
+		padding-left		: 16px;
+		padding-right		: 16px;
+		overflow			: hidden;
 	}
 
 	span[btn_txt], span[txt] {
@@ -333,21 +342,32 @@
 		overflow			: hidden;
 
 		/*-moz-column-count	: 2;*/
-		-moz-column-gap		: 4px;
+		-moz-column-gap		: 2px;
 		-moz-column-width	: auto;
 		-moz-column-fill	: balance;
 	}
 
 	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > div[value] {
 		width				: auto;
-		margin-bottom		: 5px;
+		margin-bottom		: 0px;
 		float				: none;
 		text-overflow		: ellipsis;
+		overflow			: hidden;
+	}
+
+	/* свойство спецификаци€ производител€ масла */
+	html > body > div[categories] > div[selections_frame] > div[property][uuid=d315eb14-6e85-11e4-8a48-001e673659ad] > div[values] > div[value] > span[txt] {
+		font-size			: 18px;
+		/*font-weight			: bolder;*/
+		font-family			: "Attentica_4F_UltraLight";
+		/*letter-spacing		: -1px;*/
 	}
 
 	html > body > div[categories] > div[selections_frame] > div[property] > div[values][one_column] > div[value] {
 		float				: left;
 		margin-right		: 8px;
+		text-overflow		: ellipsis;
+		overflow			: hidden;
 	}
 
 	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > div[value] > span[check_box][ico] {

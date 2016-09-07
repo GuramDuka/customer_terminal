@@ -233,7 +233,7 @@ EOT
 
 		$sql = <<<EOT
 			${before}
-			SELECT
+			SELECT DISTINCT
 				p.${order}_${direction}_uuid			AS uuid,
 				p.${order}_${direction}_code			AS code,
 				p.${order}_${direction}_name			AS name,
