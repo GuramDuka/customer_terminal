@@ -93,7 +93,8 @@ class HtmlPageState {
 			cart_page_size_				: 0,
 			cart_pages_					: 0,
 			alert_						: false,
-			large_img_view_				: false
+			large_img_view_				: false,
+			vk_							: false
 		};
 
 		// render
@@ -1103,6 +1104,13 @@ class Render {
 
 		}
 
+		if( cur_state.vk_ !== new_page_state.vk_ ) {
+
+			let e = xpath_eval_single('html/body/iframe[@vk]');
+			e.fade(new_page_state.vk_);
+
+		}
+
 	}
 
 }
@@ -1858,6 +1866,43 @@ class HtmlPageEvents extends HtmlPageState {
 
 	}
 
+	btn_vk_handler(cur_page_state, cur_paging_state, element) {
+
+		let [ new_page_state, new_paging_state ] = this.clone_page_state();
+
+		new_page_state.vk_ = !cur_page_state.vk_;
+		new_page_state.modified_ = true;
+
+		return new_page_state;
+
+	}
+
+	vk_input_callback_handler(e, keyboard, el, status) {
+
+		let sw = false;
+
+		switch( e.type ) {
+
+			case 'visible'		: break;
+			case 'hidden'		: break;
+			case 'accepted'		: sw = true; break;
+			case 'canceled'		: sw = true; break;
+			case 'restricted'	: break;
+			case 'beforeClose'	: break;
+
+		}
+
+		if( sw ) {
+
+			let e = xpath_eval_single('html/body/img[@vk]');
+			let evt = document.createEvent('MouseEvents');
+			evt.initMouseEvent('mouseup', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+			e.dispatchEvent(evt);
+
+		}
+
+	}
+
 	events_handler(e) {
 
 		let touchobj, startx, dist;
@@ -2068,6 +2113,11 @@ class HtmlPageEvents extends HtmlPageState {
 						element.fadein();
 
 					}
+
+				}
+				else if( attrs.vk ) {
+
+					new_page_state = this.btn_vk_handler(cur_page_state, cur_paging_state, element);
 
 				}
 
@@ -2390,6 +2440,11 @@ class HtmlPageManager extends HtmlPageEvents {
 		let evt = document.createEvent('MouseEvents');
 		evt.initMouseEvent('mouseup', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 		e.dispatchEvent(evt);
+
+		// virtual keyboard initiator
+		this.setup_events(xpath_eval('html/body/img[@vk]'));
+		let vki_iframe_content = xpath_eval_single('html/body/iframe[@vk]').contentWindow;
+		vki_iframe_content.document.vki_callback = (e, keyboard, el, status) => this.vk_input_callback_handler(e, keyboard, el, status);
 
 	}
 

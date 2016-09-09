@@ -970,6 +970,32 @@
 		display				: none;
 	}
 
+	html > body > img[vk] {
+		/*display				: none;*/
+		z-index				: 9000;
+		position			: absolute;
+		top					: 75%;
+		left				: 0.5%;
+		width				: 40px;
+		height				: 32px;
+		float				: none;
+		background-color	: transparent;
+		border				: 0;
+	}
+
+	html > body > iframe[vk] {
+		display				: none;
+		z-index				: 9001;
+		position			: absolute;
+		top					: calc(100% - 245px);
+		left				: calc(50% - 384px);
+		width				: 768px;
+		height				: 235px;
+		float				: none;
+		background-color	: transparent;
+		border				: 0;
+	}
+
 	html > body > div[alert] {
 		z-index				: 2000;
 		position			: fixed;
