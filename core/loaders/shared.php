@@ -96,6 +96,41 @@ function uuid2table_name($uuid, $suf = '_') {
 
 }
 //------------------------------------------------------------------------------
+function transform_fts_filter($filter) {
+
+	$filter = mb_stri_replace(' OR ', ' OR* ', $filter);
+	$filter = mb_stri_replace(' ИЛИ ', ' OR* ', $filter);
+	$filter = mb_stri_replace(' AND ', ' AND* ', $filter);
+	$filter = mb_stri_replace(' И ', ' AND* ', $filter);
+
+	$p = ' ';
+	$l = mb_strlen($filter);
+
+	for( $i = 0; $i < $l; $i++ ) {
+
+		$s = mb_substr($filter, $i, 1);
+
+		if( mb_ctype_space($s) && !mb_ctype_space($p) && $p !== '*' ) {
+
+			$p = '*';
+			$filter = mb_substr($filter, 0, $i) . $p . mb_substr($filter, $i);
+			$l++;
+
+		}
+
+		$p = $s;
+
+	}
+
+	$filter = mb_stri_replace(' OR* ', ' OR ', $filter);
+	$filter = mb_stri_replace(' AND* ', ' AND ', $filter);
+
+	$filter .= '*';
+
+	return $filter;
+
+}
+//------------------------------------------------------------------------------
 } // namespace srv1c
 //------------------------------------------------------------------------------
 ?>

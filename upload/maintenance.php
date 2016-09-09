@@ -21,10 +21,27 @@ try {
 	$infobase->set_create_if_not_exists(false);
 	$infobase->initialize();
 
-	foreach( [ 'products_fts', 'cars_fts', 'properties_values_fts' ] as $tbl )
-		foreach( [ 'optimize'/*, 'rebuild', 'integrity-check'*/ ] as $cmd ) {
+	$tbls = [
+		'products_fts'			=> 'uuid, name || \' \' || COALESCE(description, \'\') AS name FROM products',
+		'cars_fts'				=> 'uuid, name FROM cars',
+		'properties_values_fts'	=> 'uuid, value_b, value_n, value_s FROM properties_values'
+	];
 
-			$infobase->exec("INSERT INTO ${tbl} (${tbl}) VALUES('${cmd}')");
+	foreach( $tbls as $tbl => $src )
+		foreach( [ 'reload', /*'rebuild',*/ 'optimize'/*, 'integrity-check'*/ ] as $cmd ) {
+
+			if( $cmd === 'reload' ) {
+
+				$infobase->exec("DELETE FROM ${tbl}");
+				$infobase->exec("INSERT INTO ${tbl} SELECT ${src}");
+
+			}
+			else {
+
+				$infobase->exec("INSERT INTO ${tbl} (${tbl}) VALUES('${cmd}')");
+
+			}
+
 			$ellapsed = $timer->last_nano_time();
 
 		    error_log("SQLITE ${tbl} ${cmd}, ellapsed: " . $timer->ellapsed_string($ellapsed));

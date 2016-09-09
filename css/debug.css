@@ -33,6 +33,10 @@
 		cursor				: pointer;
 	}
 
+	html > body > img[vk] {
+		top					: 75%;
+	}
+
 	html > body > div[debug] {
 		display				: inline-block;
 	}

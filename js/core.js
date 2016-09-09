@@ -94,7 +94,8 @@ class HtmlPageState {
 			cart_pages_					: 0,
 			alert_						: false,
 			large_img_view_				: false,
-			vk_							: false
+			vk_							: false,
+			fts_filter_					: ''
 		};
 
 		// render
@@ -565,6 +566,8 @@ class Render {
 
 		if( select_by_car_state.car )
 			request.car = select_by_car_state.car;
+
+		request.fts_filter = new_page_state.fts_filter_;
 
 		let data = post_json_sync('proxy.php', request);
 		//state.ellapsed_ += data.ellapsed;
@@ -1877,18 +1880,20 @@ class HtmlPageEvents extends HtmlPageState {
 
 	}
 
-	vk_input_callback_handler(e, keyboard, el, status) {
+	vk_input_callback_handler(e, keyboard, el) {
 
-		let sw = false;
+		let sw = false, change = false;
 
 		switch( e.type ) {
 
-			case 'visible'		: break;
-			case 'hidden'		: break;
-			case 'accepted'		: sw = true; break;
-			case 'canceled'		: sw = true; break;
-			case 'restricted'	: break;
-			case 'beforeClose'	: break;
+			case 'keyboardChange'   : break;
+			case 'change'   		: change = true; break;
+			case 'visible'			: break;
+			case 'hidden'			: break;
+			case 'accepted'			: sw = true; break;
+			case 'canceled'			: sw = true; break;
+			case 'restricted'		: break;
+			case 'beforeClose'		: break;
 
 		}
 
@@ -1898,6 +1903,26 @@ class HtmlPageEvents extends HtmlPageState {
 			let evt = document.createEvent('MouseEvents');
 			evt.initMouseEvent('mouseup', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 			e.dispatchEvent(evt);
+
+		}
+
+		if( change ) {
+
+			//let vki_iframe_content = xpath_eval_single('html/body/iframe[@vk]').contentWindow;
+			//let vki_iframe_document = vki_iframe_content.document;
+			//let e = xpath_eval_single('html/body/div/input[@vki]', vki_iframe_document, vki_iframe_document);
+			//e = e;
+
+			if( this.page_state_.fts_value_ !== keyboard.preview.value ) {
+
+				this.page_state_.fts_filter_ = keyboard.preview.value;
+
+				this.start_		= mili_time();
+				this.ellapsed_	= 0;
+				this.render_.rewrite_page();
+				this.render_.debug_ellapsed(0, 'PAGE:&nbsp;');
+
+			}
 
 		}
 

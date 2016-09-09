@@ -187,6 +187,50 @@ function bin2uuid($b, $delimiter = '-') {
 
 }
 //------------------------------------------------------------------------------
+function mb_ctype_space ($c) {
+
+	return mb_strpos(" \b\t\r\n", $c) !== false;
+
+};
+//------------------------------------------------------------------------------
+function mb_str_replace($search, $replace, $subject, &$count = NULL) {
+
+	$l = mb_strlen($search);
+	$r = mb_strlen($replace);
+	$count = 0;
+	$p = 0;
+
+	while( ($p = mb_strpos($subject, $search, $p)) !== FALSE ){
+
+		$count += 1;
+		$subject = mb_substr($subject, 0, $p) . $replace . mb_substr($subject, $p + $l, mb_strlen($subject) - ($p + $l));
+		$p += $r;
+
+	}
+
+	return $subject;
+
+}
+//------------------------------------------------------------------------------
+function mb_stri_replace($search, $replace, $subject, &$count = NULL) {
+
+	$l = mb_strlen($search);
+	$r = mb_strlen($replace);
+	$count = 0;
+	$p = 0;
+
+	while( ($p = mb_stripos($subject, $search, $p)) !== FALSE ) {
+
+		$count += 1;
+		$subject = mb_substr($subject,0,$p).$replace.mb_substr($subject,$p + $l,mb_strlen($subject) - ($p + $l));
+		$p += $r;
+
+	}
+
+	return $subject;
+
+}
+//------------------------------------------------------------------------------
 } // namespace srv1c
 //------------------------------------------------------------------------------
 ?>

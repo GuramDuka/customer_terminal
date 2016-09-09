@@ -71,6 +71,7 @@ EOT
 
 		$limit = $before = '';
 
+		$selections = @$selections;
 		$car = @$car;
 		$car_uuid = uuid2bin($car);
 		$car_x = bin2uuid($car_uuid, '');
@@ -82,10 +83,8 @@ EOT
 			'category_uuid'	=> $category_uuid
 		];
 
-		if( @$selections !== null || @$car !== null ) {
+		if( $selections !== null || $car !== null ) {
 
-			$offset = $pgno * $pgsz;
-			$limit = "LIMIT ${pgsz} OFFSET ${offset}";
 			$sql = <<<EOT
 				SELECT DISTINCT
 					p.*
@@ -94,36 +93,36 @@ EOT
 EOT
 			;
 
-			if( @$selections === null ) $selections = [];
+			if( $selections !== null )
+				foreach( $selections as $i => $p ) {
 
-			foreach( $selections as $i => $p ) {
+					$property_uuid = strtoupper(str_replace('-', '', $p['uuid']));
+					$bind_values["property_${i}_uuid"] = uuid2bin($p['uuid']);
 
-				$property_uuid = strtoupper(str_replace('-', '', $p['uuid']));
-				$bind_values["property_${i}_uuid"] = uuid2bin($p['uuid']);
+					$s = '';
 
-				$s = '';
+					foreach( $p['values'] as $j => $v ) {
 
-				foreach( $p['values'] as $j => $v ) {
+						$value_uuid = strtoupper(str_replace('-', '', $v['uuid']));
+						$bind_values["value_${i}_${j}_uuid"] = uuid2bin($v['uuid']);
 
-					$value_uuid = strtoupper(str_replace('-', '', $v['uuid']));
-					$bind_values["value_${i}_${j}_uuid"] = uuid2bin($v['uuid']);
+						$s .= ", :value_${i}_${j}_uuid";
 
-					$s .= ", :value_${i}_${j}_uuid";
+					}
+
+					$s = substr($s, 2);
+
+					$sql .= <<<EOT
+
+								INNER JOIN properties_registry AS r${i}
+								ON p.${order}_${direction}_uuid = r${i}.object_uuid
+									AND r${i}.property_uuid = :property_${i}_uuid
+									AND r${i}.value_uuid IN (${s})
+EOT
+					;
 
 				}
-
-				$s = substr($s, 2);
-
-				$sql .= <<<EOT
-
-							INNER JOIN properties_registry AS r${i}
-							ON p.${order}_${direction}_uuid = r${i}.object_uuid
-								AND r${i}.property_uuid = :property_${i}_uuid
-								AND r${i}.value_uuid IN (${s})
-EOT
-				;
-
-			}
+			// end of if( $selections !== null )
 
 			$before = <<<EOT
 				WITH cte AS (
@@ -218,6 +217,53 @@ EOT
 
 			}
 
+		}
+
+		$fts_filter = trim(@$fts_filter);
+
+		if( mb_strlen($fts_filter) < 2 )
+			$fts_filter = null;
+
+		if( $fts_filter !== null ) {
+
+			$sql = <<<'EOT'
+				SELECT DISTINCT
+					uuid
+				FROM
+					products_fts
+				WHERE
+					name MATCH :fts_filter
+EOT
+			;
+
+			$bind_values['fts_filter'] = transform_fts_filter($fts_filter);
+
+			$with = @$selections === null && @$car === null ? 'WITH' : ',';
+
+			$before .= <<<EOT
+				${with} fts_filter AS (
+					${sql}
+				)
+				, fts_filtered_products AS (
+					SELECT DISTINCT
+						p.*
+					FROM
+						${table} AS p
+						INNER JOIN fts_filter AS f
+						ON p.${order}_${direction}_uuid = f.uuid
+				)
+EOT
+			;
+
+			$table = 'fts_filtered_products';
+
+		}
+
+		if( $selections !== null || $car !== null || $fts_filter !== null ) {
+
+			$offset = $pgno * $pgsz;
+			$limit = "LIMIT ${pgsz} OFFSET ${offset}";
+
 			$before .= <<<EOT
 
 				, cnt AS (
@@ -252,7 +298,7 @@ EOT
 EOT
 		;
 
-		if( @$selections !== null || @$car !== null ) {
+		if( $selections !== null || $car !== null || $fts_filter !== null ) {
 
 			$sql = str_replace('p.pgnon BETWEEN :pgnon0 AND :pgnon1', '1', $sql);
 
@@ -307,7 +353,7 @@ EOT
 
 		}
 
-		if( @$selections !== null ) {
+		if( $selections !== null || $car !== null || $fts_filter !== null ) {
 
 			$this->response_['pages'] = (int) ($objects / $pgsz) + ($objects % $pgsz !== 0 ? 1 : 0);
 

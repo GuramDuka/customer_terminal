@@ -1,7 +1,12 @@
 $(window).on('load', function() {
 
-	// International Text Area
-	// ********************
+	let events_handler = (e, keyboard, el) => {
+
+		if( typeof document.vki_callback === 'function' )
+			document.vki_callback(e, keyboard, el);
+
+	};
+
 	$('#keyboard').keyboard({
 		language	: 'ru',
 		layout		: 'russian-qwerty',
@@ -22,12 +27,15 @@ $(window).on('load', function() {
 		//beforeVisible: function(e, keyboard, el) {},
 		//visible: function(e, keyboard, el) {},
 		//beforeInsert: function(e, keyboard, el, textToAdd) { return textToAdd; },
-		//change: function(e, keyboard, el) {},
+		change		: events_handler,
 		//beforeClose: function(e, keyboard, el, accepted) {},
-		//accepted: function(e, keyboard, el) {},
-		//canceled: function(e, keyboard, el) {},
+		accepted	: events_handler,
+		canceled	: events_handler,
 		//restricted: function(e, keyboard, el) {},
 		//hidden: function(e, keyboard, el) {},
+		//validate	: function (keyboard, value, isClosing) {
+		//	return true;
+		//}
 	}).addExtender({
 		// choose any layout
 		layout		: 'numpad',
@@ -45,25 +53,6 @@ $(window).on('load', function() {
 
 	let kb = $('#keyboard').getkeyboard();
 	kb.reveal(true);
-
-	// Console showing callback messages
-	// ********************
-	$('.ui-keyboard-input').bind('visible hidden beforeClose accepted canceled restricted', function(e, keyboard, el, status) {
-
-		//let t = '';
-		//	switch (e.type){
-		//		case 'visible'  : t += ' keyboard is <span class="event">visible</span>'; break;
-		//		case 'hidden'   : t += ' keyboard is now <span class="event">hidden</span>'; break;
-		//		case 'accepted' : t += ' content "<span class="content">' + el.value + '</span>" was <span class="event">accepted</span>' + ($(el).is('[type=password]') ? ', yeah... not so secure :(' : ''); break;
-		//		case 'canceled' : t += ' content was <span class="event ignored">ignored</span>'; break;
-		//		case 'restricted'  : t += ' The "' + String.fromCharCode(e.keyCode) + '" key is <span class="event ignored">restricted</span>!'; break;
-		//		case 'beforeClose' : t += ' keyboard is about to <span class="event">close</span>, contents were <span class="event ' + (status ? 'accepted">accepted' : 'ignored">ignored') + '</span>'; break;
-		//	}
-
-		if( typeof document.vki_callback === 'function' )
-			document.vki_callback(e, keyboard, el, status);
-
-	});
 
 	let dummy = () => {
 

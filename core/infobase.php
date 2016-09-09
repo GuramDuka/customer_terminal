@@ -162,11 +162,8 @@ EOT
 		);
 
 		$this->exec(<<<'EOT'
-			CREATE VIRTUAL TABLE IF NOT EXISTS products_fts USING fts4 (uuid BLOB, name TEXT, notindexed=uuid)
-EOT
-		);
+			CREATE VIRTUAL TABLE IF NOT EXISTS products_fts USING fts4 (uuid BLOB, name TEXT, notindexed=uuid, tokenize=unicode61);
 
-		$this->exec(<<<'EOT'
 			CREATE TRIGGER IF NOT EXISTS products_before_update_trigger
 			       BEFORE UPDATE
 			       ON products
@@ -185,14 +182,14 @@ EOT
 			       AFTER UPDATE
 			       ON products
 			BEGIN
-			     INSERT INTO products_fts(uuid, name) VALUES (new.uuid, new.name);
+			     INSERT INTO products_fts(uuid, name) VALUES (new.uuid, new.name || ' ' || COALESCE(new.description, ''));
 			END;
 
 			CREATE TRIGGER IF NOT EXISTS products_after_insert_trigger
 			       AFTER INSERT
 			       ON products
 			BEGIN
-			     INSERT INTO products_fts(uuid, name) VALUES (new.uuid, new.name);
+			     INSERT INTO products_fts(uuid, name) VALUES (new.uuid, new.name || ' ' || COALESCE(new.description, ''));
 			END;
 EOT
 		);
@@ -269,11 +266,8 @@ EOT
 		);
 
 		$this->exec(<<<'EOT'
-			CREATE VIRTUAL TABLE IF NOT EXISTS cars_fts USING fts4 (uuid BLOB, name TEXT, notindexed=uuid)
-EOT
-		);
+			CREATE VIRTUAL TABLE IF NOT EXISTS cars_fts USING fts4 (uuid BLOB, name TEXT, notindexed=uuid, tokenize=unicode61);
 
-		$this->exec(<<<'EOT'
 			CREATE TRIGGER IF NOT EXISTS cars_before_update_trigger
 			       BEFORE UPDATE
 			       ON cars
@@ -370,7 +364,7 @@ EOT
 		);
 
 		$this->exec(<<<'EOT'
-			CREATE VIRTUAL TABLE IF NOT EXISTS properties_values_fts USING fts4 (uuid BLOB, value_b INTEGER, value_n NUMERIC, value_s TEXT, notindexed=uuid);
+			CREATE VIRTUAL TABLE IF NOT EXISTS properties_values_fts USING fts4 (uuid BLOB, value_b INTEGER, value_n NUMERIC, value_s TEXT, notindexed=uuid, tokenize=unicode61);
 
 			CREATE TRIGGER IF NOT EXISTS properties_values_before_update_trigger
 			       BEFORE UPDATE
