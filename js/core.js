@@ -269,6 +269,8 @@ class Render {
 		let pctrl = xpath_eval_single('html/body/div[@pcontrols]');
 		let base = xpath_eval_single('div[@plist_controls]', pctrl);
 
+		console.log(new_paging_state.pages_);
+
 		xpath_eval_single('div[@first_page]', base).fade(new_paging_state.pgno_ >= 2 && new_paging_state.pages_ >= 2);
 		xpath_eval_single('div[@prev_page]', base).fade(new_paging_state.pgno_ !== 0 && new_paging_state.pages_ >= 2);
 		xpath_eval_single('div[@prev_page]/span[@btn_txt]', base).innerText = (new_paging_state.pgno_ + 1) - 1;

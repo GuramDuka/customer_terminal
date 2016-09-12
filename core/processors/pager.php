@@ -287,7 +287,7 @@ EOT
 				p.${order}_${direction}_base_image_ext	AS base_image_ext,
 				p.${order}_${direction}_price			AS price,
 				p.${order}_${direction}_remainder		AS remainder,
-				p.${order}_${direction}_reserve			AS reserve, c.objects
+				p.${order}_${direction}_reserve			AS reserve, c.objects AS objects
 			FROM
 				${table} AS p, cnt AS c
 			WHERE
@@ -305,7 +305,7 @@ EOT
 		}
 		else {
 
-			$sql = str_replace(', c.objects', '', $sql);
+			$sql = str_replace(', c.objects AS objects', '', $sql);
 			$sql = str_replace(', cnt AS c', '', $sql);
 
 		}
