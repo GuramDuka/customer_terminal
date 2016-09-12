@@ -355,7 +355,7 @@
 		overflow			: hidden;
 	}
 
-	/* ñâîéñòâî ñïåöèôèêàöèÿ ïðîèçâîäèòåëÿ ìàñëà */
+	/* ÑÐ²Ð¾Ð¹ÑÑ‚Ð²Ð¾ ÑÐ¿ÐµÑ†Ð¸Ñ„Ð¸ÐºÐ°Ñ†Ð¸Ñ Ð¿Ñ€Ð¾Ð¸Ð·Ð²Ð¾Ð´Ð¸Ñ‚ÐµÐ»Ñ Ð¼Ð°ÑÐ»Ð° */
 	html > body > div[categories] > div[selections_frame] > div[property][uuid=d315eb14-6e85-11e4-8a48-001e673659ad] > div[values] > div[value] > span[txt] {
 		font-size			: 18px;
 		/*font-weight			: bolder;*/

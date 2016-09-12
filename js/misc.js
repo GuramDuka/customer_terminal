@@ -889,58 +889,39 @@ function distribute_proportionally(value, coefficients, precision = 2, check_zer
 
 }
 //------------------------------------------------------------------------------
-function post_json(path, data, success, error) {
+function xpath_eval(path, parent = undefined, document_node = null) {
 
-	let xhr = new XMLHttpRequest;
+	let doc = document_node === null ? document : document_node;
+	let it = doc.evaluate(path, parent ? parent : doc, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+	let a = [];
+	
+	for( let e; e = it.iterateNext(); )
+		a.push(e);
 
-	xhr.open('POST', path, true);
-	xhr.timeout = 180000;
-	xhr.setRequestHeader('Content-Type', 'Content-Type: application/json; charset=utf-8');
-	xhr.setRequestHeader('If-Modified-Since', 'Sat, 1 Jan 2000 00:00:00 GMT');
-	xhr.setRequestHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-
-	xhr.onreadystatechange = function() {
-
-		if( this.readyState === XMLHttpRequest.DONE ) {
-			if( this.status === 200 ) {
-
-				if( success )
-					success(JSON.parse(this.responseText, JSON.dateParser));
-
-			}
-			else if( error ) {
-
-				error(xhr.status.toString() + ' ' + xhr.statusText + "\n" + xhr.responseText, this);
-
-			}
-			else {
-
-				console.log(xhr.status.toString() + ' ' + xhr.statusText + "\n" + xhr.responseText);
-
-			}
-
-		}
-
-	};
-
-	xhr.send(JSON.stringify(data, null, '\t'));
+	return a;
 
 }
 //------------------------------------------------------------------------------
-function post_json_sync(path, data) {
+function xpath_eval_single(path, parent = undefined, document_node = null) {
 
-	let xhr = new XMLHttpRequest;
+	let a = xpath_eval(path, parent, document_node);
 
-	xhr.open('POST', path, false);
-	xhr.setRequestHeader('Content-Type'		, 'Content-Type: application/json; charset=utf-8');
-	xhr.setRequestHeader('If-Modified-Since', 'Sat, 1 Jan 2000 00:00:00 GMT');
-	xhr.setRequestHeader('Cache-Control'	, 'no-store, no-cache, must-revalidate, max-age=0');
-	xhr.send(JSON.stringify(data, null, '\t'));
+	if( a.length > 1 )
+		throw new Error('evaluate return multiple elements');
 
-	if( xhr.status !== 200 )
-		throw new Error(xhr.status.toString() + ' ' + xhr.statusText + "\n" + xhr.responseText);
+	if( a.length == 0 )
+		throw new Error('evaluate return no result');
 
-	return JSON.parse(xhr.responseText, JSON.dateParser);
+	return a[0];
+
+}
+//------------------------------------------------------------------------------
+function xpath_single(path, parent = undefined, document_node = null) {
+
+	let doc = document_node === null ? document : document_node;
+	let result = doc.evaluate(path, parent ? parent : doc, null, XPathResult.ANY_UNORDERED_NODE_TYPE, null);
+
+	return result.singleNodeValue;
 
 }
 //------------------------------------------------------------------------------
@@ -959,31 +940,6 @@ function add_event(obj, type, fn, phase = true) {
 
 	}
 
-}
-//------------------------------------------------------------------------------
-function xpath_eval(path, parent = undefined, document_node = null) {
-
-	let doc = document_node === null ? document : document_node;
-	let it = doc.evaluate(path, parent ? parent : doc, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
-	let a = [];
-	
-	for( let e; e = it.iterateNext(); )
-		a.push(e);
-
-	return a;
-}
-//------------------------------------------------------------------------------
-function xpath_eval_single(path, parent = undefined, document_node = null) {
-
-	let a = xpath_eval(path, parent, document_node);
-
-	if( a.length > 1 )
-		throw new Error('evaluate return multiple elements');
-
-	if( a.length == 0 )
-		throw new Error('evaluate return no result');
-
-	return a[0];
 }
 //------------------------------------------------------------------------------
 /*
@@ -1013,170 +969,4 @@ function define_enum(list) {
 
 	return Object.freeze(list);
 }
-//------------------------------------------------------------------------------
-/*(function() {
-  var Idle;
-
-  if (!document.addEventListener) {
-    if (document.attachEvent) {
-      document.addEventListener = function(event, callback, useCapture) {
-        return document.attachEvent("on" + event, callback, useCapture);
-      };
-    } else {
-      document.addEventListener = function() {
-        return {};
-      };
-    }
-  }
-
-  if (!document.removeEventListener) {
-    if (document.detachEvent) {
-      document.removeEventListener = function(event, callback) {
-        return document.detachEvent("on" + event, callback);
-      };
-    } else {
-      document.removeEventListener = function() {
-        return {};
-      };
-    }
-  }
-
-  "use strict";
-
-  Idle = {};
-
-  Idle = (function() {
-    Idle.isAway = false;
-
-    Idle.awayTimeout = 3000;
-
-    Idle.awayTimestamp = 0;
-
-    Idle.awayTimer = null;
-
-    Idle.onAway = null;
-
-    Idle.onAwayBack = null;
-
-    Idle.onVisible = null;
-
-    Idle.onHidden = null;
-
-    function Idle(options) {
-      var activeMethod, activity;
-      if (options) {
-        this.awayTimeout = parseInt(options.awayTimeout, 10);
-        this.onAway = options.onAway;
-        this.onAwayBack = options.onAwayBack;
-        this.onVisible = options.onVisible;
-        this.onHidden = options.onHidden;
-      }
-      activity = this;
-      activeMethod = function() {
-        return activity.onActive();
-      };
-      window.onclick = activeMethod;
-      window.onmousemove = activeMethod;
-      window.onmouseenter = activeMethod;
-      window.onkeydown = activeMethod;
-      window.onscroll = activeMethod;
-      window.onmousewheel = activeMethod;
-    }
-
-    Idle.prototype.onActive = function() {
-      this.awayTimestamp = new Date().getTime() + this.awayTimeout;
-      if (this.isAway) {
-        if (this.onAwayBack) {
-          this.onAwayBack();
-        }
-        this.start();
-      }
-      this.isAway = false;
-      return true;
-    };
-
-    Idle.prototype.start = function() {
-      var activity;
-      if (!this.listener) {
-        this.listener = (function() {
-          return activity.handleVisibilityChange();
-        });
-        document.addEventListener("visibilitychange", this.listener, false);
-        document.addEventListener("webkitvisibilitychange", this.listener, false);
-        document.addEventListener("msvisibilitychange", this.listener, false);
-      }
-      this.awayTimestamp = new Date().getTime() + this.awayTimeout;
-      if (this.awayTimer !== null) {
-        clearTimeout(this.awayTimer);
-      }
-      activity = this;
-      this.awayTimer = setTimeout((function() {
-        return activity.checkAway();
-      }), this.awayTimeout + 100);
-      return this;
-    };
-
-    Idle.prototype.stop = function() {
-      if (this.awayTimer !== null) {
-        clearTimeout(this.awayTimer);
-      }
-      if (this.listener !== null) {
-        document.removeEventListener("visibilitychange", this.listener);
-        document.removeEventListener("webkitvisibilitychange", this.listener);
-        document.removeEventListener("msvisibilitychange", this.listener);
-        this.listener = null;
-      }
-      return this;
-    };
-
-    Idle.prototype.setAwayTimeout = function(ms) {
-      this.awayTimeout = parseInt(ms, 10);
-      return this;
-    };
-
-    Idle.prototype.checkAway = function() {
-      var activity, t;
-      t = new Date().getTime();
-      if (t < this.awayTimestamp) {
-        this.isAway = false;
-        activity = this;
-        this.awayTimer = setTimeout((function() {
-          return activity.checkAway();
-        }), this.awayTimestamp - t + 100);
-        return;
-      }
-      if (this.awayTimer !== null) {
-        clearTimeout(this.awayTimer);
-      }
-      this.isAway = true;
-      if (this.onAway) {
-        return this.onAway();
-      }
-    };
-
-    Idle.prototype.handleVisibilityChange = function() {
-      if (document.hidden || document.msHidden || document.webkitHidden) {
-        if (this.onHidden) {
-          return this.onHidden();
-        }
-      } else {
-        if (this.onVisible) {
-          return this.onVisible();
-        }
-      }
-    };
-
-    return Idle;
-
-  })();
-
-  if (typeof define === 'function' && define.amd) {
-    define([], Idle);
-  } else if (typeof exports === 'object') {
-    module.exports = Idle;
-  } else {
-    window.Idle = Idle;
-  }
-
-}).call(this);*/
 //------------------------------------------------------------------------------

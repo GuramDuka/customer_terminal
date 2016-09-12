@@ -507,7 +507,7 @@ class Render {
 			'product'	: new_page_state.product_
 		};
 
-		let data = post_json_sync('proxy.php', request);
+		let data = post_json(state.deferred_object_, 'proxy.php', request);
 		//state.ellapsed_ += data.ellapsed;
 
 		this.assemble_info(new_page_state, data);
@@ -569,7 +569,7 @@ class Render {
 
 		request.fts_filter = new_page_state.fts_filter_;
 
-		let data = post_json_sync('proxy.php', request);
+		let data = post_json(state.deferred_object_, 'proxy.php', request);
 		//state.ellapsed_ += data.ellapsed;
 
 		new_paging_state.page_size_	= data.page_size;
@@ -639,7 +639,7 @@ class Render {
 
 		}
 
-		let data = post_json_sync('proxy.php', request);
+		let data = post_json(state.deferred_object_, 'proxy.php', request);
 		//state.ellapsed_ += data.ellapsed;
 
 		new_page_state.cart_ = data.cart;
@@ -734,22 +734,22 @@ class Render {
 			'setup'		: true
 		};
 
-		let data = post_json_sync('proxy.php', request);
+		let data = post_json(state.deferred_object_, 'proxy.php', request);
 
 		this.assemble_selections(new_page_state, data);
 
 	}
 
-	assemble_select_by_car(new_page_state, data) {
+	assemble_select_by_car(new_page_state) {
 
 		let state = this.state_;
 		let new_paging_state = new_page_state.paging_state_by_category_[new_page_state.category_];
 		let select_by_car_state = new_paging_state.select_by_car_state_;
 		let html = '';
 
-		for( let i = 0; i < data.values.length; i++ ) {
+		for( let i = 0; i < select_by_car_state.values.length; i++ ) {
 
-			let v = data.values[i];
+			let v = select_by_car_state.values[i];
 
 			html = html + `
 				<div value uuid="${v.uuid}">
@@ -758,11 +758,6 @@ class Render {
 			;
 
 		}
-
-		new_paging_state.select_by_car_state_.values = data.values;
-
-		if( data.car )
-			new_paging_state.select_by_car_state_.car = data.car;
 
 		let frame = xpath_eval_single('html/body/div[@categories]/div[@select_by_car_frame and @uuid=\'' + new_page_state.category_ + '\']');
 		let e = xpath_eval_single('div[@values]', frame);
@@ -802,9 +797,12 @@ class Render {
 		if( select_by_car_state.year )
 			request.year = select_by_car_state.year.uuid;
 
-		let data = post_json_sync('proxy.php', request);
+		let data = post_json(state.deferred_object_, 'proxy.php', request);
 
-		this.assemble_select_by_car(new_page_state, data);
+		new_paging_state.select_by_car_state_.values = data.values;
+
+		if( data.car )
+			new_paging_state.select_by_car_state_.car = data.car;
 
 	}
 
@@ -822,7 +820,7 @@ class Render {
 			'parent'	: new_page_state.category_ !== null_uuid ? new_page_state.category_ : null
 		};
 
-		let data = post_json_sync('proxy.php', request);
+		let data = post_json(state.deferred_object_, 'proxy.php', request);
 		let categories = data.categories;
 		let html = '';
 
@@ -1519,6 +1517,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 	btn_cheque_cart_informer_handler(cur_page_state) {
 
+		let state = this.state_;
 		let [ new_page_state ] = this.clone_page_state();
 
 		let request = {
@@ -1536,7 +1535,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 		try {
 
-			let data = post_json_sync('proxy.php', request);
+			let data = post_json(state.deferred_object_, 'proxy.php', request);
 			//state.ellapsed_ += data.ellapsed;
 
 			if( data.errno !== 0 )
@@ -1774,8 +1773,12 @@ class HtmlPageEvents extends HtmlPageState {
 			if( new_paging_state.selections_ )
 				new_paging_state.selections_ = false;
 
-			if( new_paging_state.select_by_car_ )
+			if( new_paging_state.select_by_car_ ) {
+
 				this.render_.rewrite_select_by_car(new_page_state);
+				this.render_.assemble_select_by_car(new_page_state);
+
+			}
 
 			return new_page_state;
 
@@ -1836,6 +1839,8 @@ class HtmlPageEvents extends HtmlPageState {
 		if( !cur_paging_state.select_by_car_checked_ && new_paging_state.select_by_car_checked_ )
 			this.render_.rewrite_page(new_page_state);
 
+		this.render_.assemble_select_by_car(new_page_state);
+
 		let e = xpath_eval_single('html/body/div[@categories]/div[@clear_select_by_car and @uuid=\'' + new_page_state.category_ + '\']');
 		e.fade(new_paging_state.select_by_car_checked_);
 
@@ -1865,6 +1870,8 @@ class HtmlPageEvents extends HtmlPageState {
 		if( cur_paging_state.select_by_car_checked_ )
 			this.render_.rewrite_page(new_page_state);
 
+		this.render_.assemble_select_by_car(new_page_state);
+
 		return new_page_state;
 
 	}
@@ -1875,6 +1882,19 @@ class HtmlPageEvents extends HtmlPageState {
 
 		new_page_state.vk_ = !cur_page_state.vk_;
 		new_page_state.modified_ = true;
+
+		return new_page_state;
+
+	}
+
+	btn_vki_type_handler(e, cur_page_state, cur_paging_state, element) {
+
+		let [ new_page_state, new_paging_state ] = this.clone_page_state();
+
+		new_page_state.fts_filter_ = e.detail;
+		new_page_state.modified_ = true;
+
+		this.render_.rewrite_page(new_page_state);
 
 		return new_page_state;
 
@@ -1899,10 +1919,10 @@ class HtmlPageEvents extends HtmlPageState {
 
 		if( sw ) {
 
-			let e = xpath_eval_single('html/body/img[@vk]');
-			let evt = document.createEvent('MouseEvents');
-			evt.initMouseEvent('mouseup', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-			e.dispatchEvent(evt);
+			let el = xpath_eval_single('html/body/img[@vk]');
+			let evt = document.createEvent("MouseEvents");
+			evt.initEvent('mouseup', true, true);
+			el.dispatchEvent(evt);
 
 		}
 
@@ -1913,285 +1933,392 @@ class HtmlPageEvents extends HtmlPageState {
 			//let e = xpath_eval_single('html/body/div/input[@vki]', vki_iframe_document, vki_iframe_document);
 			//e = e;
 
-			if( this.page_state_.fts_value_ !== keyboard.preview.value ) {
-
-				this.page_state_.fts_filter_ = keyboard.preview.value;
-
-				this.start_		= mili_time();
-				this.ellapsed_	= 0;
-				this.render_.rewrite_page();
-				this.render_.debug_ellapsed(0, 'PAGE:&nbsp;');
-
-			}
+			let m = new CustomEvent('vki_type', { 'detail' : keyboard.preview.value });
+			window.dispatchEvent(m);
 
 		}
 
 	}
 
+	startup_handler(cur_page_state, cur_paging_state, element) {
+
+		let [ new_page_state, new_paging_state ] = this.clone_page_state();
+
+		new_page_state.modified_ = true;
+
+		this.render_.rewrite_category();
+		this.render_.rewrite_page();
+		this.render_.rewrite_cart();
+
+		// switch to tyres category by default
+		let e = xpath_eval_single('html/body/div[@categories]/div[@btc and @uuid=\'83f528bc-481a-11e2-9a03-ace5647d95bd\']');
+		let evt = document.createEvent("MouseEvents");
+		evt.initEvent('mouseup', true, true);
+		e.dispatchEvent(evt);
+
+		return new_page_state;
+
+	}
+
+	idle_away_reload_handler(cur_page_state, cur_paging_state, element) {
+
+		let [ new_page_state, new_paging_state ] = this.clone_page_state();
+
+		new_page_state.modified_ = true;
+
+		this.render_.rewrite_page();
+
+		let date = new Date;
+		console.log(date.toLocaleFormat('%d.%m.%Y %H:%M:%S') + ': current page reloaded on user idle away');
+
+		return new_page_state;
+
+	}
+
+	sse_reload_handler(cur_page_state, cur_paging_state, element) {
+
+		let [ new_page_state, new_paging_state ] = this.clone_page_state();
+
+		new_page_state.modified_ = true;
+
+		this.render_.rewrite_page();
+
+		let date = new Date;
+		console.log(date.toLocaleFormat('%d.%m.%Y %H:%M:%S') + ': products on current page changed, reloaded');
+
+		return new_page_state;
+
+	}
+
+	/*events_handler(e) {
+
+		setTimeout((e) => this.dispatch_handler(e), 0);
+
+	}*/
+
+	//dispatch_handler(e) {
 	events_handler(e) {
 
-		let touchobj, startx, dist;
+		let x;
 
-		let state		= this;
-		let element		= e.currentTarget;
-		let attrs		= element.attributes;
+		try {
 
-		this.start_		= mili_time();
-		this.ellapsed_	= 0;
+			if( !this.load_indicator_ )
+				this.load_indicator_ = xpath_single('html/body/div[@class=\'cssload-container\']');
 
-		let cur_page_state = state.page_state_;
-		let cur_paging_state = state.page_state_.paging_state_by_category_[state.page_state_.category_];
-		let new_page_state;
+			if( this.load_indicator_ && !this.load_indicator_timer_ ) {
 
-		switch( e.type ) {
+				//this.load_indicator_.style.display = 'none';
+				this.load_indicator_.fadeout();
 
-			case 'mouseup'		:
+				this.load_indicator_timer_ = setTimeout(() => {
 
-				if( e.button !== 0 )
-					break;
+					//this.load_indicator_.style.display = 'inline-block';
+					this.load_indicator_.fadein();
 
-			case 'touchend'		:
+				},
+				125);
 
-				// check for modal elements
+			}
 
-				if( attrs.alert ) {
+			e.deferred_xhrs_handler = () => this.events_handler(e);
+			e.deferredTarget = e.currentTarget ? e.currentTarget : e.deferredTarget;
+			this.deferred_object_ = e;
 
-					// switch off product image large view
-					//xpath_eval_single('html/body/div[@alert]').fadeout('inline-block');
-					element.fadeout('inline-block');
-					state.page_state_.alert_ = false;
-					break;
+			let touchobj, startx, dist;
 
-				}
+			let state		= this;
+			let element		= e.currentTarget ? e.currentTarget : e.deferredTarget;
+			let attrs		= element ? element.attributes : [];
+
+			this.start_		= mili_time();
+			this.ellapsed_	= 0;
+
+			let cur_page_state = state.page_state_;
+			let cur_paging_state = state.page_state_.paging_state_by_category_[state.page_state_.category_];
+			let new_page_state;
+
+			switch( e.type ) {
+
+				case 'mouseup'		:
+
+					if( e.button !== 0 )
+						break;
+
+				case 'touchend'		:
+
+					// check for modal elements
+
+					if( attrs.alert ) {
+
+						// switch off product image large view
+						//xpath_eval_single('html/body/div[@alert]').fadeout('inline-block');
+						element.fadeout('inline-block');
+						state.page_state_.alert_ = false;
+						break;
+
+					}
 				
-				if( attrs.plargeimg ) {
+					if( attrs.plargeimg ) {
 
-					// switch off product image large view
-					//let largeimg = xpath_eval_single('html/body/div[@plargeimg]');
-					//largeimg.style.display = 'none';
-					element.fadeout('inline-block');
-					state.page_state_.large_img_view_ = false;
+						// switch off product image large view
+						//let largeimg = xpath_eval_single('html/body/div[@plargeimg]');
+						//largeimg.style.display = 'none';
+						element.fadeout('inline-block');
+						state.page_state_.large_img_view_ = false;
+						break;
+
+					}
+
+					// block input while modal element showing
+					if( state.page_state_.alert_ || state.page_state_.large_img_view_ )
+						break;
+
+						if( attrs.btn && element.ascend('plist_controls/pcontrols') ) {
+
+						if( attrs.prev_page ) {
+
+							new_page_state = this.btn_prev_page_handler(cur_paging_state);
+
+						}
+						else if( attrs.next_page ) {
+
+							new_page_state = this.btn_next_page_handler(cur_paging_state);
+
+						}
+						else if( attrs.first_page ) {
+
+							new_page_state = this.btn_first_page_handler(cur_paging_state);
+
+						}
+						else if( attrs.last_page ) {
+
+							new_page_state = this.btn_last_page_handler(cur_paging_state);
+
+						}
+
+					}
+					else if( attrs.btc ) {
+
+						new_page_state = this.btc_handler(cur_page_state, element, attrs);
+
+					}
+					else if( attrs.btn && element.ascend('psort_controls/pcontrols') ) {
+
+						if( attrs.list_sort_order ) {
+
+							new_page_state = this.btn_list_sort_order_handler();
+
+						}
+						else if( attrs.list_sort_direction ) {
+
+							new_page_state = this.btn_list_sort_direction_handler();
+
+						}
+
+					}
+					else if( attrs.btn && attrs.back ) {
+
+						new_page_state = this.btn_back_handler();
+
+					}
+					else if( attrs.pimg && element.ascend('pitem/ptable/plist') ) {
+
+						new_page_state = this.pimg_pitem_ptable_plist_handler(element);
+
+					}
+					else if( attrs.pimg && element.ascend('pinfo') ) {
+
+						this.pimg_pinfo_handler(cur_page_state, element);
+
+					}
+					else if( attrs.btn && element.ascend('pcontrols/pcart') ) {
+
+						if( attrs.prev_page ) {
+
+							new_page_state = this.btn_prev_page_pcontrols_pcart_handler(cur_page_state);
+
+						}
+						else if( attrs.next_page ) {
+
+							new_page_state = this.btn_next_page_pcontrols_pcart_handler(cur_page_state);
+
+						}
+
+					}
+					else if( attrs.btn && element.ascend('pitem/ptable/pcart') ) {
+
+						// change cart
+						let product = element.parentNode.attributes.uuid.value;
+
+						if( attrs.plus_one ) {
+
+							new_page_state = this.btn_plus_one_pitem_ptable_pcart_handler(cur_page_state, product);
+
+						}
+						else if( attrs.minus_one ) {
+
+							new_page_state = this.btn_minus_one_pitem_ptable_pcart_handler(cur_page_state, product);
+
+						}
+
+					}
+					else if( attrs.btn && element.ascend('pright/pinfo') ) {
+
+						new_page_state = this.pright_pinfo_handler(element, cur_page_state);
+
+					}
+					else if( attrs.buy && element.ascend('pitem/ptable/plist') ) {
+
+						new_page_state = this.btn_buy_pright_pinfo_handler(element.parentNode.attributes.uuid.value, 1);
+
+					}
+					else if( attrs.btn && attrs.drop && element.ascend('cart_informer') ) {
+
+						new_page_state = this.btn_drop_cart_informer_handler();
+
+					}
+					else if( attrs.btn && attrs.cart && element.ascend('cart_informer') ) {
+
+						new_page_state = this.btn_cart_cart_informer_handler();
+
+					}
+					else if( attrs.btn && attrs.cheque && element.ascend('cart_informer') ) {
+
+						new_page_state = this.btn_cheque_cart_informer_handler(cur_page_state);
+
+					}
+					else if( attrs.btn && attrs.selections ) {
+
+						new_page_state = this.btn_selections_handler(cur_page_state, cur_paging_state);
+
+					}
+					else if( attrs.value && element.ascend('values/property/selections_frame/categories') ) {
+
+						new_page_state = this.checkbox_values_property_selections_frame_handler(element);
+
+					}
+					else if( attrs.btn && attrs.clear_selections ) {
+
+						new_page_state = this.btn_clear_selections_handler(cur_page_state, cur_paging_state, element);
+
+					}
+					else if( attrs.btn && attrs.select_by_car ) {
+
+						new_page_state = this.btn_select_by_car_handler(cur_page_state, cur_paging_state);
+
+					}
+					else if( attrs.value && element.ascend('values/select_by_car_frame/categories') ) {
+
+						new_page_state = this.values_select_by_car_frame_handler(cur_page_state, cur_paging_state, element);
+
+					}
+					else if( attrs.btn && attrs.clear_select_by_car ) {
+
+						new_page_state = this.btn_clear_select_by_car_handler(cur_page_state, cur_paging_state, element);
+
+					}
+					else if( attrs.pdescription && element.ascend('pmid/pinfo') ) {
+
+						let e = xpath_eval_single('html/body/div[@pinfo]/div[@pmid]/div[@pproperties]');
+
+						if( e.style.display === 'none' ) {
+
+							e.fadein();
+
+						}
+						else {
+
+							e.fadeout();
+							element.fadein();
+
+						}
+
+					}
+					else if( attrs.vk ) {
+
+						new_page_state = this.btn_vk_handler(cur_page_state, cur_paging_state, element);
+
+					}
+
 					break;
 
-				}
-
-				// block input while modal element showing
-				if( state.page_state_.alert_ || state.page_state_.large_img_view_ )
+				case 'touchstart'	:
+					touchobj = e.changedTouches[0] // reference first touch point (ie: first finger)
+					startx = parseInt(touchobj.clientX) // get x position of touch point relative to left edge of browser
 					break;
 
-				if( attrs.btn && element.ascend('plist_controls/pcontrols') ) {
+				case 'touchmove'	:
+					touchobj = e.changedTouches[0] // reference first touch point (ie: first finger)
+					dist = parseInt(touchobj.clientX) - startx;
+					break;
 
-					if( attrs.prev_page ) {
+				case 'touchcancel'	:
+					break;
 
-						new_page_state = this.btn_prev_page_handler(cur_paging_state);
+				case 'touchenter'	:
+					break;
 
-					}
-					else if( attrs.next_page ) {
+				case 'touchleave'	:
+					break;
 
-						new_page_state = this.btn_next_page_handler(cur_paging_state);
+				// custom events
+				case 'startup'		:
+					new_page_state = this.startup_handler(cur_page_state, cur_paging_state, element);
+					break;
 
-					}
-					else if( attrs.first_page ) {
+				case 'away'			:
+					new_page_state = this.idle_away_reload_handler(cur_page_state, cur_paging_state, element);
+					break;
 
-						new_page_state = this.btn_first_page_handler(cur_paging_state);
+				case 'sse_reload'	:
+					new_page_state = this.sse_reload_handler(cur_page_state, cur_paging_state, element);
+					break;
 
-					}
-					else if( attrs.last_page ) {
+				case 'vki_type'		:
+					new_page_state = this.btn_vki_type_handler(e, cur_page_state, cur_paging_state, element);
+					break;
 
-						new_page_state = this.btn_last_page_handler(cur_paging_state);
+			}
 
-					}
+			// success rewrite page, save new state
+			if( new_page_state && new_page_state.modified_ ) {
 
-				}
-				else if( attrs.btc ) {
+				this.render_.show_new_page_state(new_page_state);
+				this.page_state_ = new_page_state;
 
-					new_page_state = this.btc_handler(cur_page_state, element, attrs);
+				this.render_.debug_ellapsed(0, 'PAGE:&nbsp;');
 
-				}
-				else if( attrs.btn && element.ascend('psort_controls/pcontrols') ) {
-
-					if( attrs.list_sort_order ) {
-
-						new_page_state = this.btn_list_sort_order_handler();
-
-					}
-					else if( attrs.list_sort_direction ) {
-
-						new_page_state = this.btn_list_sort_direction_handler();
-
-					}
-
-				}
-				else if( attrs.btn && attrs.back ) {
-
-					new_page_state = this.btn_back_handler();
-
-				}
-				else if( attrs.pimg && element.ascend('pitem/ptable/plist') ) {
-
-					new_page_state = this.pimg_pitem_ptable_plist_handler(element);
-
-				}
-				else if( attrs.pimg && element.ascend('pinfo') ) {
-
-					this.pimg_pinfo_handler(cur_page_state, element);
-
-				}
-				else if( attrs.btn && element.ascend('pcontrols/pcart') ) {
-
-					if( attrs.prev_page ) {
-
-						new_page_state = this.btn_prev_page_pcontrols_pcart_handler(cur_page_state);
-
-					}
-					else if( attrs.next_page ) {
-
-						new_page_state = this.btn_next_page_pcontrols_pcart_handler(cur_page_state);
-
-					}
-
-				}
-				else if( attrs.btn && element.ascend('pitem/ptable/pcart') ) {
-
-					// change cart
-					let product = element.parentNode.attributes.uuid.value;
-
-					if( attrs.plus_one ) {
-
-						new_page_state = this.btn_plus_one_pitem_ptable_pcart_handler(cur_page_state, product);
-
-					}
-					else if( attrs.minus_one ) {
-
-						new_page_state = this.btn_minus_one_pitem_ptable_pcart_handler(cur_page_state, product);
-
-					}
-
-				}
-				else if( attrs.btn && element.ascend('pright/pinfo') ) {
-
-					new_page_state = this.pright_pinfo_handler(element, cur_page_state);
-
-				}
-				else if( attrs.buy && element.ascend('pitem/ptable/plist') ) {
-
-					new_page_state = this.btn_buy_pright_pinfo_handler(element.parentNode.attributes.uuid.value, 1);
-
-				}
-				else if( attrs.btn && attrs.drop && element.ascend('cart_informer') ) {
-
-					new_page_state = this.btn_drop_cart_informer_handler();
-
-				}
-				else if( attrs.btn && attrs.cart && element.ascend('cart_informer') ) {
-
-					new_page_state = this.btn_cart_cart_informer_handler();
-
-				}
-				else if( attrs.btn && attrs.cheque && element.ascend('cart_informer') ) {
-
-					new_page_state = this.btn_cheque_cart_informer_handler(cur_page_state);
-
-				}
-				else if( attrs.btn && attrs.selections ) {
-
-					new_page_state = this.btn_selections_handler(cur_page_state, cur_paging_state);
-
-				}
-				else if( attrs.value && element.ascend('values/property/selections_frame/categories') ) {
-
-					new_page_state = this.checkbox_values_property_selections_frame_handler(element);
-
-				}
-				else if( attrs.btn && attrs.clear_selections ) {
-
-					new_page_state = this.btn_clear_selections_handler(cur_page_state, cur_paging_state, element);
-
-				}
-				else if( attrs.btn && attrs.select_by_car ) {
-
-					new_page_state = this.btn_select_by_car_handler(cur_page_state, cur_paging_state);
-
-				}
-				else if( attrs.value && element.ascend('values/select_by_car_frame/categories') ) {
-
-					new_page_state = this.values_select_by_car_frame_handler(cur_page_state, cur_paging_state, element);
-
-				}
-				else if( attrs.btn && attrs.clear_select_by_car ) {
-
-					new_page_state = this.btn_clear_select_by_car_handler(cur_page_state, cur_paging_state, element);
-
-				}
-				else if( attrs.pdescription && element.ascend('pmid/pinfo') ) {
-
-					let e = xpath_eval_single('html/body/div[@pinfo]/div[@pmid]/div[@pproperties]');
-
-					if( e.style.display === 'none' ) {
-
-						e.fadein();
-
-					}
-					else {
-
-						e.fadeout();
-						element.fadein();
-
-					}
-
-				}
-				else if( attrs.vk ) {
-
-					new_page_state = this.btn_vk_handler(cur_page_state, cur_paging_state, element);
-
-				}
-
-				break;
-
-			case 'touchstart'	:
-				touchobj = e.changedTouches[0] // reference first touch point (ie: first finger)
-				startx = parseInt(touchobj.clientX) // get x position of touch point relative to left edge of browser
-				break;
-
-			case 'touchmove'	:
-				touchobj = e.changedTouches[0] // reference first touch point (ie: first finger)
-				dist = parseInt(touchobj.clientX) - startx;
-				break;
-
-			case 'touchcancel'	:
-				break;
-
-			case 'touchenter'	:
-				break;
-
-			case 'touchleave'	:
-				break;
+			}
 
 		}
+		catch( ex ) {
 
-		// success rewrite page, save new state
-		if( new_page_state && new_page_state.modified_ ) {
-
-			/*if( !element.ascend('values/property/selections_frame/categories', true)
-				&& !element.ascend('values/select_by_car_frame/categories', true) ) {
-
-				let new_paging_state = new_page_state.paging_state_by_category_[new_page_state.category_];
-
-				new_paging_state.selections_	= new_paging_state.selections_ && !cur_paging_state.selections_;
-				new_paging_state.select_by_car_	= new_paging_state.select_by_car_ && !cur_paging_state.select_by_car_;
-				new_page_state.modified_ = true;
-
-			}*/
-
-			this.render_.show_new_page_state(new_page_state);
-
-			this.page_state_ = new_page_state;
-
-			this.render_.debug_ellapsed(0, 'PAGE:&nbsp;');
+			if( ex instanceof XhrDeferredException )
+				x = ex;
+			else
+				throw ex;
 
 		}
+		finally {
 
-		e.preventDefault();
+			if( !x ) {
+
+				if( this.load_indicator_timer_ ) {
+
+					clearTimeout(this.load_indicator_timer_);
+					delete this.load_indicator_timer_;//this.load_indicator_timer_ = undefined;
+
+				}
+
+				if( this.load_indicator_ )
+					this.load_indicator_.fadeout();//this.load_indicator_.style.display = 'none';
+
+			}
+
+			//e.preventDefault();
+
+		}
 
 	}
 
@@ -2236,7 +2363,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 		for( let element of elements )
 			for( let event of [ 'animationstart', 'animationend' ] )
-				add_event(element, event , e => this.animation_events_handler(e), phase);
+				add_event(element, event, e => this.animation_events_handler(e), phase);
 
 	}
 
@@ -2244,7 +2371,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 		for( let element of elements )
 			for( let event of this.events_ )
-				add_event(element, event , e => this.events_handler(e), phase);
+				add_event(element, event, e => this.events_handler(e), phase);
 
 	}
 
@@ -2288,10 +2415,8 @@ class HtmlPageEvents extends HtmlPageState {
 
 			if( reload ) {
 
-				this.render_.rewrite_page();
-
-				let date = new Date;
-				console.log(date.toLocaleFormat('%d.%m.%Y %H:%M:%S') + ': products on current page changed, reloaded');
+				let m = new CustomEvent('sse_reload', {});
+				window.dispatchEvent(m);
 
 			}
 
@@ -2351,10 +2476,8 @@ class HtmlPageEvents extends HtmlPageState {
 
 			if( reload ) {
 
-				this.render_.rewrite_page();
-
-				let date = new Date;
-				console.log(date.toLocaleFormat('%d.%m.%Y %H:%M:%S') + ': products on current page changed, reloaded');
+				let m = new CustomEvent('sse_reload', {});
+				window.dispatchEvent(m);
 
 			}
 
@@ -2364,7 +2487,7 @@ class HtmlPageEvents extends HtmlPageState {
 				'received'	: ids
 			};
 
-			post_json('proxy.php',request);
+			post_json_async('proxy.php', request);
 
 		}
 		catch( e ) {
@@ -2394,21 +2517,12 @@ class HtmlPageEvents extends HtmlPageState {
 			'get'		: true
 		};
 
-		post_json(
+		post_json_async(
 			'proxy.php',
 			request,
 			(data)		=> this.sse_success_handler(data.events),
 			(msg, xhr)	=> this.sse_error_handler(msg, xhr)
 		);
-
-	}
-
-	idle_away_reload_handler() {
-
-		this.render_.rewrite_page();
-
-		let date = new Date;
-		console.log(date.toLocaleFormat('%d.%m.%Y %H:%M:%S') + ': current page reloaded on user idle away');
 
 	}
 
@@ -2437,39 +2551,31 @@ class HtmlPageManager extends HtmlPageEvents {
 		this.render_ = new Render;
 		this.render_.state = this;
 
-		this.render_.rewrite_category();
-		this.render_.rewrite_page();
-		this.render_.rewrite_page();
-		this.render_.rewrite_cart();
-		this.render_.show_new_page_state();
-
-		this.render_.debug_ellapsed(0, 'BOOT:&nbsp;');
-
-		//this.sseq_ = new ServerSentEvents({ url : '/resources/core/mq/sse_server.php'});
-		//this.sseq_.message = e => this.sse_handler_(e);
-		//this.sseq_.start();
-
+		add_event(window, 'sse_reload', e => this.events_handler(e), false);
 		this.sse_start();
 
+		add_event(window, 'away', e => this.events_handler(e), false);
 		this.idle_away_reloader_ =
 			new Idle({
 				oneshot	: false,
 				retry	: true,
 				start	: true,
 				timeout	: 60000, // 60s
-				away	: () => this.idle_away_reload_handler()
+				away	: () => {
+					let e = new CustomEvent('away', {});
+					window.dispatchEvent(e);
+				}
 			});
 
-		// switch to tyres category by default
-		let e = xpath_eval_single('html/body/div[@categories]/div[@btc and @uuid=\'83f528bc-481a-11e2-9a03-ace5647d95bd\']');
-		let evt = document.createEvent('MouseEvents');
-		evt.initMouseEvent('mouseup', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-		e.dispatchEvent(evt);
-
 		// virtual keyboard initiator
+		add_event(window, 'vki_type', e => this.events_handler(e), false);
 		this.setup_events(xpath_eval('html/body/img[@vk]'));
 		let vki_iframe_content = xpath_eval_single('html/body/iframe[@vk]').contentWindow;
 		vki_iframe_content.document.vki_callback = (e, keyboard, el, status) => this.vk_input_callback_handler(e, keyboard, el, status);
+
+		add_event(window, 'startup', e => this.events_handler(e), false);
+		let e = new CustomEvent('startup', {});
+		window.dispatchEvent(e);
 
 	}
 

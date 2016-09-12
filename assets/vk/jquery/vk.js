@@ -16,8 +16,9 @@ $(window).on('load', function() {
 			at	: 'right bottom',
 			at2	: 'right bottom'
 		},
-		//keyBinding	: 'mouseup touchend',
+		keyBinding	: 'mouseup touchend',
 		appendTo	: '#kb_wrap',
+		repeatDelay	: 15000,
 		reposition	: true,
 		usePreview	: true,
 		//alwaysOpen	: true,

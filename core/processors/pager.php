@@ -221,7 +221,7 @@ EOT
 
 		$fts_filter = trim(@$fts_filter);
 
-		if( mb_strlen($fts_filter) < 2 )
+		if( mb_strlen($fts_filter) < 1 )
 			$fts_filter = null;
 
 		if( $fts_filter !== null ) {
