@@ -2033,7 +2033,8 @@ class HtmlPageEvents extends HtmlPageState {
 			let element		= e.currentTarget ? e.currentTarget : e.deferredTarget;
 			let attrs		= element ? element.attributes : [];
 
-			this.start_		= mili_time();
+			this.start_		= e.start ? e.start : mili_time();
+			e.start			= this.start_;
 			this.ellapsed_	= 0;
 
 			let cur_page_state = state.page_state_;

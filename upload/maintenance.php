@@ -22,9 +22,16 @@ try {
 	$infobase->initialize();
 
 	$tbls = [
-		'products_fts'			=> 'uuid, name || \' \' || COALESCE(description, \'\') AS name FROM products',
-		'cars_fts'				=> 'uuid, name FROM cars',
-		'properties_values_fts'	=> 'uuid, value_b, value_n, value_s FROM properties_values'
+		'products_fts'			=> <<<'EOT'
+			uuid,
+			replace(replace(replace(replace(replace(
+			replace(replace(replace(replace(replace(hex(uuid),
+				'0', 'G'), '1', 'H'), '2', 'I'), '3', 'K'), '4', 'L'),
+				'5', 'M'), '6', 'N'), '7', 'O'), '8', 'P'), '9', 'Q')
+				|| ' ' || code
+				|| ' ' || name
+				|| ' ' || COALESCE(description, '') FROM products
+EOT
 	];
 
 	foreach( $tbls as $tbl => $src )

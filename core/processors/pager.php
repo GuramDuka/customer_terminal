@@ -226,17 +226,41 @@ EOT
 
 		if( $fts_filter !== null ) {
 
-			$sql = <<<'EOT'
+			$sql = <<<EOT
+			SELECT
+				replace(replace(replace(replace(replace(
+				replace(replace(replace(replace(replace(hex(${order}_${direction}_uuid),
+					'0', 'G'), '1', 'H'), '2', 'I'), '3', 'K'), '4', 'L'),
+					'5', 'M'), '6', 'N'), '7', 'O'), '8', 'P'), '9', 'Q') AS anchor
+			FROM
+				${category_table}
+EOT
+			;
+
+			$result = $this->infobase_->query($sql);
+			$anchor_filter = '';
+
+			while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
+
+				extract($r);
+
+				$anchor_filter .= " OR ${anchor}";
+
+			}
+
+			$anchor_filter = '(' . substr($anchor_filter, 4) . ')';
+
+			$sql = <<<EOT
 				SELECT DISTINCT
 					uuid
 				FROM
 					products_fts
 				WHERE
-					name MATCH :fts_filter
+					name MATCH '${fts_filter}'
 EOT
 			;
 
-			$bind_values['fts_filter'] = transform_fts_filter($fts_filter);
+			$bind_values['fts_filter'] = $anchor_filter . ' AND ' . transform_fts_filter($fts_filter);
 
 			$with = @$selections === null && @$car === null ? 'WITH' : ',';
 

@@ -168,28 +168,51 @@ EOT
 			       BEFORE UPDATE
 			       ON products
 			BEGIN
-			     DELETE FROM products_fts WHERE uuid = old.uuid;
+			     DELETE FROM products_fts WHERE name MATCH (SELECT
+      				replace(replace(replace(replace(replace(
+					replace(replace(replace(replace(replace(hex(old.uuid),
+						'0', 'G'), '1', 'H'), '2', 'I'), '3', 'K'), '4', 'L'),
+						'5', 'M'), '6', 'N'), '7', 'O'), '8', 'P'), '9', 'Q'));
+
 			END;
 
 			CREATE TRIGGER IF NOT EXISTS products_before_delete_trigger
 			       BEFORE DELETE
 			       ON products
 			BEGIN
-			     DELETE FROM products_fts WHERE uuid = old.uuid;
+			     DELETE FROM products_fts WHERE name MATCH (SELECT
+      				replace(replace(replace(replace(replace(
+					replace(replace(replace(replace(replace(hex(old.uuid),
+						'0', 'G'), '1', 'H'), '2', 'I'), '3', 'K'), '4', 'L'),
+						'5', 'M'), '6', 'N'), '7', 'O'), '8', 'P'), '9', 'Q'));
 			END;
 
 			CREATE TRIGGER IF NOT EXISTS products_after_update_trigger
 			       AFTER UPDATE
 			       ON products
 			BEGIN
-			     INSERT INTO products_fts(uuid, name) VALUES (new.uuid, new.name || ' ' || COALESCE(new.description, ''));
+			     INSERT INTO products_fts(uuid, name) VALUES (new.uuid,
+      				replace(replace(replace(replace(replace(
+					replace(replace(replace(replace(replace(hex(new.uuid),
+						'0', 'G'), '1', 'H'), '2', 'I'), '3', 'K'), '4', 'L'),
+						'5', 'M'), '6', 'N'), '7', 'O'), '8', 'P'), '9', 'Q')
+					|| ' ' || new.code
+					|| ' ' || new.name
+					|| ' ' || COALESCE(new.description, ''));
 			END;
 
 			CREATE TRIGGER IF NOT EXISTS products_after_insert_trigger
 			       AFTER INSERT
 			       ON products
 			BEGIN
-			     INSERT INTO products_fts(uuid, name) VALUES (new.uuid, new.name || ' ' || COALESCE(new.description, ''));
+			     INSERT INTO products_fts(uuid, name) VALUES (new.uuid,
+      				replace(replace(replace(replace(replace(
+					replace(replace(replace(replace(replace(hex(new.uuid),
+						'0', 'G'), '1', 'H'), '2', 'I'), '3', 'K'), '4', 'L'),
+						'5', 'M'), '6', 'N'), '7', 'O'), '8', 'P'), '9', 'Q')
+					|| ' ' || new.code
+					|| ' ' || new.name
+					|| ' ' || COALESCE(new.description, ''));
 			END;
 EOT
 		);
@@ -265,7 +288,7 @@ EOT
 			. ' ON cars (parent_uuid, manufacturer_uuid, model_uuid, modification_uuid, year_uuid)'
 		);
 
-		$this->exec(<<<'EOT'
+		/*$this->exec(<<<'EOT'
 			CREATE VIRTUAL TABLE IF NOT EXISTS cars_fts USING fts4 (uuid BLOB, name TEXT, notindexed=uuid, tokenize=unicode61);
 
 			CREATE TRIGGER IF NOT EXISTS cars_before_update_trigger
@@ -296,7 +319,7 @@ EOT
 			     INSERT INTO cars_fts(uuid, name) VALUES (new.uuid, new.name);
 			END;
 EOT
-		);
+		);*/
 
 		//$dimensions = [ 'manufacturer' => '_uuid', 'model' => '_uuid', 'modification' => '_uuid', 'year' => '_uuid' ];
 		//$this->create_unique_indexes_on_registry('cars', $dimensions);
@@ -363,7 +386,7 @@ EOT
 			. ' ON properties_values (property_uuid)'
 		);
 
-		$this->exec(<<<'EOT'
+		/*$this->exec(<<<'EOT'
 			CREATE VIRTUAL TABLE IF NOT EXISTS properties_values_fts USING fts4 (uuid BLOB, value_b INTEGER, value_n NUMERIC, value_s TEXT, notindexed=uuid, tokenize=unicode61);
 
 			CREATE TRIGGER IF NOT EXISTS properties_values_before_update_trigger
@@ -394,7 +417,7 @@ EOT
 			     INSERT INTO properties_values_fts(uuid, value_b, value_n, value_s) VALUES (new.uuid, new.value_b, new.value_n, new.value_s);
 			END;
 EOT
-		);
+		);*/
 
 		// регистр значения свойств объектов
 		$this->exec(<<<'EOT'
