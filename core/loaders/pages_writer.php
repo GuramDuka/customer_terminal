@@ -74,7 +74,7 @@ EOT
                 		AND q.quantity > 0
 				INNER JOIN products AS a
 				ON q.product_uuid = a.uuid
-					AND a.base_image_uuid IS NOT NULL
+					/*AND a.base_image_uuid IS NOT NULL*/
 			WHERE
 				p.price > 0
 				AND a.code > 0
@@ -220,7 +220,7 @@ EOT
 						COALESCE(r.quantity, 0)	AS ${order}_${direction}_reserve
 					FROM
 						rpf_products AS a
-							INNER JOIN images AS i
+							LEFT JOIN images AS i
 							ON a.base_image_uuid = i.uuid
 								AND i.ext > ''
 							LEFT JOIN reserves_registry AS r

@@ -27,7 +27,7 @@ function get_image_url($base_image_uuid, $base_image_ext, $canvas = false) {
 	$path_name = '/resources/';
 	$uuid = bin2uuid($base_image_uuid);
 
-	if( $base_image_uuid !== null ) {
+	if( $base_image_uuid !== null && $base_image_ext !== null && !empty($base_image_ext) ) {
 
 		$ext = config::$convert_images ? config::$images_format : $base_image_ext;
 		$guid = str_replace('-', '+', $uuid);
@@ -84,7 +84,7 @@ function get_image_url($base_image_uuid, $base_image_ext, $canvas = false) {
 	}
 
 	if( $nopic )
-		$path_name .= 'asserts/nopic.jpg';
+		$path_name .= 'assets/nopic.jpg';
 
 	return $path_name;
 

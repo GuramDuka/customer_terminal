@@ -140,6 +140,8 @@ EOT
 					ON r.value_uuid = v.uuid
 			WHERE
 				r.object_uuid = :product_uuid
+			ORDER BY
+				p.name
 EOT
 		;
 
@@ -200,7 +202,7 @@ EOT
 				COALESCE(r.quantity, 0)	AS reserve
 			FROM
 				products AS a
-					INNER JOIN images AS i
+					LEFT JOIN images AS i
 					ON a.base_image_uuid = i.uuid
 					INNER JOIN prices_registry AS p
 					ON a.uuid = p.product_uuid
