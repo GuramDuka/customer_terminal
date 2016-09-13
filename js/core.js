@@ -1936,11 +1936,6 @@ class HtmlPageEvents extends HtmlPageState {
 
 		if( change ) {
 
-			//let vki_iframe_content = xpath_eval_single('html/body/iframe[@vk]').contentWindow;
-			//let vki_iframe_document = vki_iframe_content.document;
-			//let e = xpath_eval_single('html/body/div/input[@vki]', vki_iframe_document, vki_iframe_document);
-			//e = e;
-
 			if( this.vk_input_timer_ )
 				clearTimeout(this.vk_input_timer_);
 
@@ -2622,6 +2617,20 @@ function core() {
 		lnk.setAttribute('href', '/resources/css/debug.css');
 
 		let head = document.getElementsByTagName('head')[0];
+		head.appendChild(lnk);
+
+	}
+	else {
+
+		let vki_iframe_content = xpath_eval_single('html/body/iframe[@vk]').contentWindow;
+		let vki_iframe_document = vki_iframe_content.document;
+
+		let lnk = vki_iframe_document.createElement('link');
+		lnk.setAttribute('rel', 'stylesheet');
+		lnk.setAttribute('type', 'text/css');
+		lnk.setAttribute('href', 'vkn.css');
+
+		let head = vki_iframe_document.getElementsByTagName('head')[0];
 		head.appendChild(lnk);
 
 	}
