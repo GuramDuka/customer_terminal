@@ -1935,8 +1935,15 @@ class HtmlPageEvents extends HtmlPageState {
 			//let e = xpath_eval_single('html/body/div/input[@vki]', vki_iframe_document, vki_iframe_document);
 			//e = e;
 
-			let m = new CustomEvent('vki_type', { 'detail' : keyboard.preview.value });
-			window.dispatchEvent(m);
+			if( this.vk_input_timer_ )
+				clearTimeout(this.vk_input_timer_);
+
+			this.vk_input_timer_ = setTimeout( () => {
+
+				let m = new CustomEvent('vki_type', { 'detail' : keyboard.preview.value });
+				window.dispatchEvent(m);
+
+			}, 1000);
 
 		}
 
