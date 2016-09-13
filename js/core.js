@@ -269,8 +269,6 @@ class Render {
 		let pctrl = xpath_eval_single('html/body/div[@pcontrols]');
 		let base = xpath_eval_single('div[@plist_controls]', pctrl);
 
-		console.log(new_paging_state.pages_);
-
 		xpath_eval_single('div[@first_page]', base).fade(new_paging_state.pgno_ >= 2 && new_paging_state.pages_ >= 2);
 		xpath_eval_single('div[@prev_page]', base).fade(new_paging_state.pgno_ !== 0 && new_paging_state.pages_ >= 2);
 		xpath_eval_single('div[@prev_page]/span[@btn_txt]', base).innerText = (new_paging_state.pgno_ + 1) - 1;
@@ -1519,7 +1517,6 @@ class HtmlPageEvents extends HtmlPageState {
 
 	btn_cheque_cart_informer_handler(cur_page_state) {
 
-		let state = this.state_;
 		let [ new_page_state ] = this.clone_page_state();
 
 		let request = {
@@ -1537,7 +1534,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 		try {
 
-			let data = post_json(state.deferred_object_, 'proxy.php', request);
+			let data = post_json(this.deferred_object_, 'proxy.php', request);
 			//state.ellapsed_ += data.ellapsed;
 
 			if( data.errno !== 0 )
@@ -1579,6 +1576,9 @@ class HtmlPageEvents extends HtmlPageState {
 				// success, print cheque
 
 				for( let ncopy = 1; ncopy <= 2; ncopy++ ) {
+
+					if( this.deferred_object_ && this.deferred_object_.cheque_printed )
+						break;
 
 					let iframe_content = xpath_eval_single('html/body/iframe[@cheque_print and @copy=\'' + ncopy + '\']').contentWindow;
 					let iframe	= iframe_content.document;
@@ -1628,6 +1628,9 @@ class HtmlPageEvents extends HtmlPageState {
 
 				}
 
+				if( this.deferred_object_ )
+					this.deferred_object_.cheque_printed = true;
+
 				// successfully, clear cart now
 				for( let e of new_page_state.cart_ ) {
 
@@ -1646,6 +1649,9 @@ class HtmlPageEvents extends HtmlPageState {
 
 		}
 		catch( ex ) {
+
+			if( ex instanceof XhrDeferredException )
+				throw ex;
 
 			this.show_alert('<pre error>' + ex.message + "\n" + ex.stack + '</pre>', cur_page_state);
 			console.error(ex.message);
