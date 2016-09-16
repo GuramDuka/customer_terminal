@@ -50,8 +50,8 @@ class system_remainders_registry_loader extends objects_loader {
 			SELECT
 				r.shop_uuid,
 				r.product_uuid,
-				COALESCE(t.remainder_quantity, 0) ${op} r.remainder_quantity,
-				COALESCE(t.reserve_quantity, 0) ${op} r.reserve_quantity
+				(COALESCE(t.remainder_quantity, 0) * 1000 ${op} r.remainder_quantity * 1000) / 1000,
+				(COALESCE(t.reserve_quantity, 0) * 1000 ${op} r.reserve_quantity * 1000) / 1000
 			FROM
 				system_remainders_records_registry AS r
 				LEFT JOIN system_remainders_registry AS t

@@ -40,7 +40,7 @@ class remainders_registry_loader extends objects_loader {
 				remainders_registry
 			SELECT
 				r.product_uuid,
-				COALESCE(t.quantity, 0) ${op} r.quantity
+				(COALESCE(t.quantity, 0) * 1000 ${op} r.quantity * 1000) / 1000 /* mul need for fixing rouding error */
 			FROM
 				remainders_records_registry AS r
 				LEFT JOIN remainders_registry AS t
