@@ -68,6 +68,8 @@ EOT
 		$category_uuid = uuid2bin($category);
 		$category_x = bin2uuid($category_uuid, '');
 		$table = $category_table = 'products_' . uuid2table_name($category) . 'pages';
+		$table_version = $this->infobase_->products_pages_version($table);
+		$table = $category_table = $table . '_v' . $table_version;
 
 		$limit = $before = '';
 
@@ -76,20 +78,37 @@ EOT
 		$car_uuid = uuid2bin($car);
 		$car_x = bin2uuid($car_uuid, '');
 
+		list($orders, $directions) = get_orders_directions();
+
+		$o = array_search($order, $orders);
+		$d = array_search($direction, $directions);
+
 		$bind_values = [
-			'pgnon0'		=> $pgno << 4,
-			'pgnon1'		=> ($pgno << 4) + ((1 << 4) - 1),
+			'pgnon0'		=> get_pgnon($o, $d, $pgno,  0),
+			'pgnon1'		=> get_pgnon($o, $d, $pgno, -1),
 			'car_uuid'		=> $car_uuid,
 			'category_uuid'	=> $category_uuid
 		];
 
+		$pgnon0 = get_pgnon($o, $d, 0,  0);
+		$pgnon1 = get_pgnon($o, $d, -1, -1);
+
 		if( $selections !== null || $car !== null ) {
 
 			$sql = <<<EOT
-				SELECT DISTINCT
-					p.*
-				FROM
-					${category_table} AS p
+				WITH ctep AS (
+					SELECT
+						*
+					FROM
+						${category_table}
+					WHERE
+						pgnon BETWEEN ${pgnon0} AND ${pgnon1}
+				),
+				cte AS (
+					SELECT
+						p.*
+					FROM
+						ctep AS p
 EOT
 			;
 
@@ -115,7 +134,7 @@ EOT
 					$sql .= <<<EOT
 
 								INNER JOIN properties_registry AS r${i}
-								ON p.${order}_${direction}_uuid = r${i}.object_uuid
+								ON p.uuid = r${i}.object_uuid
 									AND r${i}.property_uuid = :property_${i}_uuid
 									AND r${i}.value_uuid IN (${s})
 EOT
@@ -125,7 +144,6 @@ EOT
 			// end of if( $selections !== null )
 
 			$before = <<<EOT
-				WITH cte AS (
 					${sql}
 				)
 EOT
@@ -157,7 +175,7 @@ EOT
 					$sql .= <<<EOT
 
 						LEFT JOIN properties_registry AS r${i}
-						ON f.${order}_${direction}_uuid = r${i}.object_uuid
+						ON f.uuid = r${i}.object_uuid
 							AND f.property${i}_uuid = r${i}.property_uuid
 							AND f.value${i}_uuid = r${i}.value_uuid
 EOT
@@ -229,11 +247,13 @@ EOT
 			$sql = <<<EOT
 			SELECT
 				replace(replace(replace(replace(replace(
-				replace(replace(replace(replace(replace(hex(${order}_${direction}_uuid),
+				replace(replace(replace(replace(replace(hex(uuid),
 					'0', 'G'), '1', 'H'), '2', 'I'), '3', 'K'), '4', 'L'),
 					'5', 'M'), '6', 'N'), '7', 'O'), '8', 'P'), '9', 'Q') AS anchor
 			FROM
 				${category_table}
+			WHERE
+				pgnon BETWEEN ${pgnon0} AND ${pgnon1}
 EOT
 			;
 
@@ -269,12 +289,12 @@ EOT
 					${sql}
 				)
 				, fts_filtered_products AS (
-					SELECT DISTINCT
+					SELECT
 						p.*
 					FROM
 						${table} AS p
 						INNER JOIN fts_filter AS f
-						ON p.${order}_${direction}_uuid = f.uuid
+						ON p.uuid = f.uuid
 				)
 EOT
 			;
@@ -303,17 +323,19 @@ EOT
 
 		$sql = <<<EOT
 			${before}
-			SELECT DISTINCT
-				p.${order}_${direction}_uuid			AS uuid,
-				p.${order}_${direction}_code			AS code,
-				p.${order}_${direction}_name			AS name,
-				p.${order}_${direction}_base_image_uuid	AS base_image_uuid,
-				p.${order}_${direction}_base_image_ext	AS base_image_ext,
-				p.${order}_${direction}_price			AS price,
-				p.${order}_${direction}_remainder		AS remainder,
-				p.${order}_${direction}_reserve			AS reserve, c.objects AS objects
+			SELECT
+				p.uuid				AS uuid,
+				p.code				AS code,
+				p.name				AS name,
+				p.base_image_uuid	AS base_image_uuid,
+				p.base_image_ext	AS base_image_ext,
+				p.price				AS price,
+				p.remainder			AS remainder,
+				p.reserve			AS reserve
+				, c.objects AS objects
 			FROM
-				${table} AS p, cnt AS c
+				${table} AS p
+				, cnt AS c
 			WHERE
 				p.pgnon BETWEEN :pgnon0 AND :pgnon1
 			ORDER BY
@@ -379,14 +401,24 @@ EOT
 
 		if( $selections !== null || $car !== null || $fts_filter !== null ) {
 
-			$this->response_['pages'] = (int) ($objects / $pgsz) + ($objects % $pgsz !== 0 ? 1 : 0);
+			$this->response_['pages'] = (int) ($objects / $pgsz) + (($objects % $pgsz) > 0 ? 1 : 0);
 
 		}
 		else {
 
-			$r = $this->infobase_->query("SELECT max(pgnon) FROM ${category_table}");
+			$r = $this->infobase_->query(<<<EOT
+				SELECT
+					COUNT(*)
+				FROM
+					${category_table}
+				WHERE
+					pgnon BETWEEN ${pgnon0} AND ${pgnon1}
+EOT
+			);
+			
 			list($pgnon) = $r->fetchArray(SQLITE3_NUM);
-			$this->response_['pages'] = $r ? ($pgnon >> 4) + 1 : 0;
+
+			$this->response_['pages'] = (int) ($pgnon / $pgsz) + (($pgnon % $pgsz) > 0 ? 1 : 0);
 
 		}
 

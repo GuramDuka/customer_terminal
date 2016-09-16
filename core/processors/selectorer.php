@@ -20,6 +20,10 @@ class selectorer_handler extends handler {
 
 		$category_uuid = uuid2bin($category);
 		$category_table = 'products_' . uuid2table_name($category) . 'pages';
+		$table_version = $this->infobase_->products_pages_version($category_table);
+		$category_table .= '_v' . $table_version;
+
+		$pgnon = get_pgnon(0, 0, -1, -1);
 
 		$sql = <<<EOT
 			WITH cte AS (
@@ -34,16 +38,24 @@ class selectorer_handler extends handler {
 				WHERE
 					category_uuid = :category_uuid
 			),
+			ctep AS (
+				SELECT
+					p.uuid AS object_uuid
+				FROM
+					${category_table} AS p
+				WHERE
+					p.pgnon BETWEEN 0 AND ${pgnon}
+			),
 			cte0 AS (
-				SELECT DISTINCT
-					p.name_asc_uuid AS object_uuid,
+				SELECT
+					p.object_uuid,
 					c.property_uuid,
 					c.display,
 					c.display_order,
 					c.columns,
 					c.multi_select
 				FROM
-					${category_table} AS p
+					ctep AS p
 						INNER JOIN cte AS c
 						ON 1
 			),

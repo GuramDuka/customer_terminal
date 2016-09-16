@@ -972,7 +972,7 @@
 
 	html > body > img[vk] {
 		/*display				: none;*/
-		z-index				: 9000;
+		z-index				: 999;
 		position			: absolute;
 		top					: 93%;
 		left				: 0.5%;

@@ -683,32 +683,62 @@ EOT
 
 	}
 
-	public function products_pages_ddl($table_name) {
-
-		$sql = '';
-
-		foreach( [ 'asc', 'desc' ] as $direction )
-			foreach( [ 'code', 'name', 'price', 'remainder' ] as $order )
-				$sql .= <<<EOT
-					,
-					${order}_${direction}_uuid				BLOB,
-					${order}_${direction}_code				INTEGER,
-					${order}_${direction}_name				TEXT,
-					${order}_${direction}_base_image_uuid	BLOB,
-					${order}_${direction}_base_image_ext	TEXT,
-					${order}_${direction}_price				NUMERIC,
-					${order}_${direction}_remainder			NUMERIC,
-					${order}_${direction}_reserve			NUMERIC
-EOT
-				;
+	public function products_pages_ddl($table) {
 
 		return <<<EOT
-			CREATE TABLE IF NOT EXISTS ${table_name} (
-				pgnon									INTEGER PRIMARY KEY ON CONFLICT REPLACE
-				${sql}
+			CREATE TABLE IF NOT EXISTS ${table} (
+				pgnon				INTEGER PRIMARY KEY ON CONFLICT REPLACE,
+				uuid				BLOB,
+				code				INTEGER,
+				name				TEXT,
+				base_image_uuid		BLOB,
+				base_image_ext		TEXT,
+				price				NUMERIC,
+				remainder			NUMERIC,
+				reserve				NUMERIC
 			) WITHOUT ROWID
 EOT
 		;
+
+	}
+
+	public function products_pages_version($table, $keep_versions = -1) {
+
+		$entity = $this->escapeString($table);
+
+		$result = $this->query(<<<EOT
+			SELECT
+				name
+			FROM
+				sqlite_master
+			WHERE
+				type = 'table'
+				AND name LIKE '${entity}_v%'
+EOT
+		);
+
+		$vr = [];
+
+		while( $r = $result->fetchArray(SQLITE3_NUM) )
+			$vr[] = $r[0];
+
+		natsort($vr);
+
+		while( $keep_versions >= 0 && count($vr) >= $keep_versions ) {
+
+			$entity = $this->escapeString(array_shift($vr));
+			$this->exec("DROP TABLE IF EXISTS ${entity}");
+
+		}
+
+		$r = array_pop($vr);
+
+		if( $r === null )
+			$r = 0;
+		else
+			$r = intval(substr($r, strpos($r, '_v') + 2));
+
+		return $r;
 
 	}
 

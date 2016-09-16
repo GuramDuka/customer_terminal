@@ -58,6 +58,8 @@ EOT
 			$uuid = bin2uuid($uuid);
 
 			$category_table = 'products_' . uuid2table_name($uuid) . 'pages';
+			$table_version = $this->infobase_->products_pages_version($category_table);
+			$category_table .= '_v' . $table_version;
 			$st_e = $this->infobase_->query("SELECT pgnon FROM ${category_table} LIMIT 1");
 
 			if( $st_e->fetchArray(SQLITE3_NUM) === false )

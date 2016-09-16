@@ -123,13 +123,29 @@ class Render {
 		this.state_ = null;
 
 		this.get_remainder = function (product) {
-			let f = Math.trunc(product.remainder) == product.remainder ? '%d' : '%.3f';
-			return sprintf(f, product.remainder);
+
+			let n = Math.trunc(product.remainder) != product.remainder;
+			let f = n ? '%.3f' : '%d';
+			let s = sprintf(f, product.remainder);
+
+			while( n && s.endsWith('0') )
+				s = s.substr(0, s.length - 1);
+
+			return s;
+
 		};
 
 		this.get_reserve = function (product) {
-			let f = Math.trunc(product.reserve) == product.reserve ? '%d' : '%.3f';
-			return product.reserve ? '&nbsp;(' + sprintf(f, product.reserve) + ')' : '';
+
+			let n = Math.trunc(product.reserve) != product.reserve;
+			let f = n ? '%.3f' : '%d';
+			let s = sprintf(f, product.reserve);
+
+			while( n && s.endsWith('0') )
+				s = s.substr(0, s.length - 1);
+
+			return product.reserve ? '&nbsp;(' + s + ')' : '';
+
 		};
 
 	}
