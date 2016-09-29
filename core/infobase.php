@@ -559,9 +559,7 @@ EOT
 			'infobase'		=> '_uuid',
 			'product'		=> '_uuid',
 			'storage'		=> '_uuid',
-			'organization'	=> '_uuid',
-			'recipient'		=> '_uuid',
-			'package_id'	=> '_uuid'
+			'organization'	=> '_uuid'
 		];
 
 		$gf = implode('_uuid BLOB, ', array_keys($dimensions)) . '_uuid BLOB, ';

@@ -72,6 +72,7 @@ EOT
 		$table = $category_table = $table . '_v' . $table_version;
 
 		$limit = $before = '';
+		$sorting = 'p.pgnon';
 
 		$selections = @$selections;
 		$car = @$car;
@@ -289,8 +290,15 @@ EOT
 					${sql}
 				)
 				, fts_filtered_products AS (
-					SELECT
-						p.*
+					SELECT DISTINCT
+						p.uuid				AS uuid,
+						p.code				AS code,
+						p.name				AS name,
+						p.base_image_uuid	AS base_image_uuid,
+						p.base_image_ext	AS base_image_ext,
+						p.price				AS price,
+						p.remainder			AS remainder,
+						p.reserve			AS reserve
 					FROM
 						${table} AS p
 						INNER JOIN fts_filter AS f
@@ -307,6 +315,7 @@ EOT
 
 			$offset = $pgno * $pgsz;
 			$limit = "LIMIT ${pgsz} OFFSET ${offset}";
+			$sorting = "${order} ${direction}, p.uuid";
 
 			$before .= <<<EOT
 
@@ -339,7 +348,7 @@ EOT
 			WHERE
 				p.pgnon BETWEEN :pgnon0 AND :pgnon1
 			ORDER BY
-				p.pgnon
+			${sorting}
 			${limit}
 EOT
 		;
