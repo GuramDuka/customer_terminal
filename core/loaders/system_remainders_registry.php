@@ -14,8 +14,7 @@ class system_remainders_registry_loader extends objects_loader {
 		$dimensions = [
 			'infobase_uuid',
 			'product_uuid',
-			'storage_uuid',
-			'organization_uuid'
+			'storage_uuid'
 		];
 
 		$all_fields = array_merge($dimensions, [

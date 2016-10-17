@@ -558,8 +558,7 @@ EOT
 		$dimensions = [
 			'infobase'		=> '_uuid',
 			'product'		=> '_uuid',
-			'storage'		=> '_uuid',
-			'organization'	=> '_uuid'
+			'storage'		=> '_uuid'
 		];
 
 		$gf = implode('_uuid BLOB, ', array_keys($dimensions)) . '_uuid BLOB, ';
@@ -578,7 +577,7 @@ EOT
 
 		$this->exec(
 			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'system_remainders_records_registry_by_dims'), -4)
-			. ' ON system_remainders_records_registry (infobase_uuid, product_uuid, storage_uuid, organization_uuid, recipient_uuid, package_id_uuid)'
+			. ' ON system_remainders_records_registry (infobase_uuid, product_uuid, storage_uuid)'
 		);
 
 		$this->exec(
