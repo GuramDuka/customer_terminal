@@ -47,8 +47,8 @@ class system_remainders_registry_loader extends objects_loader {
 			SELECT
 				r.shop_uuid,
 				r.product_uuid,
-				(COALESCE(t.remainder_quantity, 0) * 1000 ${op} r.remainder_quantity * 1000) / 1000,
-				(COALESCE(t.reserve_quantity, 0) * 1000 ${op} r.reserve_quantity * 1000) / 1000
+				SUM((COALESCE(t.remainder_quantity, 0) * 1000 ${op} r.remainder_quantity * 1000) / 1000),
+				SUM((COALESCE(t.reserve_quantity, 0) * 1000 ${op} r.reserve_quantity * 1000) / 1000)
 			FROM
 				system_remainders_records_registry AS r
 				LEFT JOIN system_remainders_registry AS t
@@ -56,6 +56,13 @@ class system_remainders_registry_loader extends objects_loader {
 					AND r.product_uuid = t.product_uuid
 			WHERE
 				1
+EOT
+		;
+
+		$st_totals_op_grp = <<<'EOT'
+			GROUP BY
+				r.shop_uuid,
+				r.product_uuid
 EOT
 		;
 
@@ -97,7 +104,7 @@ EOT
 			// subtract existing records from totals
 			if( $st_totals_sub === null ) {
 
-				$sql = str_replace('${op}', '-', $st_totals_op . str_replace('AND ', 'AND r.', "${where}"));
+				$sql = str_replace('${op}', '-', $st_totals_op . str_replace('AND ', 'AND r.', "${where}") . $st_totals_op_grp);
 
 				$this->infobase_->dump_plan($sql);
 				$st_totals_sub = $this->infobase_->prepare($sql);
@@ -205,7 +212,7 @@ EOT
 			// addition existing records to totals
 			if( $st_totals_add === null ) {
 
-				$sql = str_replace('${op}', '+', $st_totals_op . str_replace('AND ', 'AND r.', "${where}"));
+				$sql = str_replace('${op}', '+', $st_totals_op . str_replace('AND ', 'AND r.', "${where}") . $st_totals_op_grp);
 
 				$this->infobase_->dump_plan($sql);
 				$st_totals_add = $this->infobase_->prepare($sql);
