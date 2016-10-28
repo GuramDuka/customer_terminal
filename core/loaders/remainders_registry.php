@@ -206,8 +206,8 @@ EOT
 
 		}
 
-		$entity = $this->infobase_->escapeString('products_pages');
-		$this->infobase_->exec("REPLACE INTO dirties (entity) VALUES ('${entity}')");
+		/*$entity = $this->infobase_->escapeString('products_pages');
+		$this->infobase_->exec("REPLACE INTO dirties (entity) VALUES ('${entity}')");*/
 
 		$this->infobase_->commit_transaction();
 

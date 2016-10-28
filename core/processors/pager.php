@@ -296,13 +296,13 @@ EOT
 						p.name				AS name,
 						p.base_image_uuid	AS base_image_uuid,
 						p.base_image_ext	AS base_image_ext,
-						p.price				AS price,
+						p.price				AS price/*,
 						p.remainder			AS remainder,
-						p.reserve			AS reserve
+						p.reserve			AS reserve*/
 					FROM
 						${table} AS p
-						INNER JOIN fts_filter AS f
-						ON p.uuid = f.uuid
+							INNER JOIN fts_filter AS f
+							ON p.uuid = f.uuid
 				)
 EOT
 			;
@@ -333,17 +333,21 @@ EOT
 		$sql = <<<EOT
 			${before}
 			SELECT
-				p.uuid				AS uuid,
-				p.code				AS code,
-				p.name				AS name,
-				p.base_image_uuid	AS base_image_uuid,
-				p.base_image_ext	AS base_image_ext,
-				p.price				AS price,
-				p.remainder			AS remainder,
-				p.reserve			AS reserve
+				p.uuid						AS uuid,
+				p.code						AS code,
+				p.name						AS name,
+				p.base_image_uuid			AS base_image_uuid,
+				p.base_image_ext			AS base_image_ext,
+				p.price						AS price,
+				COALESCE(m.quantity, 0)		AS remainder,
+				COALESCE(r.quantity, 0)		AS reserve
 				, c.objects AS objects
 			FROM
 				${table} AS p
+					LEFT JOIN remainders_registry AS m
+					ON p.uuid = m.product_uuid
+					LEFT JOIN reserves_registry AS r
+					ON p.uuid = r.product_uuid
 				, cnt AS c
 			WHERE
 				p.pgnon BETWEEN :pgnon0 AND :pgnon1

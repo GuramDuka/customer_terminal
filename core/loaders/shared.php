@@ -134,7 +134,7 @@ function transform_fts_filter($filter) {
 function get_orders_directions() {
 
 	return [
-		[ 'code', 'name', 'price', 'remainder' ],
+		[ 'code', 'name', 'price'/*, 'remainder'*/ ],
 		[ 'asc', 'desc' ]
 	];
 

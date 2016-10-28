@@ -6,7 +6,7 @@ function rewrite_pages($infobase) {
 
 	$pgsz = config::$page_size;
 
-	$all_fields = [ 'uuid', 'code', 'name', 'base_image_uuid', 'base_image_ext', 'price', 'remainder', 'reserve' ];
+	$all_fields = [ 'uuid', 'code', 'name', 'base_image_uuid', 'base_image_ext', 'price'/*, 'remainder', 'reserve'*/ ];
 
 	$fields = [];
 	$fields_uuid = [];
@@ -46,7 +46,7 @@ function rewrite_pages($infobase) {
 					code       		INTEGER,
 					name       		TEXT,
 					base_image_uuid	BLOB,
-					quantity		NUMERIC,
+					/*quantity		NUMERIC,*/
 					price			NUMERIC
 				)
 EOT
@@ -66,7 +66,7 @@ EOT
 				a.code,
 				a.name,
 				a.base_image_uuid,
-				q.quantity,
+				/*q.quantity,*/
 				p.price
 			FROM
 				remainders_registry AS q
@@ -211,16 +211,16 @@ EOT
 						a.name					AS name,
 						i.uuid					AS base_image_uuid,
 						i.ext					AS base_image_ext,
+						a.price					AS price/*,
 						a.quantity				AS remainder,
-						a.price					AS price,
-						COALESCE(r.quantity, 0)	AS reserve
+						COALESCE(r.quantity, 0)	AS reserve*/
 					FROM
 						${prefix}products AS a
 							LEFT JOIN images AS i
 							ON a.base_image_uuid = i.uuid
 								AND i.ext > ''
-							LEFT JOIN reserves_registry AS r
-							ON a.uuid = r.product_uuid
+							/*LEFT JOIN reserves_registry AS r
+							ON a.uuid = r.product_uuid*/
 					)
 EOT
 				;

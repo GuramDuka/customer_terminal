@@ -31,6 +31,8 @@ class system_remainders_registry_loader extends objects_loader {
 			else
 				$fields[] = $field;
 
+		$event = [];
+
 		$this->infobase_->begin_transaction();
 
 		$timer = new \nano_timer;
@@ -78,6 +80,8 @@ EOT
 
 			foreach( $fields_uuid as $field )
 				$$field = uuid2bin(@$$field);
+
+			$event[$product_uuid] = null;
 
 			$w = '';
 
@@ -229,8 +233,8 @@ EOT
 
 		}
 
-		$entity = $this->infobase_->escapeString('products_pages');
-		$this->infobase_->exec("REPLACE INTO dirties (entity) VALUES ('${entity}')");
+		/*$entity = $this->infobase_->escapeString('products_pages');
+		$this->infobase_->exec("REPLACE INTO dirties (entity) VALUES ('${entity}')");*/
 
 		$this->infobase_->commit_transaction();
 
@@ -248,6 +252,20 @@ EOT
 			$rps = $seconds != 0 ? bcdiv($cnt, $seconds, 2) : $cnt;
 
 		    error_log(sprintf('%u', $cnt) . ' system remainders registry updated, ' . $rps . ' rps, ellapsed: ' . $timer->ellapsed_string($ellapsed));
+
+		}
+
+		$timer->start();
+
+		$trigger = new \events_trigger;
+		$event = [ 'system_remainders' => array_keys($event) ];
+		$trigger->event(json_encode($event, JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION));
+		$trigger->fire();
+
+		if( config::$log_trigger_timing ) {
+
+			list($ellapsed) = $timer->nano_time();
+	    	error_log('reserves trigger fired, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
 		}
 

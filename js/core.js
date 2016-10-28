@@ -67,7 +67,7 @@ class HtmlPageState {
 					asc		: '/resources/assets/sorting/sort_ascending.ico',
 					desc	: '/resources/assets/sorting/sort_descending.ico'
 				}
-			},
+			}/*,
 			{
 				name		: 'remainder',
 				display		: 'Остаток',
@@ -79,7 +79,7 @@ class HtmlPageState {
 					asc		: '/resources/assets/sorting/sort_ascending.ico',
 					desc	: '/resources/assets/sorting/sort_descending.ico'
 				}
-			}
+			}*/
 		];
 
 		this.page_state_	= {
@@ -124,6 +124,9 @@ class Render {
 
 		this.get_remainder = function (product) {
 
+			if( product.remainder == 0 )
+				return '-';
+
 			let n = Math.trunc(product.remainder) != product.remainder;
 			let f = n ? '%.3f' : '%d';
 			let s = sprintf(f, product.remainder);
@@ -144,7 +147,7 @@ class Render {
 			while( n && s.endsWith('0') )
 				s = s.substr(0, s.length - 1);
 
-			return product.reserve ? '&nbsp;(' + s + ')' : '';
+			return product.reserve != 0 ? '&nbsp;(' + s + ')' : '';
 
 		};
 
@@ -2439,6 +2442,9 @@ class HtmlPageEvents extends HtmlPageState {
 
 			if( data.reserves )
 				walk(data.reserves);
+
+			if( data.system_remainders )
+				walk(data.system_remainders);
 
 			if( reload ) {
 

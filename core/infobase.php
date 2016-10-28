@@ -690,9 +690,9 @@ EOT
 				name				TEXT,
 				base_image_uuid		BLOB,
 				base_image_ext		TEXT,
-				price				NUMERIC,
+				price				NUMERIC/*,
 				remainder			NUMERIC,
-				reserve				NUMERIC
+				reserve				NUMERIC*/
 			) WITHOUT ROWID
 EOT
 		;
