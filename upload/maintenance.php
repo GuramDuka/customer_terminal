@@ -23,31 +23,13 @@ try {
 
 	$tbls = [
 		'products_fts'			=> <<<'EOT'
-			uuid,
-			replace(replace(replace(replace(replace(
-			replace(replace(replace(replace(replace(hex(uuid),
-				'0', 'G'), '1', 'H'), '2', 'I'), '3', 'K'), '4', 'L'),
-				'5', 'M'), '6', 'N'), '7', 'O'), '8', 'P'), '9', 'Q')
-				|| ' ' || code
-				|| ' ' || name
-				|| ' ' || COALESCE(description, '') FROM products
 EOT
 	];
 
 	foreach( $tbls as $tbl => $src )
-		foreach( [ 'reload', /*'rebuild',*/ 'optimize'/*, 'integrity-check'*/ ] as $cmd ) {
+		foreach( [ 'optimize' ] as $cmd ) {
 
-			if( $cmd === 'reload' ) {
-
-				$infobase->exec("DELETE FROM ${tbl}");
-				$infobase->exec("INSERT INTO ${tbl} SELECT ${src}");
-
-			}
-			else {
-
-				$infobase->exec("INSERT INTO ${tbl} (${tbl}) VALUES('${cmd}')");
-
-			}
+			$infobase->exec("INSERT INTO ${tbl} (${tbl}) VALUES('${cmd}')");
 
 			$ellapsed = $timer->last_nano_time();
 

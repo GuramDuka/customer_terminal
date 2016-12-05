@@ -122,8 +122,10 @@ function transform_fts_filter($filter) {
 
 	}
 
-	$filter = mb_stri_replace(' OR* ', ' OR ', $filter);
-	$filter = mb_stri_replace(' AND* ', ' AND ', $filter);
+	$filter = mb_str_replace(' OR* ', ' OR ', $filter);
+	$filter = mb_str_replace(' AND* ', ' AND ', $filter);
+	$filter = mb_str_replace('/', ' ', $filter);
+	$filter = mb_str_replace('\\', ' ', $filter);
 
 	$filter .= '*';
 

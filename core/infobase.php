@@ -142,7 +142,7 @@ EOT
 				base_image_uuid		BLOB,
 				description			TEXT,
 				description_in_html	INTEGER
-			) WITHOUT ROWID
+			) /*WITHOUT ROWID*/
 EOT
 		);
 
@@ -162,57 +162,46 @@ EOT
 		);
 
 		$this->exec(<<<'EOT'
-			CREATE VIRTUAL TABLE IF NOT EXISTS products_fts USING fts4 (uuid BLOB, name TEXT, notindexed=uuid, tokenize=unicode61);
+			CREATE VIRTUAL TABLE IF NOT EXISTS products_fts USING fts5 (
+				uuid UNINDEXED,
+				code,
+				name,
+				article,
+				description,
+				prefix=2,
+				prefix=3,
+				detail = none,
+				columnsize = 0,
+				content = 'products',
+				content_rowid = 'rowid',
+				tokenize = "unicode61 remove_diacritics 0");
 
-			CREATE TRIGGER IF NOT EXISTS products_before_update_trigger
-			       BEFORE UPDATE
-			       ON products
+			CREATE TRIGGER IF NOT EXISTS products_ai AFTER INSERT ON products
 			BEGIN
-			     DELETE FROM products_fts WHERE name MATCH (SELECT
-      				replace(replace(replace(replace(replace(
-					replace(replace(replace(replace(replace(hex(old.uuid),
-						'0', 'G'), '1', 'H'), '2', 'I'), '3', 'K'), '4', 'L'),
-						'5', 'M'), '6', 'N'), '7', 'O'), '8', 'P'), '9', 'Q'));
-
+				INSERT INTO products_fts(rowid, uuid, code, name, article, description) VALUES (
+					new.rowid,
+					new.uuid,
+					new.code,
+					new.name,
+					COALESCE(new.article, ''),
+					COALESCE(new.description, ''));
 			END;
 
-			CREATE TRIGGER IF NOT EXISTS products_before_delete_trigger
-			       BEFORE DELETE
-			       ON products
+			CREATE TRIGGER IF NOT EXISTS products_ad AFTER DELETE ON products
 			BEGIN
-			     DELETE FROM products_fts WHERE name MATCH (SELECT
-      				replace(replace(replace(replace(replace(
-					replace(replace(replace(replace(replace(hex(old.uuid),
-						'0', 'G'), '1', 'H'), '2', 'I'), '3', 'K'), '4', 'L'),
-						'5', 'M'), '6', 'N'), '7', 'O'), '8', 'P'), '9', 'Q'));
+				INSERT INTO products_fts(products_fts, rowid) VALUES('delete', old.rowid);
 			END;
 
-			CREATE TRIGGER IF NOT EXISTS products_after_update_trigger
-			       AFTER UPDATE
-			       ON products
+			CREATE TRIGGER IF NOT EXISTS products_au AFTER UPDATE ON products
 			BEGIN
-			     INSERT INTO products_fts(uuid, name) VALUES (new.uuid,
-      				replace(replace(replace(replace(replace(
-					replace(replace(replace(replace(replace(hex(new.uuid),
-						'0', 'G'), '1', 'H'), '2', 'I'), '3', 'K'), '4', 'L'),
-						'5', 'M'), '6', 'N'), '7', 'O'), '8', 'P'), '9', 'Q')
-					|| ' ' || new.code
-					|| ' ' || new.name
-					|| ' ' || COALESCE(new.description, ''));
-			END;
-
-			CREATE TRIGGER IF NOT EXISTS products_after_insert_trigger
-			       AFTER INSERT
-			       ON products
-			BEGIN
-			     INSERT INTO products_fts(uuid, name) VALUES (new.uuid,
-      				replace(replace(replace(replace(replace(
-					replace(replace(replace(replace(replace(hex(new.uuid),
-						'0', 'G'), '1', 'H'), '2', 'I'), '3', 'K'), '4', 'L'),
-						'5', 'M'), '6', 'N'), '7', 'O'), '8', 'P'), '9', 'Q')
-					|| ' ' || new.code
-					|| ' ' || new.name
-					|| ' ' || COALESCE(new.description, ''));
+				INSERT INTO products_fts(products_fts, rowid) VALUES('delete', old.rowid);
+				INSERT INTO products_fts(rowid, uuid, code, name, article, description) VALUES (
+					new.rowid,
+					new.uuid,
+					new.code,
+					new.name,
+					COALESCE(new.article, ''),
+					COALESCE(new.description, ''));
 			END;
 EOT
 		);

@@ -132,7 +132,7 @@ EOT
 
 		if( config::$log_timing ) {
 
-			list($ellapsed, $seconds) = $timer->nano_time();
+			[ $ellapsed, $seconds ] = $timer->nano_time();
 			$cnt = count($this->objects_);
 			$rps = $seconds != 0 ? bcdiv($cnt, $seconds, 2) : $cnt;
 

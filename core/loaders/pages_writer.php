@@ -27,7 +27,7 @@ function rewrite_pages($infobase) {
 
 	$infobase->begin_transaction();
 
-	list($orders, $directions) = get_orders_directions();
+	[ $orders, $directions ] = get_orders_directions();
 
 	$timer = new \nano_timer;
 	$tx_timer = new \nano_timer;
@@ -334,7 +334,7 @@ EOT
 
 		if( config::$log_timing ) {
 
-			list($ellapsed, $seconds) = $timer->nano_time();
+			[ $ellapsed, $seconds ] = $timer->nano_time();
 			$rps = $seconds != 0 ? bcdiv($pgupd, $seconds, 2) : $pgupd;
 
 		    error_log(sprintf('%u', $pgupd) . ' products pages updated, ' . $rps . ' pps, ellapsed: ' . $timer->ellapsed_string($ellapsed));

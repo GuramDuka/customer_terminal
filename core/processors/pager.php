@@ -79,7 +79,7 @@ EOT
 		$car_uuid = uuid2bin($car);
 		$car_x = bin2uuid($car_uuid, '');
 
-		list($orders, $directions) = get_orders_directions();
+		[ $orders, $directions ] = get_orders_directions();
 
 		$o = array_search($order, $orders);
 		$d = array_search($direction, $directions);
@@ -245,7 +245,7 @@ EOT
 
 		if( $fts_filter !== null ) {
 
-			$sql = <<<EOT
+/*			$sql = <<<EOT
 			SELECT
 				replace(replace(replace(replace(replace(
 				replace(replace(replace(replace(replace(hex(uuid),
@@ -269,7 +269,9 @@ EOT
 
 			}
 
-			$anchor_filter = '(' . substr($anchor_filter, 4) . ')';
+			$anchor_filter = '(' . substr($anchor_filter, 4) . ')';*/
+
+			$fts_filter = $this->infobase_->escapeString(transform_fts_filter($fts_filter));
 
 			$sql = <<<EOT
 				SELECT DISTINCT
@@ -277,19 +279,19 @@ EOT
 				FROM
 					products_fts
 				WHERE
-					name MATCH '${fts_filter}'
+					products_fts MATCH '${fts_filter}'
 EOT
 			;
 
-			$bind_values['fts_filter'] = $anchor_filter . ' AND ' . transform_fts_filter($fts_filter);
+			//$bind_values['fts_filter'] = $anchor_filter . ' AND ' . transform_fts_filter($fts_filter);
 
 			$with = @$selections === null && @$car === null ? 'WITH' : ',';
 
 			$before .= <<<EOT
 				${with} fts_filter AS (
 					${sql}
-				)
-				, fts_filtered_products AS (
+				),
+				fts_filtered_products AS (
 					SELECT DISTINCT
 						p.uuid				AS uuid,
 						p.code				AS code,
@@ -429,7 +431,7 @@ EOT
 EOT
 			);
 			
-			list($pgnon) = $r->fetchArray(SQLITE3_NUM);
+			[ $pgnon ] = $r->fetchArray(SQLITE3_NUM);
 
 			$this->response_['pages'] = (int) ($pgnon / $pgsz) + (($pgnon % $pgsz) > 0 ? 1 : 0);
 

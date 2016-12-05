@@ -30,7 +30,7 @@ ini_set('zend.enable_gc'			, 0);
 //------------------------------------------------------------------------------
 require_once CORE_DIR . 'version.php';
 //------------------------------------------------------------------------------
-PHP_VERSION_ID < 70007 && die('PHP ' . PHP_VERSION . ' detected, required: 7.0.7');
+PHP_VERSION_ID < 70100 && die('PHP ' . PHP_VERSION . ' detected, required: 7.1.0');
 //------------------------------------------------------------------------------
 function e_handler($errno, $errstr, $errfile, $errline, array $errcontext) { 
 
