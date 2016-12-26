@@ -38,7 +38,7 @@ function post_json(obj, path, data) {
 		xhr = new XMLHttpRequest;
 		xhr.open('POST', path, true);
 		xhr.timeout = 180000;
-		xhr.setRequestHeader('Content-Type'		, 'Content-Type: application/json; charset=utf-8');
+		xhr.setRequestHeader('Content-Type'		, 'application/json; charset=utf-8');
 		xhr.setRequestHeader('If-Modified-Since', 'Sat, 1 Jan 2000 00:00:00 GMT');
 		xhr.setRequestHeader('Cache-Control'	, 'no-store, no-cache, must-revalidate, max-age=0');
 
