@@ -16,7 +16,7 @@ class nano_timer {
 
 		//parent::__construct();
 
-		$this->counter_ = new HRTime\PerformanceCounter;
+		$this->counter_ = new HRTime\StopWatch;//PerformanceCounter;
 		$this->freq_ = $this->counter_->getFrequency();
 		$this->nano_mult_ = 1000000000;
 

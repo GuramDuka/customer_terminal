@@ -183,8 +183,8 @@ EOT
 					new.uuid,
 					new.code,
 					new.name,
-					COALESCE(new.article, ''),
-					COALESCE(new.description, ''));
+					new.article,
+					new.description);
 			END;
 
 			CREATE TRIGGER IF NOT EXISTS products_ad AFTER DELETE ON products
@@ -200,8 +200,8 @@ EOT
 					new.uuid,
 					new.code,
 					new.name,
-					COALESCE(new.article, ''),
-					COALESCE(new.description, ''));
+					new.article,
+					new.description);
 			END;
 EOT
 		);
