@@ -42,7 +42,7 @@ try {
 EOT
 	);
 
-    error_log("SQLITE FTS REBUILD, ellapsed: " . $timer->ellapsed_string($timer->last_nano_time()));
+    error_log("SQLITE FTS RECREATE, ellapsed: " . $timer->ellapsed_string($timer->last_nano_time()));
 
 	$tbls = [
 		'products_fts'			=> <<<'EOT'
@@ -50,7 +50,7 @@ EOT
 	];
 
 	foreach( $tbls as $tbl => $src )
-		foreach( [ 'optimize' ] as $cmd ) {
+		foreach( [ 'optimize', 'rebuild' ] as $cmd ) {
 
 			$timer->restart();
 			$infobase->exec("INSERT INTO ${tbl} (${tbl}) VALUES('${cmd}')");
