@@ -50,7 +50,7 @@ class infobase extends \SQLite3 {
 
 		$cachesz = config::$sqlite_cache_size;
 		$this->exec("PRAGMA cache_size = -${cachesz}");
-		$this->exec('PRAGMA synchronous = NORMAL');
+		$this->exec('PRAGMA synchronous = EXTRA');
 
 		$temp_store = config::$sqlite_temp_store;
 		$this->exec("PRAGMA temp_store = ${temp_store}");

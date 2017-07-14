@@ -21,8 +21,7 @@ function get_trigger_infobase() {
 
 	$cachesz = config::$sqlite_cache_size;
 	$infobase->exec("PRAGMA cache_size = -${cachesz}");
-
-	$infobase->exec('PRAGMA synchronous = NORMAL');
+	$infobase->exec('PRAGMA synchronous = EXTRA');
 
 	$temp_store = config::$sqlite_temp_store;
 	$infobase->exec("PRAGMA temp_store = ${temp_store}");
