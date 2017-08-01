@@ -50,7 +50,7 @@ class infobase extends \SQLite3 {
 
 		$cachesz = config::$sqlite_cache_size;
 		$this->exec("PRAGMA cache_size = -${cachesz}");
-		$this->exec('PRAGMA synchronous = EXTRA');
+		$this->exec('PRAGMA synchronous = NORMAL');
 
 		$temp_store = config::$sqlite_temp_store;
 		$this->exec("PRAGMA temp_store = ${temp_store}");
@@ -168,15 +168,14 @@ EOT
 				name,
 				article,
 				description,
-				prefix=2,
-				prefix=3,
-				detail = none,
+				prefix="2,3,4",
+				detail = full,
 				columnsize = 0,
-				content = 'products',
-				content_rowid = 'rowid',
+				/*content = 'products',
+				content_rowid = 'rowid',*/
 				tokenize = "unicode61 remove_diacritics 0");
 
-			CREATE TRIGGER IF NOT EXISTS products_ai AFTER INSERT ON products
+			/*CREATE TRIGGER IF NOT EXISTS products_ai AFTER INSERT ON products
 			BEGIN
 				INSERT INTO products_fts(rowid, uuid, code, name, article, description) VALUES (
 					new.rowid,
@@ -202,7 +201,7 @@ EOT
 					new.name,
 					new.article,
 					new.description);
-			END;
+			END;*/
 EOT
 		);
 
