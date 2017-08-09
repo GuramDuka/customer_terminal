@@ -137,12 +137,16 @@ EOT
 				uuid				BLOB PRIMARY KEY ON CONFLICT REPLACE,
 				marked				INTEGER,
 				code				INTEGER,
+				code_fti			TEXT,
 				name				TEXT,
+				name_fti			TEXT,
 				article				TEXT,
+				article_fti			TEXT,
 				base_image_uuid		BLOB,
 				description			TEXT,
+				description_fti		TEXT,
 				description_in_html	INTEGER
-			) /*WITHOUT ROWID*/
+			) WITHOUT ROWID
 EOT
 		);
 
@@ -168,40 +172,26 @@ EOT
 				name,
 				article,
 				description,
-				prefix="2,3,4",
+				prefix = '2 3 4',
 				detail = full,
-				columnsize = 0,
-				/*content = 'products',
-				content_rowid = 'rowid',*/
-				tokenize = "unicode61 remove_diacritics 0");
+				columnsize = 1,
+        		tokenize = "unicode61 remove_diacritics 0");
 
-			/*CREATE TRIGGER IF NOT EXISTS products_ai AFTER INSERT ON products
+			-- Triggers to keep the FTS index up to date.
+			CREATE TRIGGER IF NOT EXISTS products_ai AFTER INSERT ON products FOR EACH ROW
 			BEGIN
-				INSERT INTO products_fts(rowid, uuid, code, name, article, description) VALUES (
-					new.rowid,
-					new.uuid,
-					new.code,
-					new.name,
-					new.article,
-					new.description);
+				INSERT INTO products_fts VALUES (new.uuid, new.code_fti, new.name_fti, new.article_fti, new.description_fti);
 			END;
 
-			CREATE TRIGGER IF NOT EXISTS products_ad AFTER DELETE ON products
+			CREATE TRIGGER IF NOT EXISTS products_ad AFTER DELETE ON products FOR EACH ROW
 			BEGIN
-				INSERT INTO products_fts(products_fts, rowid) VALUES('delete', old.rowid);
+				INSERT INTO products_fts VALUES (old.uuid, NULL, NULL, NULL, NULL);
 			END;
 
-			CREATE TRIGGER IF NOT EXISTS products_au AFTER UPDATE ON products
+			CREATE TRIGGER IF NOT EXISTS products_au AFTER UPDATE ON products FOR EACH ROW
 			BEGIN
-				INSERT INTO products_fts(products_fts, rowid) VALUES('delete', old.rowid);
-				INSERT INTO products_fts(rowid, uuid, code, name, article, description) VALUES (
-					new.rowid,
-					new.uuid,
-					new.code,
-					new.name,
-					new.article,
-					new.description);
-			END;*/
+				INSERT INTO products_fts VALUES (new.uuid, new.code_fti, new.name_fti, new.article_fti, new.description_fti);
+			END;
 EOT
 		);
 

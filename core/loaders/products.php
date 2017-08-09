@@ -89,10 +89,14 @@ EOT;
 			'uuid',
 			'marked',
 			'code',
+			'code_fti',
 			'name',
+			'name_fti',
 			'article',
+			'article_fti',
 			'base_image_uuid',
 			'description',
+			'description_fti',
 			'description_in_html'
 		];
 		$fields = [];

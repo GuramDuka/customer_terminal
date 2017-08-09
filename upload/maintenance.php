@@ -29,9 +29,8 @@ try {
 	$infobase->initialize();
 
 	$infobase->exec( <<<'EOT'
-		INSERT INTO products_fts(rowid, uuid, code, name, article, description)
+		INSERT INTO products_fts
 			SELECT
-				rowid,
 				uuid,
 				code,
 				name,
@@ -84,13 +83,13 @@ EOT
 	$tinfobase = get_trigger_infobase();
 
 	$timer->restart();
-	//$infobase->exec('VACUUM');
-	//$tinfobase->exec('VACUUM');
+	$infobase->exec('VACUUM');
+	$tinfobase->exec('VACUUM');
     error_log('SQLITE VACUUM, ellapsed: ' . $timer->ellapsed_string($timer->last_nano_time()));
 
 	$timer->restart();
-	//$infobase->exec('ANALYZE');
-	//$tinfobase->exec('ANALYZE');
+	$infobase->exec('ANALYZE');
+	$tinfobase->exec('ANALYZE');
     error_log('SQLITE ANAYLYZE, ellapsed: ' . $timer->ellapsed_string($timer->last_nano_time()));
 
 }

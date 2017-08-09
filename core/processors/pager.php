@@ -274,12 +274,14 @@ EOT
 			$fts_filter = $this->infobase_->escapeString(transform_fts_filter($fts_filter));
 
 			$sql = <<<EOT
-				SELECT DISTINCT
-					uuid
+				SELECT
+					MAX(rowid), uuid
 				FROM
 					products_fts
 				WHERE
 					products_fts MATCH '${fts_filter}'
+				GROUP BY
+       				uuid
 EOT
 			;
 
