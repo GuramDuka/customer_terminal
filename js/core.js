@@ -1145,19 +1145,20 @@ class HtmlPageEvents extends HtmlPageState {
 
 		this.render_ = null;
 		this.events_ = [
-			//'mousedown',
-			//'mouseenter',
-			//'mouseleave',
-			//'mousemove',
-			//'mouseout',
-			//'mouseover',
+			'click',
+			'mousedown',
+			'mouseenter',
+			'mouseleave',
+			'mousemove',
+			'mouseout',
+			'mouseover',
 			'mouseup',
 			'touchstart',
 			'touchend',
 			'touchcancel',
-			//'touchmove',
-			//'touchenter',
-			//'touchleave'
+			'touchmove',
+			'touchenter',
+			'touchleave'
 		];
 
 	}
@@ -2028,6 +2029,8 @@ class HtmlPageEvents extends HtmlPageState {
 	//dispatch_handler(e) {
 	events_handler(e) {
 
+		e.preventDefault();
+
 		let x;
 
 		try {
@@ -2618,7 +2621,7 @@ function core() {
 
 	let browser = get_browser();
 
-	if( true || navigator.userAgent.match(/altair$/i) ) {
+	if( navigator.userAgent.match(/altair$/i) ) {
 
 		let div = document.createElement('div');
 		div.setAttribute('debug', '');
