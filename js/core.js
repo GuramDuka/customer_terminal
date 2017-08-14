@@ -2621,7 +2621,7 @@ function core() {
 
 	let browser = get_browser();
 
-	if( navigator.userAgent.match(/altair$/i) ) {
+	if( true || navigator.userAgent.match(/altair$/i) ) {
 
 		let div = document.createElement('div');
 		div.setAttribute('debug', '');
