@@ -28,7 +28,9 @@ class carter_handler extends handler {
 				p.price					AS price,
 				COALESCE(r.quantity, 0)	AS reserve
 			FROM
-					products AS a
+				cart AS b
+					INNER JOIN products AS a
+          			ON a.uuid = b.product_uuid
 					INNER JOIN images AS i
 					ON a.base_image_uuid = i.uuid
 					INNER JOIN prices_registry AS p
@@ -37,18 +39,16 @@ class carter_handler extends handler {
 					ON a.uuid = q.product_uuid
 					LEFT JOIN reserves_registry AS r
 					ON a.uuid = r.product_uuid
-          			INNER JOIN cart AS b
-          			ON a.uuid = b.product_uuid
      		WHERE
-				a.uuid IN (select product_uuid FROM cart)
+				b.session_uuid = :session_uuid
 			ORDER BY
 				a.name
 EOT
 		;
 
-		$this->infobase_->dump_plan($sql);
-
-		$result = $this->infobase_->query($sql);
+		$st = $this->infobase_->prepare($sql);
+		$st->bindValue(':session_uuid', @$_SESSION['DATA_ID'], SQLITE3_BLOB);
+		$result = $st->execute();
 
 		$cart = [];
 
@@ -194,9 +194,23 @@ EOT
 
 	}
 
+	protected function session_startup() {
+
+		session_start([
+			'cookie_lifetime' => 365 * 24 * 60 * 60
+		]);
+
+		if( @$_SESSION['DATA_ID'] === null )
+			$_SESSION['DATA_ID'] = random_bytes(16);
+	}
+
 	protected function handle_request() {
 
 		$timer = new \nano_timer;
+
+		$this->session_startup();
+
+		$session_uuid = @$_SESSION['DATA_ID'];
 
 		$this->infobase_ = new infobase;
 		$this->infobase_->set_create_if_not_exists(false);
@@ -214,20 +228,26 @@ EOT
 
 			$timer->restart();
 
+			$sql = <<<'EOT'
+				REPLACE INTO cart (
+					session_uuid, product_uuid, quantity
+				) VALUES (
+					:session_uuid, :product_uuid, :quantity
+				)
+EOT
+			;
+
+			$st = $this->infobase_->prepare($sql);
+			$st->bindParam(':session_uuid', $session_uuid, SQLITE3_BLOB);
+
 			foreach( $products as $product ) {
 
 				extract($product);
 
 				$product_uuid = uuid2bin($uuid);
 
-				$sql = <<<'EOT'
-					REPLACE INTO cart (product_uuid, quantity) VALUES (:uuid, :quantity)
-EOT
-				;
-
-				$st = $this->infobase_->prepare($sql);
-				$st->bindValue(':uuid'		, $product_uuid, SQLITE3_BLOB);
-				$st->bindValue(':quantity'	, $quantity);
+				$st->bindValue(':product_uuid'	, $product_uuid, SQLITE3_BLOB);
+				$st->bindValue(':quantity'		, $quantity === null ? 0 : (is_numeric($quantity) ? $quantity : floatval($quantity)));
 				$st->execute();
 
 			}
@@ -235,6 +255,7 @@ EOT
 			$sql = <<<'EOT'
 				REPLACE INTO cart
 				SELECT
+					c.session_uuid,
 					c.product_uuid,
 					q.quantity
 				FROM
@@ -242,22 +263,23 @@ EOT
 					INNER JOIN remainders_registry AS q
 					ON c.product_uuid = q.product_uuid
 				WHERE
-					c.quantity > q.quantity
+					c.session_uuid = :session_uuid
+					AND c.quantity > q.quantity
 EOT
 			;
 
-			$this->infobase_->dump_plan($sql);
-
-			$this->infobase_->exec($sql);
+			$st = $this->infobase_->prepare($sql);
+			$st->bindValue(':session_uuid', $session_uuid, SQLITE3_BLOB);
+			$st->execute();
 
 			$sql = <<<'EOT'
-				DELETE FROM cart WHERE quantity <= 0 OR quantity IS NULL
+				DELETE FROM cart WHERE session_uuid = :session_uuid AND quantity <= 0
 EOT
 			;
 
-			$this->infobase_->dump_plan($sql);
-
-			$this->infobase_->exec($sql);
+			$st = $this->infobase_->prepare($sql);
+			$st->bindValue(':session_uuid', $session_uuid, SQLITE3_BLOB);
+			$st->execute();
 
 			if( config::$cart_timing ) {
 

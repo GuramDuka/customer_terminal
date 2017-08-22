@@ -36,48 +36,48 @@ class HtmlPageState {
 				name		: 'code',
 				display		: 'Код',
 				ico			: {
-					asc		: '/resources/assets/sorting/sort_number_column.ico',
-					desc	: '/resources/assets/sorting/sort_number_column.ico'
+					asc		: 'assets/sorting/sort_number_column.ico',
+					desc	: 'assets/sorting/sort_number_column.ico'
 				},
 				order_icons : {
-					asc		: '/resources/assets/sorting/sort_number.ico',
-					desc	: '/resources/assets/sorting/sort_number_descending.ico'
+					asc		: 'assets/sorting/sort_number.ico',
+					desc	: 'assets/sorting/sort_number_descending.ico'
 				}
 			},
 			{
 				name		: 'name',
 				display		: 'Наименование',
 				ico			: {
-					asc		: '/resources/assets/sorting/sort_alphabel_column.ico',
-					desc	: '/resources/assets/sorting/sort_alphabel_column.ico'
+					asc		: 'assets/sorting/sort_alphabel_column.ico',
+					desc	: 'assets/sorting/sort_alphabel_column.ico'
 				},
 				order_icons : {
-					asc		: '/resources/assets/sorting/sort_asc_az.ico',
-					desc	: '/resources/assets/sorting/sort_desc_az.ico'
+					asc		: 'assets/sorting/sort_asc_az.ico',
+					desc	: 'assets/sorting/sort_desc_az.ico'
 				}
 			},
 			{
 				name		: 'price',
 				display		: 'Цена',
 				ico			: {
-					asc		: '/resources/assets/sorting/sort_price.ico',
-					desc	: '/resources/assets/sorting/sort_price_descending.ico'
+					asc		: 'assets/sorting/sort_price.ico',
+					desc	: 'assets/sorting/sort_price_descending.ico'
 				},
 				order_icons : {
-					asc		: '/resources/assets/sorting/sort_ascending.ico',
-					desc	: '/resources/assets/sorting/sort_descending.ico'
+					asc		: 'assets/sorting/sort_ascending.ico',
+					desc	: 'assets/sorting/sort_descending.ico'
 				}
 			}/*,
 			{
 				name		: 'remainder',
 				display		: 'Остаток',
 				ico			: {
-					asc		: '/resources/assets/sorting/sort_quantity.ico',
-					desc	: '/resources/assets/sorting/sort_quantity_descending.ico'
+					asc		: 'assets/sorting/sort_quantity.ico',
+					desc	: 'assets/sorting/sort_quantity_descending.ico'
 				},
 				order_icons : {
-					asc		: '/resources/assets/sorting/sort_ascending.ico',
-					desc	: '/resources/assets/sorting/sort_descending.ico'
+					asc		: 'assets/sorting/sort_ascending.ico',
+					desc	: 'assets/sorting/sort_descending.ico'
 				}
 			}*/
 		];
@@ -104,6 +104,46 @@ class HtmlPageState {
 
 	}
 
+	post_json(path, data) {
+		let response, request = JSON.stringify(data, null, '\t');
+		let object = this;
+		let current_event = object.current_event_;
+
+		if( !current_event.deferred_xhrs_ )
+			current_event.deferred_xhrs_ = {};
+
+		let MD5 = new Hashes.MD5;
+		let hash = MD5.hex(path + "\n\n" + request);
+		let xhr = current_event.deferred_xhrs_[hash];
+
+		if( xhr ) {
+			if( xhr.status !== 200 )
+				throw new Error(xhr.status.toString() + ' ' + xhr.statusText + "\n" + xhr.responseText);
+
+			response = JSON.parse(xhr.responseText, JSON.dateParser);
+		}
+		else {
+			xhr = new XMLHttpRequest;
+			xhr.open('POST', path, true);
+			xhr.timeout = 180000;
+			xhr.setRequestHeader('Content-Type'		, 'application/json; charset=utf-8');
+			xhr.setRequestHeader('If-Modified-Since', 'Sat, 1 Jan 2000 00:00:00 GMT');
+			xhr.setRequestHeader('Cache-Control'	, 'no-store, no-cache, must-revalidate, max-age=0');
+
+			xhr.onreadystatechange = () => {
+				if( xhr.readyState === XMLHttpRequest.DONE )
+					object.events_handler(current_event);
+			};
+
+			current_event.deferred_xhrs_[hash] = xhr;
+
+			xhr.send(request);
+
+			throw new XhrDeferredException;
+		}
+
+		return response;
+	}
 }
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
@@ -160,10 +200,10 @@ class Render {
 		if( m.length === 0 )
 			return;
 
-		let p = xpath_eval_single('p[@debug' + level + ']', m[0]);
+		let p = xpath_eval_single('div[@debug' + level + ']', m[0]);
 
 		p.innerHTML = s;
-		p.style.display = s !== null ? 'inline-block' : 'none';
+		p.style.display = s !== null ? 'block' : 'none';
 
 	}
 
@@ -212,7 +252,7 @@ class Render {
 					+ '<p pprice></p>'
 					+ '<p pquantity></p>'
 					+ '<div btn buy>'
-					+ '<img btn_ico src="/resources/assets/cart/cart_put.ico">'
+					+ '<img btn_ico src="assets/cart/cart_put.ico">'
 					//+ '<span btn_txt>КУПИТЬ</span>'
 					+ '</div>'
 					+ '</div>';
@@ -429,7 +469,7 @@ class Render {
 			//let height = sscanf(getComputedStyle(element).height, '%u')[0];
 			//let line_height = sscanf(getComputedStyle(pcrin).height, '%u')[0];
 			//new_page_state.cart_page_size_ = page_size = Math.trunc(height / line_height);
-			new_page_state.cart_page_size_ = navigator.userAgent.match(/altair$/i) ? 9 : Math.trunc(9 * 720 / 390);
+			new_page_state.cart_page_size_ = this.debug_ ? 9 : Math.trunc(9 * 720 / 390);
 		}
 
 		new_page_state.cart_pages_ = Math.trunc(cart.length / new_page_state.cart_page_size_) + (cart.length % new_page_state.cart_page_size_ !== 0 ? 1 : 0);
@@ -451,11 +491,11 @@ class Render {
 					+ '<span pprice></span>'
 					+ '<span psum></span>'
 					+ '<div btn plus_one>'
-					+ '<img btn_ico src="/resources/assets/plus.ico">'
+					+ '<img btn_ico src="assets/plus.ico">'
 					+ '</div>'
 					+ '<span pbuy_quantity></span>'
 					+ '<div btn minus_one>'
-					+ '<img btn_ico src="/resources/assets/minus.ico">'
+					+ '<img btn_ico src="assets/minus.ico">'
 					+ '</div>'
 					+ '</div>'
 				;
@@ -526,7 +566,7 @@ class Render {
 			'product'	: new_page_state.product_
 		};
 
-		let data = post_json(state.deferred_object_, 'proxy.php', request);
+		let data = state.post_json('proxy.php', request);
 		//state.ellapsed_ += data.ellapsed;
 
 		this.assemble_info(new_page_state, data);
@@ -588,7 +628,7 @@ class Render {
 
 		request.fts_filter = new_page_state.fts_filter_;
 
-		let data = post_json(state.deferred_object_, 'proxy.php', request);
+		let data = state.post_json('proxy.php', request);
 		//state.ellapsed_ += data.ellapsed;
 
 		new_paging_state.page_size_	= data.page_size;
@@ -658,7 +698,7 @@ class Render {
 
 		}
 
-		let data = post_json(state.deferred_object_, 'proxy.php', request);
+		let data = state.post_json('proxy.php', request);
 		//state.ellapsed_ += data.ellapsed;
 
 		new_page_state.cart_ = data.cart;
@@ -753,7 +793,7 @@ class Render {
 			'setup'		: true
 		};
 
-		let data = post_json(state.deferred_object_, 'proxy.php', request);
+		let data = state.post_json('proxy.php', request);
 
 		this.assemble_selections(new_page_state, data);
 
@@ -816,7 +856,7 @@ class Render {
 		if( select_by_car_state.year )
 			request.year = select_by_car_state.year.uuid;
 
-		let data = post_json(state.deferred_object_, 'proxy.php', request);
+		let data = state.post_json('proxy.php', request);
 
 		new_paging_state.select_by_car_state_.values = data.values;
 
@@ -839,7 +879,7 @@ class Render {
 			'parent'	: new_page_state.category_ !== null_uuid ? new_page_state.category_ : null
 		};
 
-		let data = post_json(state.deferred_object_, 'proxy.php', request);
+		let data = state.post_json('proxy.php', request);
 		let categories = data.categories;
 		let html = '';
 
@@ -863,7 +903,7 @@ class Render {
 				</div>
 				<div selections_frame fadein instant uuid="${c.uuid}"></div>
 				<div btn clear_selections uuid="${c.uuid}">
-					<img btn_ico src="/resources/assets/filter_clear.ico">
+					<img btn_ico src="assets/filter_clear.ico">
 					<span btn_txt>ОЧИСТИТЬ</span>
 				</div>`
 			;
@@ -874,28 +914,28 @@ class Render {
 						<!--<span ico search_field></span>
 						<span ico list_box></span>-->
 						<span label>Производитель</span>
-						<img arrow src="/resources/assets/arrows/arrow_right.ico">
+						<img arrow src="assets/arrows/arrow_right.ico">
 						<span value></span>
 					</div>
 					<div selector model>
 						<span label>Модель</span>
-						<img arrow src="/resources/assets/arrows/arrow_right.ico">
+						<img arrow src="assets/arrows/arrow_right.ico">
 						<span value></span>
 					</div>
 					<div selector modification>
 						<span label>Модификация</span>
-						<img arrow src="/resources/assets/arrows/arrow_right.ico">
+						<img arrow src="assets/arrows/arrow_right.ico">
 						<span value></span>
 					</div>
 					<div selector year>
 						<span label>Год выпуска</span>
-						<img arrow src="/resources/assets/arrows/arrow_right.ico">
+						<img arrow src="assets/arrows/arrow_right.ico">
 						<span value></span>
 					</div>
 					<div selector values></div>
 				</div>
 				<div btn clear_select_by_car uuid="${c.uuid}">
-					<img btn_ico src="/resources/assets/car_clear.ico">
+					<img btn_ico src="assets/car_clear.ico">
 					<span btn_txt>ОЧИСТИТЬ</span>
 				</div>`
 			;
@@ -1158,7 +1198,11 @@ class HtmlPageEvents extends HtmlPageState {
 			'touchcancel',
 			'touchmove',
 			'touchenter',
-			'touchleave'
+			'touchleave',
+			'blur',
+			'focus',
+			'focusin',
+			'focusout'
 		];
 
 	}
@@ -1539,29 +1583,26 @@ class HtmlPageEvents extends HtmlPageState {
 
 		let [ new_page_state ] = this.clone_page_state();
 
-		let request = {
-			'module'	: 'carter',
-			'handler'	: 'carter',
-			'order'		: []
-		};
-
-		for( let e of new_page_state.cart_ )
-			request.order.push({
-				'uuid'		: e.uuid,
-				'price'		: e.price,
-				'quantity'	: e.buy_quantity
-			});
-
 		try {
+			let request = {
+				'module'	: 'carter',
+				'handler'	: 'carter',
+				'order'		: []
+			};
 
-			let data = post_json(this.deferred_object_, 'proxy.php', request);
-			//state.ellapsed_ += data.ellapsed;
+			for( let e of new_page_state.cart_ )
+				request.order.push({
+					'uuid'		: e.uuid,
+					'price'		: e.price,
+					'quantity'	: e.buy_quantity
+				});
+
+			let data = this.post_json('proxy.php', request);
 
 			if( data.errno !== 0 )
 				throw new Error(data.error + "\n" + data.stacktrace);
 
 			if( data.order.availability ) {
-
 				// fail, modify buy quantities and show cart alert
 
 				for( let p of data.order.availability ) {
@@ -1575,12 +1616,6 @@ class HtmlPageEvents extends HtmlPageState {
 
 					}
 
-					//data.availability[i].product
-					//data.availability[i].remainder
-					//data.availability[i].reserve
-					//data.availability[i].quantity
-					//data.availability[i].na
-
 				}
 
 				this.render_.rewrite_cart(new_page_state);
@@ -1589,16 +1624,11 @@ class HtmlPageEvents extends HtmlPageState {
 				this.show_alert(msg, new_page_state, 15000);
 
 				new_page_state.cart_edit_ = new_page_state.cart_.length > 0;
-
 			}
 			else {
-
 				// success, print cheque
 
-				for( let ncopy = 1; ncopy <= 2; ncopy++ ) {
-
-					if( this.deferred_object_ && this.deferred_object_.cheque_printed )
-						break;
+				for( let ncopy = 1; !this.cheque_printed_ && ncopy <= 2; ncopy++ ) {
 
 					let iframe_content = xpath_eval_single('html/body/iframe[@cheque_print and @copy=\'' + ncopy + '\']').contentWindow;
 					let iframe	= iframe_content.document;
@@ -1607,7 +1637,7 @@ class HtmlPageEvents extends HtmlPageState {
 					xpath_eval_single('p[@node_name]'			, head, iframe).innerHTML = data.order.name;
 					xpath_eval_single('p[@uuid]'				, head, iframe).innerHTML = data.order.uuid;
 					xpath_eval_single('p[@number]'				, head, iframe).innerHTML = 'Заказ&nbsp;:&nbsp;' + data.order.number;
-					xpath_eval_single('p[@date]'				, head, iframe).innerHTML = 'Время&nbsp;:&nbsp;' + data.order.date.toLocaleFormat('%d.%m.%Y %H:%M:%S');
+					xpath_eval_single('p[@date]'				, head, iframe).innerHTML = 'Время&nbsp;:&nbsp;' + this.date_formatter_.format(data.order.date);//.toLocaleFormat('%d.%m.%Y %H:%M:%S');
 					xpath_eval_single('p[@barcode]'				, head, iframe).innerHTML = 'EAN13&nbsp;:&nbsp;' + data.order.barcode;
 
 					let table = xpath_eval_single('html/body/div[@table]', iframe, iframe);
@@ -1648,31 +1678,27 @@ class HtmlPageEvents extends HtmlPageState {
 
 				}
 
-				if( this.deferred_object_ )
-					this.deferred_object_.cheque_printed = true;
+				this.cheque_printed_ = true;
 
 				// successfully, clear cart now
 				for( let e of new_page_state.cart_ ) {
-
 					e.buy_quantity = 0;
 					e.modified = true;
-
 				}
 
 				this.render_.rewrite_cart(new_page_state);
-
-				new_page_state.cart_edit_ = false;
-
+				delete this.cheque_printed_;
+            	new_page_state.cart_edit_ = false;
 			}
 
 			new_page_state.product_ = null_uuid;
-
 		}
 		catch( ex ) {
 
 			if( ex instanceof XhrDeferredException )
 				throw ex;
 
+			delete this.cheque_printed_;
 			this.show_alert('<pre error>' + ex.message + "\n" + ex.stack + '</pre>', cur_page_state);
 			console.error(ex.message);
 			throw ex;
@@ -1972,21 +1998,37 @@ class HtmlPageEvents extends HtmlPageState {
 
 	startup_handler(cur_page_state, cur_paging_state, element) {
 
-		let [ new_page_state, new_paging_state ] = this.clone_page_state();
+		if( this.cst_ ) {
 
-		new_page_state.modified_ = true;
+			if( !this.startup_stage_ )
+				this.startup_stage_ = 1;
 
-		this.render_.rewrite_category();
-		this.render_.rewrite_page();
-		this.render_.rewrite_cart();
+			if( this.startup_stage_ === 1 ) {
+				this.render_.rewrite_category();
+				this.startup_stage_ = 2;
+			}
 
-		// switch to tyres category by default
-		let e = xpath_eval_single('html/body/div[@categories]/div[@btc and @uuid=\'83f528bc-481a-11e2-9a03-ace5647d95bd\']');
-		let evt = document.createEvent("MouseEvents");
-		evt.initEvent('mouseup', true, true);
-		e.dispatchEvent(evt);
+			if( this.startup_stage_ === 2 ) {
+				this.render_.rewrite_page();
+				this.startup_stage_ = 3;
+			}
 
-		return new_page_state;
+			if( this.startup_stage_ === 3 ) {
+				this.render_.rewrite_cart();
+				this.startup_stage_ = 4;
+			}
+
+			if( this.startup_stage_ === 4 ) {
+				this.render_.show_new_page_state();
+				delete this.startup_stage_;
+
+				// switch to tyres category by default
+				let e = xpath_eval_single('html/body/div[@categories]/div[@btc and @uuid=\'83f528bc-481a-11e2-9a03-ace5647d95bd\']');
+				let evt = document.createEvent("MouseEvents");
+				evt.initEvent('mouseup', true, true);
+				setTimeout(() => e.dispatchEvent(evt));
+			}
+		}
 
 	}
 
@@ -1999,7 +2041,9 @@ class HtmlPageEvents extends HtmlPageState {
 		this.render_.rewrite_page();
 
 		let date = new Date;
-		console.log(date.toLocaleFormat('%d.%m.%Y %H:%M:%S') + ': current page reloaded on user idle away');
+
+		console.log(this.date_formatter_.format(date) + ': current page reloaded on user idle away');
+		//console.log(date.toLocaleFormat('%d.%m.%Y %H:%M:%S') + ': current page reloaded on user idle away');
 
 		return new_page_state;
 
@@ -2014,7 +2058,7 @@ class HtmlPageEvents extends HtmlPageState {
 		this.render_.rewrite_page();
 
 		let date = new Date;
-		console.log(date.toLocaleFormat('%d.%m.%Y %H:%M:%S') + ': products on current page changed, reloaded');
+		console.log(this.date_formatter_.format(date) + ': products on current page changed, reloaded');
 
 		return new_page_state;
 
@@ -2026,10 +2070,185 @@ class HtmlPageEvents extends HtmlPageState {
 
 	}*/
 
+	set_body_window_size() {
+
+		let [ w, h ] = window_size();
+		let b = xpath_eval_single('html/body');
+		let sp = SmartPhone.isAny();
+
+		if( this.debug_ && this.dct_ && !sp ) {
+			let m = xpath_eval_single('html/body/div[@debug]');
+			m.style.left = '5%';
+			m.style.width = '35%';
+
+			b.style.left = 'calc(50% - 35mm)';
+			b.style.top = '20px';
+			b.style.width = '70mm';
+			b.style.height = '140mm';
+
+			let icon_scan = xpath_eval_single('html/body/i[@icon_scan]');
+			icon_scan.style.top = '12%';
+		}
+		else if( sp ) { // prevent virtual keyboard appear resize body
+			let ww = this.deviceWidth_  !== undefined ? this.deviceWidth_  : 0;
+			let hh = this.deviceHeight_ !== undefined ? this.deviceHeight_ : 0;
+
+			if( w > ww || h > hh ) {
+				b.style.width  = w + 'px';
+				b.style.height = h + 'px';
+				this.deviceWidth_  = w;
+				this.deviceHeight_ = h;
+			}
+		}
+		else {
+			b.style.width  = w + 'px';
+			b.style.height = h + 'px';
+		}
+
+	}
+
+	get_quagga_params() {
+		return {
+			inputStream : {
+				name		: 'Live',
+				type		: 'LiveStream',
+				target		: xpath_eval_single('html/body/div[@middle]/div[@scanner]/div[@viewport]'),//document.querySelector('#yourElement'),    // Or '#yourElement' (optional)
+				constraints	: {
+					width		: { min: 320 },
+					height		: { min: 240 },
+					facingMode	: 'environment',
+					aspectRatio	: { min: 1, max: 2 }
+				}
+			},
+			decoder			: {
+				readers : [
+					{ format : 'code_128_reader', config : {} },
+					{ format : 'ean_reader'		, config : {} },
+					{ format : 'upc_reader'		, config : {} },
+					{ format : 'upc_e_reader'	, config : {} },
+					{ format : 'codabar_reader'	, config : {} }
+				]
+			},
+			locator		: {
+				patchSize	: 'medium',
+				halfSample	: true
+			},
+			numOfWorkers	: navigator.hardwareConcurrency,
+			frequency		: 2,
+			locate			: false
+		};
+	};
+
+	barcode_scan_handler(code) {
+		let m = xpath_eval_single('html/body/div[@middle]/div[@scanner]/div[@viewport]');
+		m.insertAdjacentHTML('afterend', `<div barcode="${code}">${code}</div>`);
+
+		let beep = document.getElementById('scanner_beep');
+
+		try {
+			beep.play();
+		}
+		catch( e ) {
+			console.log(e.message);
+		}
+	}
+
+	switch_scanner() {
+
+		if( this.quagga_initialized_ ) {
+			let icon_scan = xpath_eval_single('html/body/i[@icon_scan]');
+			let scanner = xpath_eval_single('html/body/div[@middle]/div[@scanner]');
+
+			if( this.quagga_started_ ) {
+				Quagga.stop();
+				this.quagga_started_ = false;
+				icon_scan.blink(false);
+				scanner.fade(false);
+				console.log("Quagga stopped");
+				this.quagga_initialized_ = false;
+			}
+			else {
+    			/*Quagga.onProcessed(result => {
+					let drawingCtx = Quagga.canvas.ctx.overlay;
+					let drawingCanvas = Quagga.canvas.dom.overlay;
+
+					if( result ) {
+						if( result.boxes ) {
+							drawingCtx.clearRect(0, 0, parseInt(drawingCanvas.getAttribute('width')), parseInt(drawingCanvas.getAttribute('height')));
+							result.boxes.filter(box => box !== result.box).forEach((box) => {
+                    			Quagga.ImageDebug.drawPath(box, { x: 0, y: 1 }, drawingCtx, { color: 'green', lineWidth: 2 });
+							});
+						}
+
+						if( result.box )
+							Quagga.ImageDebug.drawPath(result.box, { x: 0, y: 1 }, drawingCtx, { color: '#00F', lineWidth: 2 });
+
+						if( result.codeResult && result.codeResult.code )
+							Quagga.ImageDebug.drawPath(result.line, { x: 'x', y: 'y' }, drawingCtx, { color: 'red', lineWidth: 3 });
+					}
+				});*/
+
+				Quagga.onDetected(result => {
+					this.barcode_scan_handler(result.codeResult.code);
+					//let code = result.codeResult.code;
+
+					//if( App.lastResult !== code ) {
+    	        	//	App.lastResult = code;
+					//	let $node = null, canvas = Quagga.canvas.dom.image;
+					//	$node = $('<li><div class="thumbnail"><div class="imgWrapper"><img /></div><div class="caption"><h4 class="code"></h4></div></div></li>');
+					//	$node.find("img").attr("src", canvas.toDataURL());
+					//	$node.find("h4.code").html(code);
+					//	$("#result_strip ul.thumbnails").prepend($node);
+					//}
+				});
+
+				Quagga.start();
+				this.quagga_started_ = true;
+				icon_scan.blink(true);
+				scanner.fade(true);
+				console.log("Quagga started");
+			}
+		}
+		else {
+			this.quagga_scripts_loaded_ = true;
+			
+			Quagga.init(this.get_quagga_params(), err => {
+				if( err ) {
+					console.log(err);
+					return;
+				}
+
+				this.quagga_initialized_ = true;
+				console.log("Quagga initialization finished. Ready to start");
+
+				this.switch_scanner();
+			});
+		}
+	}
+
+	icon_scan_handler() {
+
+		if( this.quagga_scripts_loaded_ ) {
+			this.switch_scanner();
+		}
+		else {
+			load_script('assets/scanner/vendor/jquery-3.2.1.slim.min.js', () =>
+			load_script('assets/scanner/adapter_no_edge_no_global-4.2.2.js', () =>
+			load_script('assets/scanner/quagga.min.js', () => this.switch_scanner())));
+		}
+
+	}
+
 	//dispatch_handler(e) {
 	events_handler(e) {
 
+		//e.stopImmediatePropagation();
 		e.preventDefault();
+
+		if( !e.deferredTarget )
+			e.deferredTarget = e.currentTarget;
+
+		this.current_event_ = e;
 
 		let x;
 
@@ -2053,15 +2272,9 @@ class HtmlPageEvents extends HtmlPageState {
 
 			}
 
-			e.deferred_xhrs_handler = () => this.events_handler(e);
-			e.deferredTarget = e.currentTarget ? e.currentTarget : e.deferredTarget;
-			this.deferred_object_ = e;
-
-			let touchobj, startx, dist;
-
 			let state		= this;
 			let element		= e.currentTarget ? e.currentTarget : e.deferredTarget;
-			let attrs		= element ? element.attributes : [];
+			let attrs		= element && element.attributes ? element.attributes : {};
 
 			this.start_		= e.start ? e.start : mili_time();
 			e.start			= this.start_;
@@ -2072,6 +2285,10 @@ class HtmlPageEvents extends HtmlPageState {
 			let new_page_state;
 
 			switch( e.type ) {
+
+				case 'resize'		:
+					this.set_body_window_size();
+					break;
 
 				case 'mouseup'		:
 
@@ -2273,17 +2490,27 @@ class HtmlPageEvents extends HtmlPageState {
 						new_page_state = this.btn_vk_handler(cur_page_state, cur_paging_state, element);
 
 					}
+					else if( attrs.icon_scan ) {
 
+						this.icon_scan_handler();
+
+					}
 					break;
 
 				case 'touchstart'	:
-					touchobj = e.changedTouches[0] // reference first touch point (ie: first finger)
-					startx = parseInt(touchobj.clientX) // get x position of touch point relative to left edge of browser
+					if( attrs.middle && this.debug_ && this.dct_ ) {
+						this.startx_ = e.touches[0].pageX;
+						this.starty_ = e.touches[0].pageY;
+					}
 					break;
 
 				case 'touchmove'	:
-					touchobj = e.changedTouches[0] // reference first touch point (ie: first finger)
-					dist = parseInt(touchobj.clientX) - startx;
+					if( attrs.middle && this.debug_ && this.dct_ ) {
+						let distx = this.startx_ - e.touches[0].pageX;
+						let disty = this.starty_ - e.touches[0].pageY;
+						Render.debug(0, 'TM:&nbsp;' + Math.trunc(distx) + '&nbsp;' + Math.trunc(disty));
+					}
+
 					break;
 
 				case 'touchcancel'	:
@@ -2294,6 +2521,45 @@ class HtmlPageEvents extends HtmlPageState {
 
 				case 'touchleave'	:
 					break;
+
+				case 'mouseover'	:
+					break;
+
+				case 'mouseout'	:
+					break;
+
+				case 'mouseenter'	:
+					if( attrs.middle && this.debug_ && this.dct_ ) {
+						this.startx_ = parseInt(e.clientX);
+						this.starty_ = parseInt(e.clientY);
+					}
+					break;
+
+				case 'mouseleave'	:
+					break;
+
+				case 'mousemove'	:
+					if( attrs.middle && this.debug_ && this.dct_ ) {
+						let distx = parseInt(e.clientX) - this.startx_;
+						let disty = parseInt(e.clientY) - this.starty_;
+						Render.debug(0, 'ME:&nbsp;' + this.startx_ + '&nbsp;' + this.starty_);
+						Render.debug(1, 'MM:&nbsp;' + distx + '&nbsp;' + disty);
+					}
+
+					break;
+
+				case 'blur'			:		
+					break;
+				case 'focus'		:
+					break;
+				case 'focusin'		:
+					break;
+				case 'focusout'		:
+					break;
+
+				case 'contextmenu'	:
+				case 'selectstart'	:
+					return false;
 
 				// custom events
 				case 'startup'		:
@@ -2348,8 +2614,6 @@ class HtmlPageEvents extends HtmlPageState {
 					this.load_indicator_.fadeout();//this.load_indicator_.style.display = 'none';
 
 			}
-
-			//e.preventDefault();
 
 		}
 
@@ -2569,30 +2833,59 @@ class HtmlPageEvents extends HtmlPageState {
 class HtmlPageManager extends HtmlPageEvents {
 
 	constructor() {
-
 		super();
+	}
+
+	startup() {
+
+		this.dct_ = location_search().dct;
+		this.cst_ = !this.dct_; // customer terminal mode
+		this.debug_ = location_search().debug;
+
+		this.set_body_window_size();
+
+		this.date_formatter_ = new Intl.DateTimeFormat('ru-RU', {
+			year	: 'numeric', 
+			month	: '2-digit',
+			day		: '2-digit',
+			hour	: '2-digit',
+			minute	: '2-digit',
+			second	: '2-digit',
+			hour12	: false
+		});
 
 		Render.hide_cursor();
 
 		this.setup_animation_events(xpath_eval('//*[@fadein or @fadeout]'));
 		this.setup_events(xpath_eval('html/body/div[@btn]'));
-		this.setup_events(xpath_eval('html/body/div[@pcontrols]/div[@plist_controls or @psort_controls]/div[@btn]'));
-		this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pright]/div[@btn]'));
-		this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pmid]/div[@pdescription]'));
-		this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pimg]'));
-		this.setup_events(xpath_eval('html/body/div[@plargeimg or @alert]'));
-		this.setup_events(xpath_eval('html/body/div[@top]/div[@cart_informer]/div[@btn]'));
+
+		if( this.cst_ ) {
+			this.setup_events(xpath_eval('html/body/div[@pcontrols]/div[@plist_controls or @psort_controls]/div[@btn]'));
+			this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pright]/div[@btn]'));
+			this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pmid]/div[@pdescription]'));
+			this.setup_events(xpath_eval('html/body/div[@pinfo]/div[@pimg]'));
+			this.setup_events(xpath_eval('html/body/div[@plargeimg or @alert]'));
+			this.setup_events(xpath_eval('html/body/div[@top]/div[@cart_informer]/div[@btn]'));
+		}
+
+		if( this.dct_ ) {
+			this.setup_events([document]);
+			this.setup_events(xpath_eval('html/body'));
+			this.setup_events(xpath_eval('html/body/div[@middle]'));
+			this.setup_events(xpath_eval('html/body/i[@icon_scan]'));
+		}
+
 		this.setup_events(xpath_eval('html/body/div[@pcart]/div[@pcontrols]/div[@btn]'));
 
 		this.render_ = new Render;
 		this.render_.state = this;
 
-		add_event(window, 'sse_reload', e => this.events_handler(e), false);
-		this.sse_start();
+		if( this.cst_ ) {
+			add_event(window, 'sse_reload', e => this.events_handler(e), false);
+			this.sse_start();
 
-		add_event(window, 'away', e => this.events_handler(e), false);
-		this.idle_away_reloader_ =
-			new Idle({
+			add_event(window, 'away', e => this.events_handler(e), false);
+			this.idle_away_reloader_ = new Idle({
 				oneshot	: false,
 				retry	: true,
 				start	: true,
@@ -2603,35 +2896,244 @@ class HtmlPageManager extends HtmlPageEvents {
 				}
 			});
 
-		// virtual keyboard initiator
-		add_event(window, 'vki_type', e => this.events_handler(e), false);
-		this.setup_events(xpath_eval('html/body/img[@vk]'));
-		let vki_iframe_content = xpath_eval_single('html/body/iframe[@vk]').contentWindow;
-		vki_iframe_content.document.vki_callback = (e, keyboard, el, status) => this.vk_input_callback_handler(e, keyboard, el, status);
+			// virtual keyboard initiator
+			add_event(window, 'vki_type', e => this.events_handler(e), false);
+			this.setup_events(xpath_eval('html/body/img[@vk]'));
+			let vki_iframe_content = xpath_eval_single('html/body/iframe[@vk]').contentWindow;
+			vki_iframe_content.vki_callback = (e, keyboard, el, status) => this.vk_input_callback_handler(e, keyboard, el, status);
+		}
+
+		add_event(window, 'resize', e => this.events_handler(e), false);
+
+		if( !this.debug_ ) { // disable text selection and context menu
+			add_event(document, 'contextmenu', (e) => { e.preventDefault(); return false; }, true);
+			add_event(document, 'selectstart', (e) => { e.preventDefault(); return false; }, true);
+		}
 
 		add_event(window, 'startup', e => this.events_handler(e), false);
 		let e = new CustomEvent('startup', {});
-		window.dispatchEvent(e);
-
+		setTimeout(() => window.dispatchEvent(e));
 	}
+}
+//------------------------------------------------------------------------------
+function html_div_mag() {
+	return `
+			<div mag>
+				<p>Ваш магазин:</p>
+				<p>г. Липецк</p>
+				<p>ул. Ударников, д. 97</p>
+			</div>
+	`;
+}
+//------------------------------------------------------------------------------
+function dct_html_body() {
+	return `
+		<div top>
+			<div logo></div>
+			${html_div_mag()}
+		</div>
+		<div middle>
+			<div scanner fadein>
+				<div viewport></div>
+			</div>
+			<!--<iframe scanner src="assets/scanner/index.html"></iframe>-->
+		</div>
+		<i icon_scan></i>
+		<div mount></div>
+		<div alert fadein></div>
+		<!--<video id="scanner_beep" width="1" height="1" style="top: -100px; left: -100px; position: absolute;" preload>
+			<source src="assets/scanner/beep-07.mp4" type="video/mp4">
+			<source src="assets/scanner/beep-07.ogv" type="video/ogg">
+		</video>-->
+		<audio id="scanner_beep">
+			<source src="assets/scanner/beep-07.mp3"></source>
+			<source src="assets/scanner/beep-07.wav"></source>
+			<source src="assets/scanner/beep-07.ogg"></source>
+		</audio>
+	`;
+}
+//------------------------------------------------------------------------------
+function cst_html_body() {
+	return `
+		<div top>
+			<div logo></div>
+			${html_div_mag()}
+			<div cart_informer>
+			<div cinfo>
+				<p ccount></p>
+				<p csum></p>
+			</div>
+			<div btn cheque>
+				<img btn_ico src="assets/cheque.ico">
+					<span btn_txt>ПРЕДЧЕК</span>
+				</div>
+				<div btn cart>
+					<img btn_ico src="assets/cart/cart_edit.ico">
+					<span btn_txt>ИЗМЕНИТЬ</span>
+				</div>
+				<div btn drop>
+					<img btn_ico src="assets/cart/cart_delete.ico">
+					<span btn_txt>ОЧИСТИТЬ</span>
+				</div>
+			</div>
+		</div>
+		<div categories></div>
+		<div btn back>
+			<img btn_ico src="assets/arrows/arrow_undo.ico">
+			<span btn_txt>НАЗАД</span>
+		</div>
+		<div btn selections>
+			<img btn_ico src="assets/filter.ico">
+			<span btn_txt>&nbsp;&nbsp;ФИЛЬТР&nbsp;&nbsp;</span>
+		</div>
+		<div btn select_by_car>
+			<img btn_ico src="assets/car.ico">
+			<span btn_txt>АВТОМОБИЛЬ</span>
+		</div>
+		<div plist fadein>
+			<div ptable></div>
+		</div>
+		<div pcontrols>
+			<div psort_controls>
+				<div btn list_sort_order fadein>
+					<span btn_txt></span>
+					<img btn_ico src="">
+				</div>
+				<div btn list_sort_direction fadein>
+					<img btn_ico src="">
+				</div>
+			</div>
+			<div plist_controls>
+				<div btn first_page fadein>
+					<img btn_ico_condensed src="assets/arrows/arrow_left.ico">
+					<img btn_ico_condensed src="assets/arrows/arrow_left.ico">
+				</div>
+				<div btn prev_page fadein>
+					<span btn_txt></span>
+					<img btn_ico src="assets/arrows/arrow_left.ico">
+				</div>
+				<div btn next_page fadein>
+					<img btn_ico src="assets/arrows/arrow_right.ico">
+					<span btn_txt></span>
+				</div>
+				<div btn last_page fadein>
+					<img btn_ico_condensed src="assets/arrows/arrow_right.ico">
+					<img btn_ico_condensed src="assets/arrows/arrow_right.ico">
+					<span btn_txt></span>
+				</div>
+			</div>
+		</div>
+		<div pinfo fadein>
+			<div pimg></div>
+				<div pmid>
+				<p pname></p>
+				<hr><p pproperties_head>Характеристики</p><hr>
+				<div pproperties fadein></div>
+				<div pdescription fadein></div>
+			</div>
+			<div pright>
+				<p pprice></p>
+				<p pquantity></p>
+				<p pincart></p>
+				<div btn minus_one fadein>
+					<img btn_ico src="assets/minus.ico">
+				</div>
+				<p pbuy_quantity></p>
+				<div btn plus_one fadein>
+					<img btn_ico src="assets/plus.ico">
+				</div>
+				<div btn buy>
+					<img btn_ico src="assets/cart/cart_put.ico">
+					<span btn_txt>КУПИТЬ</span>
+				</div>
+				<hr><p premainders_head>Наличие в магазинах</p><hr>
+				<div premainders></div>
+			</div>
+		</div>
+		<div plargeimg fadein></div>
+		<div pcart fadein>
+			<div ptable></div>
+			<div pcontrols>
+				<div btn prev_page fadein>
+					<span btn_txt></span>
+					<img btn_ico src="assets/arrows/arrow_left.ico">
+				</div>
+				<div btn next_page fadein>
+					<img btn_ico src="assets/arrows/arrow_right.ico">
+					<span btn_txt></span>
+				</div>
+			</div>
+		</div>
+		<div middle></div>
+		<div mount></div>
+		<div alert fadein></div>
 
+		<iframe cheque_print copy="1" src="assets/print/cheque_template.html"></iframe>
+		<iframe cheque_print copy="2" src="assets/print/cheque_template.html"></iframe>
+
+		<img vk fadein src="assets/vk/jquery/keyboard.svg">
+		<iframe vk fadein src="assets/vk/jquery/vk.html"></iframe>
+
+		<div barcode></div>
+
+		<div class="cssload-container" fadein>
+			<div class="cssload-text">
+				<span>ЗАГРУЗКА<br>ЖДИТЕ...</span>
+			</div>
+			<div class="cssload-bell">
+				<div class="cssload-circle">
+					<div class="cssload-inner"></div>
+				</div>
+				<div class="cssload-circle">
+					<div class="cssload-inner"></div>
+				</div>
+				<div class="cssload-circle">
+					<div class="cssload-inner"></div>
+				</div>
+				<div class="cssload-circle">
+					<div class="cssload-inner"></div>
+				</div>
+				<div class="cssload-circle">
+					<div class="cssload-inner"></div>
+				</div>
+			</div>
+		</div>
+	`;
 }
 //------------------------------------------------------------------------------
 function core() {
 
-	let browser = get_browser();
+	let qp = location_search();
+	//let browser = get_browser();
+	let t = qp.dct ? dct_html_body() : cst_html_body();
 
-	if( true || navigator.userAgent.match(/altair$/i) ) {
+	if( qp.debug && qp.dct )
+		t += `<img debug_barcode src="assets/scanner/barcode-7638900411416.svg">`;
+
+	document.getElementsByTagName('body')[0].insertAdjacentHTML('beforeend', t);
+	//document.getElementsByTagName('title')[0].innerText = 'Терминал сбора данных, ТСД (data collection terminal, DCT)';
+
+	if( qp.dct ) {
+		let lnk = document.createElement('link');
+		lnk.setAttribute('rel', 'stylesheet');
+		lnk.setAttribute('type', 'text/css');
+		lnk.setAttribute('href', 'css/dct.css');
+
+		let head = document.getElementsByTagName('head')[0];
+		head.appendChild(lnk);
+	}
+
+	if( qp.debug ) {
 
 		let div = document.createElement('div');
 		div.setAttribute('debug', '');
 		div.innerHTML = `
-			<p debug0></p><p debug1></p>
-			<p debug2></p><p debug3></p>
-			<p debug4></p><p debug5></p>
-			<p debug6></p><p debug7></p>
-			<p debug8></p><p debug9></p>`
-		;
+			<div debug0></div><div debug1></div>
+			<div debug2></div><div debug3></div>
+			<div debug4></div><div debug5></div>
+			<div debug6></div><div debug7></div>
+			<div debug8></div><div debug9></div>
+		`;
 
 		let body = document.getElementsByTagName('body')[0];
 		body.appendChild(div);
@@ -2639,7 +3141,7 @@ function core() {
 		let lnk = document.createElement('link');
 		lnk.setAttribute('rel', 'stylesheet');
 		lnk.setAttribute('type', 'text/css');
-		lnk.setAttribute('href', '/resources/css/debug.css');
+		lnk.setAttribute('href', 'css/debug.css');
 
 		let head = document.getElementsByTagName('head')[0];
 		head.appendChild(lnk);
@@ -2661,6 +3163,7 @@ function core() {
 	}
 
 	manager = new HtmlPageManager;
+	manager.startup();
 
 	// TODO: debug only, need to remove
 	//let barcode_render = new barcode_ean13_render({ width: 7.62 });

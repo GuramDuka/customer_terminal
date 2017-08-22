@@ -2,204 +2,30 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<meta name="description" content="Список">
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+		<!--<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=0, shrink-to-fit=yes, minimal-ui">-->
+		<!-- set viewport to native resolution (android) - disable zoom !-->
+		<!--<meta 
+			name="viewport" 
+			content="target-densitydpi=device-dpi; width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0"
+		/>-->
+		<meta name="viewport" content="width=device-width, height=device-height, user-scalable=0, shrink-to-fit=yes, minimal-ui">
+		<meta name="description" content="">
 
-		<title>Список</title>
+		<title></title>
 
-		<link rel="shortcut icon" href="/resources/assets/favicon.ico" />
-		<link rel="stylesheet" type="text/css" href="/resources/css/default.css" />
-		<link rel="stylesheet" type="text/css" href="/resources/css/load.css" />
-		<!--<link rel="stylesheet" type="text/css" href="/resources/css/debug.css" />-->
-
-		<style type="text/css">
-		</style>
+		<link rel="shortcut icon" href="assets/favicon.ico" />
+		<link rel="stylesheet" type="text/css" href="css/default.css" />
+		<link rel="stylesheet" type="text/css" href="css/load.css" />
 
 	</head>
-	<body>
-		<div top>
-			<div logo></div>
-			<div mag>
-				<p>Ваш магазин:</p>
-				<p>г. Липецк</p>
-				<p>ул. Ударников, д. 97</p>
-			</div>
-			<div cart_informer>
-				<div cinfo>
-					<p ccount></p>
-					<p csum></p>
-				</div>
-				<div btn cheque>
-					<img btn_ico src="/resources/assets/cheque.ico">
-					<span btn_txt>ПРЕДЧЕК</span>
-				</div>
-				<div btn cart>
-					<img btn_ico src="/resources/assets/cart/cart_edit.ico">
-					<span btn_txt>ИЗМЕНИТЬ</span>
-				</div>
-				<div btn drop>
-					<img btn_ico src="/resources/assets/cart/cart_delete.ico">
-					<span btn_txt>ОЧИСТИТЬ</span>
-				</div>
-			</div>
-		</div>
-		<div categories></div>
-		<div btn back>
-			<img btn_ico src="/resources/assets/arrows/arrow_undo.ico">
-			<span btn_txt>НАЗАД</span>
-		</div>
-		<div btn selections>
-			<img btn_ico src="/resources/assets/filter.ico">
-			<span btn_txt>&nbsp;&nbsp;ФИЛЬТР&nbsp;&nbsp;</span>
-		</div>
-		<div btn select_by_car>
-			<img btn_ico src="/resources/assets/car.ico">
-			<span btn_txt>АВТОМОБИЛЬ</span>
-		</div>
-		<div plist fadein>
-			<div ptable></div>
-		</div>
-		<div pcontrols>
-			<div psort_controls>
-				<div btn list_sort_order fadein>
-					<span btn_txt></span>
-					<img btn_ico src="">
-				</div>
-				<div btn list_sort_direction fadein>
-					<img btn_ico src="">
-				</div>
-			</div>
-			<div plist_controls>
-				<div btn first_page fadein>
-					<img btn_ico_condensed src="/resources/assets/arrows/arrow_left.ico">
-					<img btn_ico_condensed src="/resources/assets/arrows/arrow_left.ico">
-				</div>
-				<div btn prev_page fadein>
-					<span btn_txt></span>
-					<img btn_ico src="/resources/assets/arrows/arrow_left.ico">
-				</div>
-				<div btn next_page fadein>
-					<img btn_ico src="/resources/assets/arrows/arrow_right.ico">
-					<span btn_txt></span>
-				</div>
-				<div btn last_page fadein>
-					<img btn_ico_condensed src="/resources/assets/arrows/arrow_right.ico">
-					<img btn_ico_condensed src="/resources/assets/arrows/arrow_right.ico">
-					<span btn_txt></span>
-				</div>
-			</div>
-		</div>
-		<div pinfo fadein>
-			<div pimg></div>
-			<div pmid>
-				<p pname></p>
-				<hr><p pproperties_head>Характеристики</p><hr>
-				<div pproperties fadein></div>
-				<div pdescription fadein></div>
-			</div>
-			<div pright>
-				<p pprice></p>
-				<p pquantity></p>
-				<p pincart></p>
-				<div btn minus_one fadein>
-					<img btn_ico src="/resources/assets/minus.ico">
-				</div>
-				<p pbuy_quantity></p>
-				<div btn plus_one fadein>
-					<img btn_ico src="/resources/assets/plus.ico">
-				</div>
-				<div btn buy>
-					<img btn_ico src="/resources/assets/cart/cart_put.ico">
-					<span btn_txt>КУПИТЬ</span>
-				</div>
-				<hr><p premainders_head>Наличие в магазинах</p><hr>
-				<div premainders></div>
-			</div>
-		</div>
-		<div plargeimg fadein></div>
-		<div pcart fadein>
-			<div ptable>
-			</div>
-			<div pcontrols>
-				<div btn prev_page fadein>
-					<span btn_txt></span>
-					<img btn_ico src="/resources/assets/arrows/arrow_left.ico">
-				</div>
-				<div btn next_page fadein>
-					<img btn_ico src="/resources/assets/arrows/arrow_right.ico">
-					<span btn_txt></span>
-				</div>
-			</div>
-		</div>
-		<div mount></div>
-		<div alert fadein></div>
-		<iframe cheque_print copy="1" src="/resources/assets/print/cheque_template.html"></iframe>
-		<iframe cheque_print copy="2" src="/resources/assets/print/cheque_template.html"></iframe>
-
-		<img vk fadein src="/resources/assets/vk/jquery/keyboard.svg">
-		<iframe vk fadein src="/resources/assets/vk/jquery/vk.html"></iframe>
-
-		<!--
-		<script type="text/javascript" src="js/misc.js"></script>
-		<script type="text/javascript" src="js/idle.js"></script>
-		<script type="text/javascript" src="js/sseq.js"></script>
-		<script type="text/javascript" src="js/core.js"></script>
-		-->
-
-		<!--
-		<script type="text/javascript" src="js/prefetch.js"></script>
-		<script type="text/javascript" src="js/refresh.js"></script>
-		-->
-
-		<div barcode></div>
-
-		<div class="cssload-container" fadein>
-			<div class="cssload-text">
-				<span>ЗАГРУЗКА<br>ЖДИТЕ...</span>
-			</div>
-			<div class="cssload-bell">
-				<div class="cssload-circle">
-					<div class="cssload-inner"></div>
-				</div>
-				<div class="cssload-circle">
-					<div class="cssload-inner"></div>
-				</div>
-				<div class="cssload-circle">
-					<div class="cssload-inner"></div>
-				</div>
-				<div class="cssload-circle">
-					<div class="cssload-inner"></div>
-				</div>
-				<div class="cssload-circle">
-					<div class="cssload-inner"></div>
-				</div>
-			</div>
-		</div>
-
-		<script type="text/javascript">
-
-			// http://www.nczonline.net/blog/2009/07/28/the-best-way-to-load-external-javascript/
-			function load_script(url, callback) {
-
-				let script		= document.createElement('script');
-				script.type		= 'text/javascript';
-				script.onload	= callback;
-				script.src		= url;
-
-				document.getElementsByTagName('head')[0].appendChild(script);
-
-			}
-
-			load_script('js/hashes.js',
-				() => load_script('js/misc.js',
-					() => load_script('js/xhrs.js',
-						() => load_script('js/idle.js',
-							() => load_script('js/sseq.js',
-								() => load_script('js/barcode.js',
-									() => load_script('js/core.js', () => core())))))));
-
-			//document.addEventListener('DOMContentLoaded', core);
-		</script>
-
-	</body>
+	<body></body>
+	<script type="text/javascript">
+		document.addEventListener('DOMContentLoaded', () => {
+			let script		= document.createElement('script');
+			script.type		= 'text/javascript';
+			script.onload	= () => core_loader();
+			script.src		= 'js/loader.js';
+			document.getElementsByTagName('body')[0].appendChild(script);
+		});
+	</script>
 </html>

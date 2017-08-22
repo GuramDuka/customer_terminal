@@ -2,8 +2,8 @@ $(window).on('load', function() {
 
 	let events_handler = (e, keyboard, el) => {
 
-		if( typeof document.vki_callback === 'function' )
-			document.vki_callback(e, keyboard, el);
+		if( typeof window.vki_callback === 'function' )
+			window.vki_callback(e, keyboard, el);
 
 	};
 

@@ -19,6 +19,8 @@ file_exists(TMP_DIR) || mkdir(TMP_DIR, 0777, true);
 //------------------------------------------------------------------------------
 ini_set('soap.wsdl_cache_dir'		, TMP_DIR);
 ini_set('session.save_path'			, TMP_DIR);
+ini_set('session.gc_probability'	, 0);
+ini_set('session.gc_maxlifetime'    , 365 * 24 * 60 * 60);
 ini_set('upload_tmp_dir'			, TMP_DIR);
 ini_set('sys_temp_dir'				, TMP_DIR);
 ini_set('error_log'					, LOG_FILE);

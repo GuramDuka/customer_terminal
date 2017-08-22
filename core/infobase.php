@@ -580,10 +580,22 @@ EOT
 
 		$this->exec(<<<'EOT'
 			CREATE TABLE IF NOT EXISTS cart (
-				product_uuid	BLOB PRIMARY KEY ON CONFLICT REPLACE,
-				quantity		NUMERIC
-			) WITHOUT ROWID
+				session_uuid	BLOB NOT NULL,
+				product_uuid	BLOB NOT NULL,
+				quantity		NUMERIC NOT NULL,
+				UNIQUE(session_uuid, product_uuid) ON CONFLICT REPLACE
+			) /*WITHOUT ROWID*/
 EOT
+		);
+
+		$this->exec(
+			'CREATE UNIQUE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'cart_by_session_uuid_product_uuid'), -4)
+			. ' ON cart (session_uuid, product_uuid)'
+		);
+
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'cart_by_session_uuid_quantity'), -4)
+			. ' ON cart (session_uuid, quantity)'
 		);
 
 		// регистр Настройка подбора терминала покупателя

@@ -43,17 +43,6 @@
 		cursor				: none;
 	}
 
-	/* disable text selection */
-	* {
-		-webkit-touch-callout: none;	/* iOS Safari */
-		-webkit-user-select	: none;		/* Chrome/Safari/Opera */
-		-o-user-select		: none;
-		-khtml-user-select	: none;		/* Konqueror */
-		-moz-user-select	: none;		/* Firefox */
-		-ms-user-select		: none;		/* Internet Explorer/Edge */
-		user-select			: none;		/* Non-prefixed version, currently not supported by any browser */
-	}
-
 	html > body {
 		background-color	: white;
 		border				: solid 0px black;
@@ -172,8 +161,8 @@
 		background-color	: transparent;
 		background-size		: contain;
 		background-repeat	: no-repeat;
-		background-position	: center;
-		background-image	: url('/resources/assets/logo.jpg')/*, linear-gradient(transparent, gold)*/;
+		background-position	: center center;
+		background-image	: url('../assets/logo.jpg')/*, linear-gradient(transparent, gold)*/;
 	}
 
 	html > body > div[top] > div[cart_informer] {
@@ -371,11 +360,11 @@
 	}
 
 	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > div[value] > span[check_box][ico] {
-		background-image	: url('/resources/assets/check_box_uncheck.ico');
+		background-image	: url('../assets/check_box_uncheck.ico');
 	}
 
 	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > div[value][checked] > span[check_box][ico] {
-		background-image	: url('/resources/assets/check_box_mix.ico');
+		background-image	: url('../assets/check_box_mix.ico');
 	}
 
 	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > div[value] > span[check_box][txt] {
@@ -445,11 +434,11 @@
 	}
 
 	html > body > div[categories] > div[select_by_car_frame] > div[selector] > span[search_field][ico] {
-		background-image	: url('/resources/assets/search_field.ico');
+		background-image	: url('../assets/search_field.ico');
 	}
 
 	html > body > div[categories] > div[select_by_car_frame] > div[selector] > span[list_box][ico] {
-		background-image	: url('/resources/assets/list_box.ico');
+		background-image	: url('../assets/list_box.ico');
 	}
 
 	html > body > div[categories] > div[select_by_car_frame] > div[selector] > span[label] {
@@ -948,15 +937,17 @@
 		margin-top			: -5.1%;
 	}
 
+	html > body > div[middle] {
+		display				: none;
+	}
+
 	html > body > div[mount] {
 		float				: none;
 		background-color	: transparent;
 		background-size		: contain;
 		background-repeat	: no-repeat;
-		background-position	: center;
-		background-image	:
-								url('/resources/assets/mount.png'),
-								linear-gradient(transparent, gold);
+		background-position	: center bottom;
+		background-image	: url('../assets/mount.png'),	linear-gradient(transparent, gold);
 								/*linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet),*/
 		position			: fixed;
 		top					: calc(100% - 128px);
@@ -964,6 +955,10 @@
 		width				: 100%;
 		height				: 145px;
 		z-index				: 1;
+	}
+
+	html > body > div[barcode] {
+		display				: none;
 	}
 
 	html > body > iframe[cheque_print] {
@@ -1025,7 +1020,7 @@
 	}
 
 	html > body > div[debug] {
-		width				: 15% !important;
+		width				: 45%;
 		display				: none;
 		font-family			: "droid";
 		font-weight			: bold;
@@ -1041,17 +1036,8 @@
 		display				: none;
 	}
 
-	html > body > div[debug] > p {
+	html > body > div[debug] > div {
 		display				: none;
-	}
-
-	html > body > div[debug] > p > font {
-
-		font-family			: "Digital-7";
-		font-size			: 20px;
-		font-weight			: normal;
-		font-style			: normal;
-
 	}
 
 	/* animation */

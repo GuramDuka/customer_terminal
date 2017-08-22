@@ -1,19 +1,8 @@
 @media screen {
 
-	/* enable text selection and cursor */
-	.notent {
-		-webkit-touch-callout: all;	/* iOS Safari */
-		-webkit-user-select	: all;		/* Chrome/Safari/Opera */
-		-o-user-select		: all;
-		-khtml-user-select	: all;		/* Konqueror */
-		-moz-user-select	: all;		/* Firefox */
-		-ms-user-select		: all;		/* Internet Explorer/Edge */
-		user-select			: all;		/* Non-prefixed version, currently not supported by any browser */
-		cursor				: auto;
-	}
-
+	/* enable cursor */
 	* {
-		cursor				: auto;
+		cursor					: auto;
 	}
 
 	html > body > div[plist],
@@ -38,7 +27,21 @@
 	}
 
 	html > body > div[debug] {
-		display				: inline-block;
+		display				: block;
+	}
+
+	html > body > div[debug] > div {
+		width				: 100%;
+		display				: none;
+	}
+
+	html > body > div[debug] > div > font {
+
+		font-family			: "Digital-7";
+		font-size			: 20px;
+		font-weight			: normal;
+		font-style			: normal;
+
 	}
 
 	// TODO: debug only, need to remove

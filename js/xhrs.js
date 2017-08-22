@@ -26,11 +26,20 @@ function post_json(obj, path, data) {
 
 		//obj.deferred_xhrs_[hash] = undefined;
 		//delete obj.deferred_xhrs_[hash];
+		//let clear = () => {
+		//	delete obj.deferred_xhrs_[hash];
+		//
+		//	if( Object.getOwnPropertyNames(obj.deferred_xhrs_).length === 0 )
+		//		delete obj.deferred_xhrs_;
+		//};
 
-		if( xhr.status !== 200 )
+		if( xhr.status !== 200 ) {
+		//	clear();
 			throw new Error(xhr.status.toString() + ' ' + xhr.statusText + "\n" + xhr.responseText);
+		}
 
 		response = JSON.parse(xhr.responseText, JSON.dateParser);
+		//clear();
 
 	}
 	else {
@@ -42,11 +51,12 @@ function post_json(obj, path, data) {
 		xhr.setRequestHeader('If-Modified-Since', 'Sat, 1 Jan 2000 00:00:00 GMT');
 		xhr.setRequestHeader('Cache-Control'	, 'no-store, no-cache, must-revalidate, max-age=0');
 
-		xhr.onreadystatechange = function () {
+		xhr.deferred_object_ = obj.deferred_object_;
 
+		xhr.onreadystatechange = function () {
 			if( this.readyState === XMLHttpRequest.DONE )
 				if( obj.deferred_xhrs_handler )
-					obj.deferred_xhrs_handler();
+					obj.deferred_xhrs_handler(xhr.deferred_object_);
 
 		};
 

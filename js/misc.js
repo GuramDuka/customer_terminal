@@ -89,6 +89,31 @@ if( window.JSON && !window.JSON.dateParser ) {
 
 }
 //------------------------------------------------------------------------------
+function window_size() {
+	return [
+		window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
+		window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
+	];
+}
+//------------------------------------------------------------------------------
+function location_search(query) {
+	let q = query ? query : location.search;
+
+	return (/^[?#]/.test(q) ? q.slice(1) : q).
+    	split('&').
+		reduce((params, param) => {
+			let [ k, v ] = param.split('=');
+
+			if( k.length !== 0 ) {
+				k = decodeURIComponent(k.replace(/\+/g, ' '));
+				v = v && v.length !== 0 ? decodeURIComponent(v.replace(/\+/g, ' ')) : true;
+				params[k] = v;
+			}
+
+			return params;
+		}, {});
+}
+//------------------------------------------------------------------------------
 // http://stackoverflow.com/a/1042676
 // extends 'from' object with members from 'to'. If 'to' is null, a deep clone of 'from' is returned
 function extend_object(from, to = null) {
