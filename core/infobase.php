@@ -397,6 +397,17 @@ EOT
 EOT
 		);*/
 
+		$this->exec(<<<'EOT'
+			CREATE TABLE IF NOT EXISTS barcodes_registry (
+				product_uuid	BLOB,
+				barcode			TEXT
+			)
+EOT
+		);
+
+		$dimensions = [ 'product' => '_uuid', 'barcode' => '' ];
+		$this->create_unique_indexes_on_registry('barcodes_registry', $dimensions);
+
 		// регистр значения свойств объектов
 		$this->exec(<<<'EOT'
 			CREATE TABLE IF NOT EXISTS properties_registry (

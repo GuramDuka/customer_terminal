@@ -1664,11 +1664,8 @@ class HtmlPageEvents extends HtmlPageState {
 
 					let barcode = data.order.barcode;
 					//barcode = data.order.barcode_eangnivc;
-
 					let barcode_render = new barcode_ean13_render({ width: 6.1 });
-
 					let barcode_html = barcode_render.draw_barcode(barcode);
-
 					let tail = xpath_eval_single('html/body/div[@tail]', iframe, iframe);
 					xpath_eval_single('div[@barcode]', tail, iframe).innerHTML = barcode_html;
 
@@ -1987,7 +1984,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 			this.vk_input_timer_ = setTimeout( () => {
 
-				let m = new CustomEvent('vki_type', { 'detail' : keyboard.preview.value });
+				let m = new CustomEvent('vki_type', { detail : keyboard.preview.value });
 				window.dispatchEvent(m);
 
 			}, 1000);
@@ -2029,6 +2026,9 @@ class HtmlPageEvents extends HtmlPageState {
 				setTimeout(() => e.dispatchEvent(evt));
 			}
 		}
+
+		if( this.dct_ ) // fetch delayed cart
+			setTimeout(() => window.dispatchEvent(new CustomEvent('barcode')));
 
 	}
 
@@ -2087,7 +2087,7 @@ class HtmlPageEvents extends HtmlPageState {
 			b.style.height = '140mm';
 
 			let icon_scan = xpath_eval_single('html/body/i[@icon_scan]');
-			icon_scan.style.top = '12%';
+			icon_scan.style.top = '4%';
 		}
 		else if( sp ) { // prevent virtual keyboard appear resize body
 			let ww = this.deviceWidth_  !== undefined ? this.deviceWidth_  : 0;
@@ -2099,6 +2099,14 @@ class HtmlPageEvents extends HtmlPageState {
 				this.deviceWidth_  = w;
 				this.deviceHeight_ = h;
 			}
+
+			/*if( this.dct_ ) {
+				let icon_scan = xpath_eval_single('html/body/i[@icon_scan]');
+				icon_scan.style.top = 'calc(100% - 9.999%)';
+				icon_scan.style.left = 'calc(100% - 10.5mm)';
+				icon_scan.style.width = '10mm';
+				icon_scan.style.height = '10mm';
+			}*/
 		}
 		else {
 			b.style.width  = w + 'px';
@@ -2134,23 +2142,105 @@ class HtmlPageEvents extends HtmlPageState {
 				halfSample	: true
 			},
 			numOfWorkers	: navigator.hardwareConcurrency,
-			frequency		: 2,
+			frequency		: 10,
 			locate			: false
 		};
 	};
 
-	barcode_scan_handler(code) {
-		let m = xpath_eval_single('html/body/div[@middle]/div[@scanner]/div[@viewport]');
-		m.insertAdjacentHTML('afterend', `<div barcode="${code}">${code}</div>`);
+	barcode_scan_handler(cur_page_state, code) {
 
-		let beep = document.getElementById('scanner_beep');
+		if( this.barcode_event_ && this.barcode_event_ !== this.current_event_ )
+			return;
+
+		this.barcode_event_ = this.current_event_;
+
+		let [ new_page_state, new_paging_state ] = this.clone_page_state();
 
 		try {
-			beep.play();
+
+			//Render.debug(3, 'B:&nbsp;' + code);
+			//let m = xpath_eval_single('html/body/div[@middle]/div[@scanner]/div[@viewport]');
+			//m.insertAdjacentHTML('afterend', `<div barcode="${code}">${code}</div>`);
+
+			let request = {
+				'module'		: 'carter',
+				'handler'		: 'carter'
+			};
+
+			if( code )
+				request.products = [{ 'barcode' : code }];
+
+			let data = this.post_json('proxy.php', request);
+
+			// allow scan barcode only once per second
+			setTimeout(() => delete this.barcode_event_, 1000);
+
+			new_page_state.cart_ = data.cart;
+			new_page_state.cart_by_uuid_ = {};
+
+			for( let e of data.cart )
+				new_page_state.cart_by_uuid_[e.uuid] = e;
+
+			let m = xpath_eval_single('html/body/div[@middle]');
+			let cart = new_page_state.cart_;
+			let n = cart.length;
+			let modified = false;
+
+			for( let p of cart ) {
+				let g = () => xpath_single('div[@uuid=\'' + p.uuid + '\']', m);
+				let e = g();
+
+				if( !e ) {
+					m.insertAdjacentHTML('beforeend', `
+						<div pitem="${n}" uuid="${p.uuid}">
+							<span pno></span>
+							<div pimg></div>
+							<span pname></span>
+							<span pprice></span>
+							<span psum></span>
+							<div btn plus_one>
+								<img btn_ico src="assets/plus.ico">
+							</div>
+							<span pbuy_quantity></span>
+							<div btn minus_one>
+								<img btn_ico src="assets/minus.ico">
+							</div>
+						</div>
+					`);
+
+					e = g();
+					this.setup_events(xpath_eval('div[@pitem]/div[@btn]', e));
+				}
+
+				let price = Math.trunc(p.price) + '₽';
+				let name = '№' + n + '. [' + p.code + '] ' + p.name + ', ' + price + ', ' + p.buy_quantity + ' единицы';
+
+				xpath_eval_single('span[@pno]'				, e).innerHTML				= n;
+				xpath_eval_single('div[@pimg]'				, e).style.backgroundImage	= 'url(' + p.img_url + ')';
+				xpath_eval_single('span[@pname]'			, e).innerHTML				= name;
+				xpath_eval_single('span[@pprice]'			, e).innerHTML				= price;
+				xpath_eval_single('span[@psum]'				, e).innerHTML				= Math.trunc(p.price) * p.buy_quantity + '&nbsp;₽';
+				xpath_eval_single('span[@pbuy_quantity]'	, e).innerText				= p.buy_quantity;
+
+				let o = cur_page_state.cart_by_uuid_[p.uuid] || {};
+
+				if( o.buy_quantity !== p.buy_quantity )
+					modified = true;
+
+				n--;
+			}
+
+			if( modified && code )
+				this.scanner_beep();
+
+			new_page_state.modified_ = true;
+
 		}
-		catch( e ) {
-			console.log(e.message);
+		finally {
+			delete this.handling_barcode_;
 		}
+
+		return new_page_state;
 	}
 
 	switch_scanner() {
@@ -2189,7 +2279,7 @@ class HtmlPageEvents extends HtmlPageState {
 				});*/
 
 				Quagga.onDetected(result => {
-					this.barcode_scan_handler(result.codeResult.code);
+					window.dispatchEvent(new CustomEvent('barcode', { detail : result.codeResult.code }));
 					//let code = result.codeResult.code;
 
 					//if( App.lastResult !== code ) {
@@ -2221,12 +2311,52 @@ class HtmlPageEvents extends HtmlPageState {
 				this.quagga_initialized_ = true;
 				console.log("Quagga initialization finished. Ready to start");
 
+            	let track = Quagga.CameraAccess.getActiveTrack();
+
+            	if( track && typeof track.getCapabilities === 'function' ) {
+                    track.applyConstraints({advanced: [{zoom: parseFloat(2.0)}]});
+					track.applyConstraints({advanced: [{torch: true}]});
+                }
+
 				this.switch_scanner();
 			});
 		}
 	}
 
+	amplifyMedia(mediaElem, multiplier) {
+		let context = new (window.AudioContext || window.webkitAudioContext),
+			result = {
+				context: context,
+				source: context.createMediaElementSource(mediaElem),
+				gain: context.createGain(),
+				media: mediaElem,
+				amplify: function(multiplier) { result.gain.gain.value = multiplier; },
+				getAmpLevel: function() { return result.gain.gain.value; }
+		};
+		result.source.connect(result.gain);
+		result.gain.connect(context.destination);
+		result.amplify(multiplier);
+		return result;
+	}
+
+	scanner_beep(volume = 1.0) {
+
+		try {
+			let beep = document.getElementById('scanner_beep');
+			//let amp = this.amplifyMedia(beep, volume);
+			beep.volume = volume;
+			beep.play();
+		}
+		catch( e ) {
+			console.log(e.message);
+			Render.debug(2, 'PLAY:&nbsp;' + e.message);
+		}
+
+	}
+
 	icon_scan_handler() {
+
+		this.scanner_beep(0.0001);
 
 		if( this.quagga_scripts_loaded_ ) {
 			this.switch_scanner();
@@ -2562,6 +2692,10 @@ class HtmlPageEvents extends HtmlPageState {
 					return false;
 
 				// custom events
+				case 'barcode'		:
+					this.barcode_scan_handler(cur_page_state, e.detail);
+					break;
+
 				case 'startup'		:
 					new_page_state = this.startup_handler(cur_page_state, cur_paging_state, element);
 					break;
@@ -2713,12 +2847,8 @@ class HtmlPageEvents extends HtmlPageState {
 			if( data.system_remainders )
 				walk(data.system_remainders);
 
-			if( reload ) {
-
-				let m = new CustomEvent('sse_reload', {});
-				window.dispatchEvent(m);
-
-			}
+			if( reload )
+				window.dispatchEvent(new CustomEvent('sse_reload'));
 
 		}
 
@@ -2774,12 +2904,8 @@ class HtmlPageEvents extends HtmlPageState {
 
 			}
 
-			if( reload ) {
-
-				let m = new CustomEvent('sse_reload', {});
-				window.dispatchEvent(m);
-
-			}
+			if( reload )
+				window.dispatchEvent(new CustomEvent('sse_reload'));
 
 			let request = {
 				'module'	: 'eventer',
@@ -2891,8 +3017,7 @@ class HtmlPageManager extends HtmlPageEvents {
 				start	: true,
 				timeout	: 60000, // 60s
 				away	: () => {
-					let e = new CustomEvent('away', {});
-					window.dispatchEvent(e);
+					window.dispatchEvent(new CustomEvent('away'));
 				}
 			});
 
@@ -2910,9 +3035,11 @@ class HtmlPageManager extends HtmlPageEvents {
 			add_event(document, 'selectstart', (e) => { e.preventDefault(); return false; }, true);
 		}
 
+		if( this.dct_ )
+			add_event(window, 'barcode', e => this.events_handler(e), false);
+
 		add_event(window, 'startup', e => this.events_handler(e), false);
-		let e = new CustomEvent('startup', {});
-		setTimeout(() => window.dispatchEvent(e));
+		setTimeout(() => window.dispatchEvent(new CustomEvent('startup')));
 	}
 }
 //------------------------------------------------------------------------------
@@ -2946,9 +3073,9 @@ function dct_html_body() {
 			<source src="assets/scanner/beep-07.ogv" type="video/ogg">
 		</video>-->
 		<audio id="scanner_beep">
-			<source src="assets/scanner/beep-07.mp3"></source>
-			<source src="assets/scanner/beep-07.wav"></source>
-			<source src="assets/scanner/beep-07.ogg"></source>
+			<source src="assets/scanner/beep-07.ogg" type="audio/ogg">
+			<source src="assets/scanner/beep-07.mp3" type="audio/mpeg">
+			<source src="assets/scanner/beep-07.wav" type="audio/x-wav">
 		</audio>
 	`;
 }

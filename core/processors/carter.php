@@ -18,27 +18,30 @@ class carter_handler extends handler {
 
 		$sql = <<<EOT
 			SELECT
-				a.uuid					AS uuid,
+				b.product_uuid			AS uuid,
 				b.quantity				AS buy_quantity,
 				a.code					AS code,
 				a.name					AS name,
 				i.uuid					AS base_image_uuid,
 				i.ext					AS base_image_ext,
-				q.quantity				AS remainder,
-				p.price					AS price,
-				COALESCE(r.quantity, 0)	AS reserve
+				COALESCE(q.quantity, 0)	AS remainder,
+				COALESCE(p.price, 0)	AS price,
+				COALESCE(r.quantity, 0)	AS reserve,
+				bcr.barcode				AS barcode
 			FROM
 				cart AS b
-					INNER JOIN products AS a
+					LEFT JOIN products AS a
           			ON a.uuid = b.product_uuid
-					INNER JOIN images AS i
+					LEFT JOIN images AS i
 					ON a.base_image_uuid = i.uuid
-					INNER JOIN prices_registry AS p
+					LEFT JOIN prices_registry AS p
 					ON a.uuid = p.product_uuid
-					INNER JOIN remainders_registry AS q
+					LEFT JOIN remainders_registry AS q
 					ON a.uuid = q.product_uuid
 					LEFT JOIN reserves_registry AS r
 					ON a.uuid = r.product_uuid
+					LEFT JOIN barcodes_registry AS bcr
+					ON a.uuid = bcr.product_uuid
      		WHERE
 				b.session_uuid = :session_uuid
 			ORDER BY
@@ -56,20 +59,30 @@ EOT
 
 			extract($r);
 
-			$cart[] = [
-				'uuid'			=> bin2uuid($uuid),
+			$uuid = bin2uuid($uuid);
+
+			$barcodes = @$cart[$uuid]['barcodes'];
+
+			if( $barcodes === null )
+				$barcodes = [];
+
+			$barcodes[] = $barcode;
+
+			$cart[$uuid] = [
+				'uuid'			=> $uuid,
 				'buy_quantity'	=> $buy_quantity,
 				'code'			=> $code,
 				'name'			=> htmlspecialchars($name, ENT_HTML5),
 				'price'			=> $price,
 				'remainder'		=> $remainder,
 				'reserve'		=> $reserve,
-				'img_url'		=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext, true), ENT_HTML5)
+				'img_url'		=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext, true), ENT_HTML5),
+				'barcodes'		=> $barcodes
 			];
 
 		}
 
-		return $cart;
+		return array_values($cart);
 
 	}
 
@@ -240,15 +253,43 @@ EOT
 			$st = $this->infobase_->prepare($sql);
 			$st->bindParam(':session_uuid', $session_uuid, SQLITE3_BLOB);
 
+			$sql = <<<'EOT'
+				SELECT
+					a.product_uuid,
+					COALESCE(b.quantity, 0) + 1 AS quantity
+				FROM
+					barcodes_registry AS a
+						LEFT JOIN cart AS b
+						ON b.session_uuid = :session_uuid
+							AND a.product_uuid = b.product_uuid
+				WHERE
+					a.barcode = :barcode
+EOT
+			;
+
+			$st_barcode = $this->infobase_->prepare($sql);
+			$st_barcode->bindParam(':session_uuid', $session_uuid, SQLITE3_BLOB);
+
 			foreach( $products as $product ) {
 
 				extract($product);
 
-				$product_uuid = uuid2bin($uuid);
+				$product_uuid = uuid2bin(@$uuid);
+				$quantity = @$quantity;
 
-				$st->bindValue(':product_uuid'	, $product_uuid, SQLITE3_BLOB);
-				$st->bindValue(':quantity'		, $quantity === null ? 0 : (is_numeric($quantity) ? $quantity : floatval($quantity)));
-				$st->execute();
+				if( @$barcode !== null ) {
+					$st_barcode->bindValue(':barcode', $barcode);
+					$result = $st_barcode->execute();
+
+					while( $r = $result->fetchArray(SQLITE3_ASSOC) )
+						extract($r);
+				}
+
+				if( $product_uuid !== null ) {
+					$st->bindValue(':product_uuid'	, $product_uuid, SQLITE3_BLOB);
+					$st->bindValue(':quantity'		, floatval($quantity));
+					$st->execute();
+				}
 
 			}
 

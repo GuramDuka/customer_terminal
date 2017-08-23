@@ -23,8 +23,9 @@ class loader_handler extends handler {
 		$loaders = [
 			'constants',
 			'prices_registry',
-			'remainders_registry',
+			'barcodes_registry',
 			'reserves_registry',
+			'remainders_registry',
 			'categories_registry',
 			'properties_registry',
 			'system_remainders_registry',

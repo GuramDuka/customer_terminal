@@ -24,7 +24,7 @@ function get_image_path($uuid, $dir_sep = DIRECTORY_SEPARATOR, $range = 256) {
 function get_image_url($base_image_uuid, $base_image_ext, $canvas = false) {
 
 	$nopic = false;
-	$path_name = '/resources/';
+	$path_name = '';
 	$uuid = bin2uuid($base_image_uuid);
 
 	if( $base_image_uuid !== null && $base_image_ext !== null && !empty($base_image_ext) ) {
