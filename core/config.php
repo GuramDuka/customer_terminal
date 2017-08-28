@@ -48,7 +48,7 @@ class config extends \config {
 	public static $canvas_format								= 'jpg';
 	public static $canvas_interlace								= true;
 	public static $canvas_compression_quality					= 95;
-	public static $force_create_infobase						= true;
+	public static $force_create_infobase						= false;
 	public static $force_rewrite_pages							= false;
 	public static $cars_selections_registry_max_values_on_row	= 12;
 

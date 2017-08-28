@@ -63,12 +63,13 @@ EOT
 
 			$barcodes = @$cart[$uuid]['barcodes'];
 
-			if( $barcodes === null )
-				$barcodes = [];
+			if( $barcode !== null ) {
+				if( $barcodes === null )
+					$barcodes = [];
+				$barcodes[] = $barcode;
+			}
 
-			$barcodes[] = $barcode;
-
-			$cart[$uuid] = [
+			$e = [
 				'uuid'			=> $uuid,
 				'buy_quantity'	=> $buy_quantity,
 				'code'			=> $code,
@@ -77,8 +78,16 @@ EOT
 				'remainder'		=> $remainder,
 				'reserve'		=> $reserve,
 				'img_url'		=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext, true), ENT_HTML5),
-				'barcodes'		=> $barcodes
+				'img_ico'		=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext, false), ENT_HTML5)
 			];
+
+			if( $barcodes !== null )
+				$e['barcodes'] = $barcodes;
+
+			if( $base_image_uuid !== null )
+				$e['img_uuid'] = bin2uuid($base_image_uuid);
+
+			$cart[$uuid] = $e;
 
 		}
 

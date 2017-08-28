@@ -90,9 +90,11 @@ if( window.JSON && !window.JSON.dateParser ) {
 }
 //------------------------------------------------------------------------------
 function window_size() {
+	//window.devicePixelRatio = 1;
 	return [
 		window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
-		window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
+		window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight,
+		window.devicePixelRatio
 	];
 }
 //------------------------------------------------------------------------------

@@ -1,47 +1,167 @@
 @media screen {
 
-	html > body {
+	@keyframes blink2 {  
+		from { opacity: 1.0; }
+		  to { opacity: 0.3; }
+	}
+
+	*[blink2] {
+		animation			: blink2 0.6s cubic-bezier(1.0, 0, 0.7, 1.0) infinite alternate;
+	}
+
+	@keyframes spin {
+		  0%  {transform: rotate(  0deg);}
+		100%  {transform: rotate(360deg);}
+	}
+
+	*[spin] {
+		animation			: spin 4s linear infinite;
+	}
+
+	@keyframes flipv {
+		  0%  {transform: rotateY( 0deg);}
+		100%  {transform: rotateY(90deg);}
+	}
+
+	*[flipv] {
+		animation			: flipv 4s 0.6s cubic-bezier(1.0, 0, 0.7, 1.0) infinite alternate;
+	}
+
+	@keyframes fliph {
+		  0%  {transform: rotateX( 0deg);}
+		100%  {transform: rotateX(90deg);}
+	}
+
+	*[fliph] {
+		animation			: fliph 0.6s cubic-bezier(1.0, 0, 0.7, 1.0) infinite alternate;
+	}
+
+	@keyframes fliphin {
+		  to  {transform: rotateX( 0deg);}
+		from  {transform: rotateX(90deg);}
+	}
+
+	*[fliphin] {
+		animation			: fliphin 150ms cubic-bezier(1.0, 0, 0.7, 1.0);
+	}
+
+	@keyframes fliphout {
+		from  {transform: rotateX( 0deg);}
+		to    {transform: rotateX(90deg);}
+	}
+
+	*[fliphout] {
+		animation			: fliphin 150ms cubic-bezier(1.0, 0, 0.7, 1.0);
+	}
+
+	* {
 		position			: relative;
+	}
+
+	html > body {
 		/*width				: 17%;
 		height				: 100%;
 		width				: 70mm;
 		height				: 140mm;*/
-		border				: solid 1px black;
+		/*border				: solid 1px black;*/
 	}
 
-	div {
+	/*div {
 		border				: solid 1px red;
-	}
+	}*/
 
 	html > body > div[top] {
 		height				: 10%;
 	}
 
 	html > body > div[top] > div[logo] {
-		width				: 17.5%;
+		float				: left;
+		min-width			: 17.5%;
 		height				: 100%;
+		margin-right		: 2px;
 	}
 
 	html > body > div[top] > div[mag] {
-		font-size			: 50%;
-		max-width			: 40%;
+		float				: left;
+		font-size			: 45%;
 		margin-left			: 0.1%;
 		height				: 100%;
 	}
 
+	html > body > div[top] > div[cart_informer] {
+		float				: right;
+		min-width			: 55%;
+		height				: 90%;
+	}
+
+	html > body > div[top] > div[cart_informer] > div[cinfo] {
+		float				: none;
+		width				: auto;
+		height				: 100%;
+		margin-bottom		: 3px;
+	}
+
+	html > body > div[top] > div[cart_informer] > div[cinfo] > p {
+		width				: 100%;
+		height				: auto;
+		float				: left;
+		font-size			: 69%;
+		font-weight			: bolder;
+		text-overflow		: ellipsis;
+		text-decoration		: none;
+		text-transform		: uppercase;
+		text-align			: left;
+		font-family			: droid;
+		margin-left			: 3px;
+	}
+
+	html > body > div[top] > div[cart_informer] > div[btn][drop],
+	html > body > div[top] > div[cart_informer] > div[btn][cart],
+	html > body > div[top] > div[cart_informer] > div[btn][cheque] {
+		height				: 20%;
+		float				: right;
+		margin-right		: 3px;
+		display				: none;
+	}
+
+	html > body > div[top] > div[cart_informer] > div[btn][drop] > img[btn_ico] {
+		/* fix: shift down */
+		margin-top			: -2.1%;
+	}
+
+	html > body > div[top] > div[cart_informer] > div[btn][cart] > img[btn_ico] {
+		/* fix: shift down */
+		margin-top			: -3.1%;
+	}
+
+	html > body > div[top] > div[cart_informer] > div[btn][cheque] > img[btn_ico] {
+		/* fix: shift down */
+		margin-top			: -3.1%;
+	}
+
 	html > body > div[middle] {
-		display				: block;
+		display				: inline-block;
 		height				: 78.6%;
+		overflow			: auto;
 	}
 
 	html > body > div[mount] {
 		position			: static;
-		height				: 10%;
+		height				: 10.75%;
+
+		vertical-align		: middle;
+		text-align			: center;
+		font-size			: 50%;
+		font-weight			: bolder;
+		text-overflow		: ellipsis;
+		text-decoration		: none;
+		text-transform		: uppercase;
+		color				: darkblue;
 	}
 
 	html > body > i[icon_scan] {
 		/*position			: fixed;*/
-		z-index				: 9001;
+		z-index				: 999;
 		position			: absolute;
 
 		/*top					: calc(100% - 9.5%);
@@ -51,17 +171,16 @@
 		background-image	: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoV2luZG93cykiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QzFFMjMzNTBFNjcwMTFFMkIzMERGOUMzMzEzM0E1QUMiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QzFFMjMzNTFFNjcwMTFFMkIzMERGOUMzMzEzM0E1QUMiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpDMUUyMzM0RUU2NzAxMUUyQjMwREY5QzMzMTMzQTVBQyIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpDMUUyMzM0RkU2NzAxMUUyQjMwREY5QzMzMTMzQTVBQyIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PtQr90wAAAUuSURBVHjanFVLbFRVGP7ua97T9DGPthbamAYYBNSMVbBpjCliWWGIEBMWsnDJxkh8RDeEDW5MDGticMmGBWnSlRSCwgLFNkqmmrRIqzjTznTazkxn5s7c6/efzm0G0Jhwkj/nP+d/nv91tIWFBTQaDQWapkGW67p4ltUub5qmAi0UCqF/a/U2m81tpmddotwwDGSz2dzi4uKSaOucnJycGhsbe1XXdQiIIcdxEAgEtgXq9brySHCht79UXi/8QheawN27d385fPjwuEl6XyKR6LdtW7t06RLK5TKOHj2K/fv3Q87Dw8OYn5/HiRMnMDs7i5mZGQwODiqlPp8PuVwO6XRaOXb16lXl1OnTp5FMJvtosF8M+MWLarWqGJaWlpBKpRRcu3YN4+PjmJ6exsTEhDJw5coVjI6OKgPhcBiZTAbxeBx+vx+XL19Gd3c3Tp48Ka9zqDYgBlTQxYNgMIhIJKLCILkQb+TZsgvdsiyFi+feWRR7oRNZyanQtvW2V4DEUUBiK2eJpeDirSyhCe7F2QPh8fiEp72i9PbsC5G52DbiKZA771yr1dTuGfJ4PQNPFoAyQNR1aNEmsS5eyB3PgjeooMZd2AWvNmzYci/Gea7TeFOcI93jV/K67noGmi4vdRI9gPSDeMLSdKUBZZczlWm1rTtHjLZ24d+WER2tc8N1m+Y+ID74wx0zGYvhg9UNrJdtHJyZRdQfwPsrq9g99xsGlgsYmr6BNzO/IVwsYfjBQ6XYz6JI/72MV366B5/lw0elOkJWGUM3bmKtWjXSLuLaBWhnPnnp0FfoiFi4+TMfVAb2poBkDLjO845uYLEAjL4ALGWBP5YAOsP4AJYBFDaB1HOSVWD2PuV95H2RdV93Lv74/cf6p6Zxq/h6OofeOPJBC39JtONdwOAAViOs4p4OFGTf0Uc8iiyrr9YdQrUnDLsngrVOC0jQib44HlF2RafRZBz1Qy+vfhgK3NJZBlrm+LEm9qWwzFgLU7Ozg0JxZP06jQSRpQ7EerAWDSt6PuhHPmChEAog56fCLvJT5hHTm3OZkz3DyLx7XNWTGEA1GkV14gjWgwbW0ESVjYRwCOuai03L5E7OUBAV4kXSS4auoGIaKOma4m8EA5R1sMEGLh95C+XuLph0WJWpxepYYLtfT0RRgY1KgNODY6BoaChRuEhDCIZQYseuki5KN6hcQHiq7OZNv4/Zq2O6P4Lfkwn46vZjjaYZrIpvWbpzjLErrc4xUGE4avRedpYJalRcIl5hQius/SrPm9xrNOQYJhao6BvNUeWqtY8KaWuNjHOFAr7mM9f4NA4UbKysoUJ8PV9UzVOx6wxDDWUOxnK1pmCD07fOMAvtIsM3l89Dl3HRGhVma9AZMqjOnz2LQqWCxs6dqr3T7x1DTzKJaG8SekcHhg4cgI/56uKdlKnBV/WndqN3YAB/7tyBd3oT6GBIOzs7kc/nDfFdDFT5bS73cp06dQoaPa/Rw/rtO/resTHxxE2m9rCrbSR27UJCcMf1BpiA5rAAGgdfc868fUR1sMwj0cm9Iu9IctweisViB3hhKTHDcHc5jv/LspbyaZrR1OD82/fIlOkuB9LnEWRmDX2TsddUPg3D5gvuc0je0rZaD5EW6G3yjS+A3eeBEWq3XW/Abw1HhUspXADufQb86oW7tZytkYCN//3hHwBvDALPi8EnSOYK8DAOfCc2h4aGcO7cuafkzampqf9UripH12/DtOZbx8ciVGzYy5OO40o25ascGRl5Ssc/AgwAjW3JwqIUjSYAAAAASUVORK5CYII=");*/
 
 		background-image	: url(../assets/scanner/if_barcode_173153.svg);
-		width				: 10mm;
-		height				: 10mm;
+		width				: calc(var(--dpmm) * 10 * 1px);
+		height				: calc(var(--dpmm) * 10 * 1px);
 		top					: calc(100% - 11%);
-		left				: calc(100% - 11mm);
+		left				: calc(100% - calc(var(--dpmm) * 11 * 1px));
 
 		display				: inline-block;
 		background-color	: transparent;
 		background-size		: contain;
 		background-repeat	: no-repeat;
 		background-position	: center;
-		line-height			: 24px;
 		margin				: 0px;
 		padding				: 0px;
 		float				: none;
@@ -112,112 +231,91 @@
 	html > body > div[middle] > div[pitem] {
 		width				: 100%;
 		height				: auto;
-		min-height			: 10mm;
+		min-height			: calc(var(--dpmm) * 11 * 1px);
 		float				: left;
+		/*white-space			: nowrap;*/
+		word-wrap			: break-word;
+		white-space			: normal;
+		font-size			: 90%;
+		font-weight			: bold;
 		text-align			: left;
-		white-space			: nowrap;
-		vertical-align		: middle;
+		text-overflow		: ellipsis;
+		text-decoration		: none;
+		text-transform		: uppercase;
+		vertical-align		: top;
+		padding-top			: 2px;
+		border-top			: 3px solid #dfba3c;
+		border-radius		: 5px;
+		box-shadow			: none;
 	}
 
-	html > body > div[middle] > div[pitem] > div[pimg] {
-		width				: auto;
-		min-width			: 0%;
-		height				: 100%;
-		float				: left;
+	html > body > div[middle] > div[pitem] > div[txt] {
+		position			: relative;
+		top					: 0;
+		left				: 0;
+		width				: 100%;
+		height				: auto;
+	}
+
+	html > body > div[middle] > div[pitem] > div[txt][have_img] {
+		width				: calc(100% - var(--dpmm) * 9.99 * 1px);
+	}
+
+	html > body > div[middle] > div[pitem] > i[pimg] {
+		position			: absolute;
+		top					: 2px;
+		left				: calc(100% - var(--dpmm) * 10 * 1px);
+		width				: calc(var(--dpmm) * 10 * 1px); /* 10mm */
+		height				: calc(var(--dpmm) * 10 * 1px); /* 10mm */
+		/*float				: right;*/
 		background-color	: transparent;
-		background-size		: contain;
+		background-size		: 100% auto;
+		background-repeat	: no-repeat;
+		background-position	: right top;
+	}
+
+	html > body > div[middle] > div[pitem] > div[pbuy_quantity] {
+		display				: none;
+		float				: left;
+		width				: auto;
+		height				: auto;
+		min-height			: calc(var(--dpmm) * 10 * 1px);
+		font-family			: "droid";
+		font-size			: calc(100% - (1 - var(--smart-phone)) * 30% + var(--smart-phone) * 20%);
+		font-weight			: bold;
+		text-align			: left;
+		text-overflow		: ellipsis;
+		text-decoration		: none;
+		text-transform		: uppercase;
+		vertical-align		: middle;
+		margin-left			: 2px;
+		margin-right		: 2px;
+	}
+
+	html > body > div[middle] > div[pitem] > div[btn][plus_one], div[btn][minus_one] {
+		display				: none;
+		float				: left;
+		width				: calc(var(--dpmm) * 10 * 1px); /* 10mm */
+		height				: calc(var(--dpmm) * 10 * 1px); /* 10mm */
+		padding				: 0;
+		margin				: 0;
+		margin-bottom		: 2px;
+		min-width			: 0;
+		min-height			: 0;
+		line-height			: 0;
+		vertical-align		: middle;
+		text-align			: center;
+		background-size		: 80% 80%;
 		background-repeat	: no-repeat;
 		background-position	: center;
 	}
 
-	html > body > div[middle] > div[pitem] > span {
-		width				: auto;
-		float				: left;
-		text-overflow		: ellipsis;
-		font-size			: 95%;
-		font-weight			: bold;
-		text-decoration		: none;
-		text-transform		: uppercase;
-		height				: 100%;
-		word-wrap			: break-word;
-		white-space			: normal;
-	}
-
-	html > body > div[middle] > div[pitem] > span[pno] {
-		display				: none;
-		min-width			: 2%;
-		text-align			: right;
-		text-overflow		: ellipsis;
-		overflow			: hidden;
-		white-space			: nowrap;
-	}
-
-	html > body > div[middle] > div[pitem] > span[pname] {
-		min-width			: 37%;
-		text-align			: left;
-		text-overflow		: ellipsis;
-		overflow			: hidden;
-	}
-
-	html > body > div[middle] > div[pitem] > span[pprice] {
-		display				: none;
-		min-width			: 2%;
-		text-align			: right;
-		text-overflow		: ellipsis;
-		overflow			: hidden;
-	}
-
-	html > body > div[middle] > div[pitem] > span[psum] {
-		display				: none;
-		min-width			: 2%;
-		text-align			: right;
-		text-overflow		: ellipsis;
-		overflow			: hidden;
+	html > body > div[middle] > div[pitem] > div[btn][plus_one] {
+		background-image	: url(../assets/plus.ico);
 	}
 
 	html > body > div[middle] > div[pitem] > div[btn][minus_one] {
-		display				: none;
-		float				: right;
-		width				: auto;
-		height				: auto;
-		min-width			: 2%;
+		background-image	: url(../assets/minus.ico);
 	}
 
-	html > body > div[middle] > div[pitem] > span[pbuy_quantity] {
-		display				: none;
-		float				: right;
-		width				: auto;
-		height				: auto;
-		min-width			: 2%;
-		text-align			: center;
-	}
-
-	html > body > div[middle] > div[pitem] > div[btn][plus_one] {
-		display				: none;
-		float				: right;
-		width				: auto;
-		height				: auto;
-		min-width			: 2%;
-	}
-
-	html > body > div[middle] > div[pitem] > div[btn][plus_one] > img[btn_ico],
-	html > body > div[middle] > div[pitem] > div[btn][minus_one] > img[btn_ico] {
-		/* fix: shift up */
-		margin-top			: -6.1%;
-		width				: auto;
-		height				: auto;
-		min-width			: 1px;
-		min-height			: 1px;
-	}
-
-	html > body > img[debug_barcode] {
-		position			: fixed;
-		z-index				: 9001;
-		position			: absolute;
-		top					: 9%;
-		left				: -110%;
-		float				: none;
-		background-color	: transparent;
-		border				: 0;
-	}
 }

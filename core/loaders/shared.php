@@ -36,8 +36,9 @@ function get_image_url($base_image_uuid, $base_image_ext, $canvas = false) {
 
 		if( $canvas ) {
 
-			if( file_exists($name . $uuid . '.' . config::$canvas_format) ) {
+			if( file_exists($name . $guid . '.' . config::$canvas_format) ) {
 
+				$uuid = $guid;
 				$ext = config::$canvas_format;
 
 			}
@@ -46,7 +47,14 @@ function get_image_url($base_image_uuid, $base_image_ext, $canvas = false) {
 				$uuid = $guid;
 
 			}
-			else if( !file_exists($name . $uuid . '.' . $ext) ) {
+			else if( file_exists($name . $uuid . '.' . $ext) ) {
+			}
+			else if( file_exists($name . $uuid . '.' . config::$canvas_format) ) {
+
+				$ext = config::$canvas_format;
+
+			}
+			else {//if( !file_exists($name . $guid . '.' . $ext) ) {
 
 				$nopic = true;
 
@@ -55,17 +63,14 @@ function get_image_url($base_image_uuid, $base_image_ext, $canvas = false) {
 		}
 		else {
 
-			if( file_exists($name . $guid . '.' . $ext) ) {
-
-				$uuid = $guid;
-
+			if( file_exists($name . $uuid . '.' . $ext) ) {
 			}
 			else if( file_exists($name . $uuid . '.' . config::$canvas_format) ) {
 
 				$ext = config::$canvas_format;
 
 			}
-			else if( !file_exists($name . $uuid . '.' . $ext) ) {
+			else {//if( !file_exists($name . $uuid . '.' . $ext) ) {
 
 				$nopic = true;
 
