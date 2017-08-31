@@ -2161,17 +2161,19 @@ class HtmlPageEvents extends HtmlPageState {
 			b.style.height = h + 'px';
 		}
 
-		let p = xpath_eval_single('html/body/div[@search_panel]');
-		let r = p.getCoords();
-		Render.debug(4, '' + h + ' ' + screen.height + ' ' + r.top);
+		let p = xpath_single('html/body/div[@search_panel]');
 
-		if( h < screen.height ) {
-			let viewport_h = Math.min(b.getCoords().bottom, h);
-			let nh = Math.trunc(viewport_h - r.top * 1.4);
-			p.style.height = nh.toString() + 'px';
+		if( p ) {
+			let r = p.getCoords();
+
+			if( h < screen.height ) {
+				let viewport_h = Math.min(b.getCoords().bottom, h);
+				let nh = Math.trunc(viewport_h - r.top * 1.4);
+				p.style.height = nh.toString() + 'px';
+			}
+			else
+				p.removeAttribute('style');
 		}
-		else
-			p.removeAttribute('style');
 	}
 
 	get_quagga_params() {
