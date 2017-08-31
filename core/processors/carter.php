@@ -13,6 +13,7 @@ require_once LOADERS_DIR . 'shared.php';
 class carter_handler extends handler {
 
 	protected $infobase_;
+	protected $session_uuid_;
 
 	protected function fetch_cart() {
 
@@ -50,7 +51,7 @@ EOT
 		;
 
 		$st = $this->infobase_->prepare($sql);
-		$st->bindValue(':session_uuid', @$_SESSION['DATA_ID'], SQLITE3_BLOB);
+		$st->bindValue(':session_uuid', $this->session_uuid_, SQLITE3_BLOB);
 		$result = $st->execute();
 
 		$cart = [];
@@ -95,14 +96,16 @@ EOT
 
 	}
 
-	protected function handle_order(&$order) {
+	protected function fetch_constants($bin2uuid = false) {
 
 		$constants = [
-			'exchange_node'			=> null,
-			'exchange_node_name'	=> null,
-			'exchange_url'			=> null,
-			'exchange_user'			=> null,
-			'exchange_pass'			=> null
+			'ТекущийМагазинАдрес'			=> null,
+			'ТекущийМагазинПредставление'	=> null,
+			'exchange_node'					=> null,
+			'exchange_node_name'			=> null,
+			'exchange_url'					=> null,
+			'exchange_user'					=> null,
+			'exchange_pass'					=> null
 		];
 
 		extract($constants);
@@ -112,6 +115,7 @@ EOT
 		$sql = <<<EOT
 			SELECT
 				name							AS name,
+				value_type						AS value_type,
 				COALESCE(value_uuid, value_s)	AS value
 			FROM
 				constants
@@ -124,12 +128,26 @@ EOT
 
 		$result = $this->infobase_->query($sql);
 
+		$a = [];
+
 		while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
 
 			extract($r);
-			$$name = $value;
+
+			if( $bin2uuid && $value_type === 4 )
+				$a[$name] = bin2uuid(@$value);
+			else
+				$a[$name] = $value;
 
 		}
+
+		return $a;
+
+	}
+
+	protected function handle_order(&$order) {
+
+		extract($this->fetch_constants());
 
 		$order_request = [ 'exchange_node' => bin2uuid($exchange_node) ];
 		$order_products = [];
@@ -147,6 +165,9 @@ EOT
 		}
 
 		$order_request['order'] = $order_products;
+
+		if( @$this->request_['paper'] !== null )
+			$order_request['paper'] = true;
 
 		$ch = curl_init();
 
@@ -214,16 +235,28 @@ EOT
 
 		$this->response_['order'] = $data;
 
+		if( @$this->request_['paper'] !== null ) {
+			$orders = @$_SESSION['ORDERS'];
+
+			if( $orders === null )
+				$orders = [];
+			else
+				$orders = unserialize(bzdecompress(base64_decode($orders)));
+
+			$orders[] = $data;
+			$_SESSION['ORDERS'] = base64_encode(bzcompress(serialize($orders), 9));
+		}
 	}
 
 	protected function session_startup() {
 
 		session_start([
-			'cookie_lifetime' => 365 * 24 * 60 * 60
+			'cookie_lifetime' => 10 * 365 * 24 * 60 * 60 // 10 years
 		]);
 
-		if( @$_SESSION['DATA_ID'] === null )
-			$_SESSION['DATA_ID'] = random_bytes(16);
+		if( ($this->session_uuid_ = uuid2bin(@$_SESSION['DATA_ID'])) === null )
+			$_SESSION['DATA_ID'] = bin2uuid($this->session_uuid_ = random_bytes(16));
+
 	}
 
 	protected function handle_request() {
@@ -231,8 +264,6 @@ EOT
 		$timer = new \nano_timer;
 
 		$this->session_startup();
-
-		$session_uuid = @$_SESSION['DATA_ID'];
 
 		$this->infobase_ = new infobase;
 		$this->infobase_->set_create_if_not_exists(false);
@@ -260,7 +291,7 @@ EOT
 			;
 
 			$st = $this->infobase_->prepare($sql);
-			$st->bindParam(':session_uuid', $session_uuid, SQLITE3_BLOB);
+			$st->bindParam(':session_uuid', $this->session_uuid_, SQLITE3_BLOB);
 
 			$sql = <<<'EOT'
 				SELECT
@@ -277,7 +308,7 @@ EOT
 			;
 
 			$st_barcode = $this->infobase_->prepare($sql);
-			$st_barcode->bindParam(':session_uuid', $session_uuid, SQLITE3_BLOB);
+			$st_barcode->bindParam(':session_uuid', $this->session_uuid_, SQLITE3_BLOB);
 
 			foreach( $products as $product ) {
 
@@ -319,7 +350,7 @@ EOT
 			;
 
 			$st = $this->infobase_->prepare($sql);
-			$st->bindValue(':session_uuid', $session_uuid, SQLITE3_BLOB);
+			$st->bindValue(':session_uuid', $this->session_uuid_, SQLITE3_BLOB);
 			$st->execute();
 
 			$sql = <<<'EOT'
@@ -328,7 +359,7 @@ EOT
 			;
 
 			$st = $this->infobase_->prepare($sql);
-			$st->bindValue(':session_uuid', $session_uuid, SQLITE3_BLOB);
+			$st->bindValue(':session_uuid', $this->session_uuid_, SQLITE3_BLOB);
 			$st->execute();
 
 			if( config::$cart_timing ) {
@@ -338,6 +369,14 @@ EOT
 
 			}
 
+		}
+		else {
+			$c = $this->fetch_constants();
+
+			$this->response_['constants'] = [
+				'ТекущийМагазинАдрес'			=> $c['ТекущийМагазинАдрес'],
+				'ТекущийМагазинПредставление'	=> $c['ТекущийМагазинПредставление']
+			];
 		}
 
 		$timer->restart();
@@ -352,6 +391,17 @@ EOT
 		}
 
 		$this->infobase_->commit_transaction();
+
+		if( @$orders !== null ) {
+			$orders = @$_SESSION['ORDERS'];
+
+			if( $orders === null )
+				$orders = [];
+			else
+				$orders = unserialize(bzdecompress(base64_decode($orders)));
+
+			$this->response_['orders'] = $orders;
+		}
 
 		$ellapsed = $timer->nano_time(false);
 

@@ -147,7 +147,7 @@
 
 	html > body > div[mount] {
 		position			: static;
-		height				: 10.75%;
+		height				: calc(10.75% + var(--smart-phone) * 0.03125%);
 
 		vertical-align		: middle;
 		text-align			: center;
@@ -159,8 +159,8 @@
 		color				: darkblue;
 	}
 
-	html > body > i[icon_scan] {
-		/*position			: fixed;*/
+	html > body > i[btn] {
+		display				: none;
 		z-index				: 999;
 		position			: absolute;
 
@@ -170,13 +170,11 @@
 		height				: 24px;
 		background-image	: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoV2luZG93cykiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QzFFMjMzNTBFNjcwMTFFMkIzMERGOUMzMzEzM0E1QUMiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QzFFMjMzNTFFNjcwMTFFMkIzMERGOUMzMzEzM0E1QUMiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpDMUUyMzM0RUU2NzAxMUUyQjMwREY5QzMzMTMzQTVBQyIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpDMUUyMzM0RkU2NzAxMUUyQjMwREY5QzMzMTMzQTVBQyIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PtQr90wAAAUuSURBVHjanFVLbFRVGP7ua97T9DGPthbamAYYBNSMVbBpjCliWWGIEBMWsnDJxkh8RDeEDW5MDGticMmGBWnSlRSCwgLFNkqmmrRIqzjTznTazkxn5s7c6/efzm0G0Jhwkj/nP+d/nv91tIWFBTQaDQWapkGW67p4ltUub5qmAi0UCqF/a/U2m81tpmddotwwDGSz2dzi4uKSaOucnJycGhsbe1XXdQiIIcdxEAgEtgXq9brySHCht79UXi/8QheawN27d385fPjwuEl6XyKR6LdtW7t06RLK5TKOHj2K/fv3Q87Dw8OYn5/HiRMnMDs7i5mZGQwODiqlPp8PuVwO6XRaOXb16lXl1OnTp5FMJvtosF8M+MWLarWqGJaWlpBKpRRcu3YN4+PjmJ6exsTEhDJw5coVjI6OKgPhcBiZTAbxeBx+vx+XL19Gd3c3Tp48Ka9zqDYgBlTQxYNgMIhIJKLCILkQb+TZsgvdsiyFi+feWRR7oRNZyanQtvW2V4DEUUBiK2eJpeDirSyhCe7F2QPh8fiEp72i9PbsC5G52DbiKZA771yr1dTuGfJ4PQNPFoAyQNR1aNEmsS5eyB3PgjeooMZd2AWvNmzYci/Gea7TeFOcI93jV/K67noGmi4vdRI9gPSDeMLSdKUBZZczlWm1rTtHjLZ24d+WER2tc8N1m+Y+ID74wx0zGYvhg9UNrJdtHJyZRdQfwPsrq9g99xsGlgsYmr6BNzO/IVwsYfjBQ6XYz6JI/72MV366B5/lw0elOkJWGUM3bmKtWjXSLuLaBWhnPnnp0FfoiFi4+TMfVAb2poBkDLjO845uYLEAjL4ALGWBP5YAOsP4AJYBFDaB1HOSVWD2PuV95H2RdV93Lv74/cf6p6Zxq/h6OofeOPJBC39JtONdwOAAViOs4p4OFGTf0Uc8iiyrr9YdQrUnDLsngrVOC0jQib44HlF2RafRZBz1Qy+vfhgK3NJZBlrm+LEm9qWwzFgLU7Ozg0JxZP06jQSRpQ7EerAWDSt6PuhHPmChEAog56fCLvJT5hHTm3OZkz3DyLx7XNWTGEA1GkV14gjWgwbW0ESVjYRwCOuai03L5E7OUBAV4kXSS4auoGIaKOma4m8EA5R1sMEGLh95C+XuLph0WJWpxepYYLtfT0RRgY1KgNODY6BoaChRuEhDCIZQYseuki5KN6hcQHiq7OZNv4/Zq2O6P4Lfkwn46vZjjaYZrIpvWbpzjLErrc4xUGE4avRedpYJalRcIl5hQius/SrPm9xrNOQYJhao6BvNUeWqtY8KaWuNjHOFAr7mM9f4NA4UbKysoUJ8PV9UzVOx6wxDDWUOxnK1pmCD07fOMAvtIsM3l89Dl3HRGhVma9AZMqjOnz2LQqWCxs6dqr3T7x1DTzKJaG8SekcHhg4cgI/56uKdlKnBV/WndqN3YAB/7tyBd3oT6GBIOzs7kc/nDfFdDFT5bS73cp06dQoaPa/Rw/rtO/resTHxxE2m9rCrbSR27UJCcMf1BpiA5rAAGgdfc868fUR1sMwj0cm9Iu9IctweisViB3hhKTHDcHc5jv/LspbyaZrR1OD82/fIlOkuB9LnEWRmDX2TsddUPg3D5gvuc0je0rZaD5EW6G3yjS+A3eeBEWq3XW/Abw1HhUspXADufQb86oW7tZytkYCN//3hHwBvDALPi8EnSOYK8DAOfCc2h4aGcO7cuafkzampqf9UripH12/DtOZbx8ciVGzYy5OO40o25ascGRl5Ssc/AgwAjW3JwqIUjSYAAAAASUVORK5CYII=");*/
 
-		background-image	: url(../assets/scanner/if_barcode_173153.svg);
 		width				: calc(var(--dpmm) * 10 * 1px);
 		height				: calc(var(--dpmm) * 10 * 1px);
-		top					: calc(100% - 11%);
-		left				: calc(100% - calc(var(--dpmm) * 11 * 1px));
+		/*top					: calc(100% - 11%);
+		left				: calc(100% - calc(var(--dpmm) * 11 * 1px));*/
 
-		display				: inline-block;
 		background-color	: transparent;
 		background-size		: contain;
 		background-repeat	: no-repeat;
@@ -185,6 +183,28 @@
 		padding				: 0px;
 		float				: none;
 		border				: 0;
+	}
+
+	html > body > i[btn][scan] {
+		background-image	: url(../assets/scanner/if_barcode_173153.svg);
+		top					: calc(100% - 11%);
+		left				: calc(100% - calc(var(--dpmm) * 11 * 1px));
+		display				: inline-block;
+	}
+
+	html > body > i[btn][order] {
+		background-image	: url(../assets/80e2334a553b118e3a09d7a44b266cd0.svg);
+		left				: calc(0% + 1px);
+		top					: calc(100% - 9.5% - var(--smart-phone) * 0.5%);
+		height				: calc(var(--dpmm) * 9 * 1px);
+	}
+
+	html > body > i[btn][vks] {
+		background-image	: url(../assets/keyboard.svg);
+		left				: calc(50% - 9.5% - var(--smart-phone) * 0.5%);
+		top					: calc(100% - 9.5% - var(--smart-phone) * 0.5%);
+		height				: calc(var(--dpmm) * 9 * 1px);
+		display				: inline-block;
 	}
 
 	html > body > div[middle] > div[scanner] {
@@ -246,7 +266,7 @@
 		padding-top			: 2px;
 		border-top			: 3px solid #dfba3c;
 		border-radius		: 5px;
-		box-shadow			: none;
+		box-shadow			: 0 0 10px rgba(0, 0, 0, 0.5);
 	}
 
 	html > body > div[middle] > div[pitem] > div[txt] {
@@ -316,6 +336,135 @@
 
 	html > body > div[middle] > div[pitem] > div[btn][minus_one] {
 		background-image	: url(../assets/minus.ico);
+	}
+
+	html > body > div[middle] > div[orders_panel] {
+		position			: absolute;
+		width				: 100%;
+		height				: auto;
+		top					: 0;
+		left				: calc(100%);
+		float				: none;
+		background-color	: transparent;
+		border-left			: 3px solid #dfba3c;
+		border-radius		: 5px;
+		overflow			: auto;
+	}
+
+	html > body > div[middle] > div[orders_panel] > div[order] {
+		width				: 100%;
+		height				: auto;
+		min-height			: calc(var(--dpmm) * 11 * 1px);
+		float				: left;
+		/*white-space			: nowrap;*/
+		word-wrap			: break-word;
+		white-space			: normal;
+		font-size			: 80%;
+		font-weight			: bold;
+		text-align			: left;
+		text-overflow		: ellipsis;
+		text-decoration		: none;
+		/*text-transform		: uppercase;*/
+		vertical-align		: top;
+		padding-top			: 2px;
+		border-top			: 3px solid #dfba3c;
+		border-radius		: 5px;
+		box-shadow			: 0 0 10px rgba(0, 0, 0, 0.5);
+	}
+
+	html > body > div[middle] > div[orders_panel] > div[order] > div[txt] {
+		position			: relative;
+		top					: 0;
+		left				: 0;
+		width				: calc(100% - var(--dpmm) * 9.99 * 1px);
+		width				: 100%;
+		height				: auto;
+	}
+
+	html > body > div[middle] > div[orders_panel] > div[order] > iframe[order] {
+		display				: none;
+		position			: absolute;
+		top					: 0;
+		left				: calc(100% - var(--dpmm) * 10 * 1px);
+		width				: calc(var(--dpmm) * 10 * 1px);
+		height				: 90%; /*calc(var(--dpmm) * 10 * 1px);*/
+		overflow			: hidden;
+		border				: 0;
+		padding				: 0;
+		margin				: 0;
+	}
+
+	html > body > img[debug_barcode] {
+		position			: fixed;
+		z-index				: 9001;
+		position			: absolute;
+		top					: 9%;
+		left				: -110%;
+		float				: none;
+		background-color	: transparent;
+		border				: 0;
+	}
+
+	html > body > div[search_panel] {
+		z-index				: 1000;
+		position			: absolute;
+		top					: 2.5%;
+		left				: 2.5%;
+		width				: calc(95% - 3px * 2);
+		height				: calc(95% - 3px * 2);
+		float				: none;
+		border				: 3px solid #dfba3c;
+		border-radius		: 7px;
+		box-shadow			: none;
+		background-color	: rgba(255, 255, 255, 0.85);
+		background-size		: contain;
+		background-repeat	: no-repeat;
+		background-position	: center;
+		overflow			: hidden;
+	}
+
+	html > body > div[search_panel] > input[vks] {
+		width				: calc(100% - 16px);
+		/*position			: relative;
+		left				: 2px;
+		top					: 4px;*/
+		padding				: 0;
+		margin-top			: 4px;
+		border-radius		: 3px;
+		box-shadow			: 0 0 5px rgba(0, 0, 0, 0.5);
+		font-size			: 100%;
+	}
+
+	html > body > div[search_panel] > div[results] {
+		width				: calc(100% - 2px);
+		margin-top			: 4px;
+		/*border				: 1px solid black;*/
+		max-height			: calc(100% - 6%);
+		background-color	: transparent;
+		overflow			: auto;
+		float				: none;
+		overflow			: auto;
+	}
+
+	html > body > div[search_panel] > div[results] > div[result] {
+		float				: none;
+		width				: calc(100% - 2px);
+		/*max-height			: calc(var(--dpmm) * 6 * 1px);*/
+		padding-bottom		: 4px;
+		margin				: 2px;
+		border-top			: 3px solid #dfba3c;
+		border-radius		: 3px;
+		box-shadow			: 0 0 5px rgba(0, 0, 0, 0.5);
+		word-wrap			: break-word;
+		white-space			: nowrap;
+		font-size			: 95%;
+		font-weight			: bold;
+		text-align			: left;
+		text-overflow		: clip;
+		text-decoration		: none;
+		text-transform		: uppercase;
+		vertical-align		: top;
+		overflow			: auto;
 	}
 
 }

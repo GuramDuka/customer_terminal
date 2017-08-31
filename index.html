@@ -14,15 +14,41 @@
 		<title></title>
 
 		<link rel="shortcut icon" href="assets/favicon.ico" />
+
+		<script type="text/javascript">
+			document.addEventListener('DOMContentLoaded', () => {
+				if( window.content_loader_ ) {
+					window.content_loader_();
+					delete window.content_loader_;
+				}
+				window.content_loaded_ = true;
+			});
+
+			function lazy_loader(e) {
+				let loader;
+
+				if( e.type === 'error' )
+					loader = () => {
+						let script		= document.createElement('script');
+						script.type		= 'text/javascript';
+						script.onload	= () => core_chain_loader();
+						script.src		= 'js/loader.js';
+						document.getElementsByTagName('body')[0].appendChild(script);
+					};
+				else if( e.type === 'load' )
+					loader = () => core_gear_loader();
+
+				if( window.content_loaded_ )
+					loader();
+				else
+					window.content_loader_ = loader;
+			}
+		</script>
+
+		<script type="text/javascript" src="js/gear.js"
+			onload="lazy_loader.apply(this, arguments)"
+			onerror="lazy_loader.apply(this, arguments)">
+		</script>
 	</head>
 	<body></body>
-	<script type="text/javascript">
-		document.addEventListener('DOMContentLoaded', () => {
-			let script		= document.createElement('script');
-			script.type		= 'text/javascript';
-			script.onload	= () => core_loader();
-			script.src		= 'js/loader.js';
-			document.getElementsByTagName('body')[0].appendChild(script);
-		});
-	</script>
 </html>

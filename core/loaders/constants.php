@@ -43,8 +43,10 @@ class constants_loader extends objects_loader {
 
 				if( $st_erase === null ) {
 
-					$st_erase = $this->infobase_->prepare('DELETE FROM constants WHERE name = :name');
-					$st_erase->bindParam(':name', $uuid, SQLITE3_BLOB);
+					$sql = 'DELETE FROM constants WHERE name = :name';
+					$this->infobase_->dump_plan($sql);
+					$st_erase = $this->infobase_->prepare($sql);
+					$st_erase->bindParam(':name', $name);
 
 				}
 
@@ -58,7 +60,9 @@ class constants_loader extends objects_loader {
 					$gf = implode(', ', $all_fields);
 					$gv = implode(', :', $all_fields);
 
-					$st = $this->infobase_->prepare("REPLACE INTO constants (${gf}) VALUES (:${gv})");
+					$sql = "REPLACE INTO constants (${gf}) VALUES (:${gv})";
+					$this->infobase_->dump_plan($sql);
+					$st = $this->infobase_->prepare($sql);
 
 					foreach( $fields_uuid as $field )
 						$st->bindParam(":${field}", $$field, SQLITE3_BLOB);

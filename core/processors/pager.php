@@ -271,7 +271,8 @@ EOT
 
 			$anchor_filter = '(' . substr($anchor_filter, 4) . ')';*/
 
-			$fts_filter = $this->infobase_->escapeString(transform_fts_filter($fts_filter));
+			$filter = $this->infobase_->escapeString(transform_fts_filter($fts_filter));
+			$raw_filter = $this->infobase_->escapeString($fts_filter);
 
 			$sql = <<<EOT
 				SELECT
@@ -279,12 +280,13 @@ EOT
 				FROM
 					products_fts
 				WHERE
-					products_fts MATCH '${fts_filter}'
+					-- Search for matches in all columns except "barcode"
+					products_fts MATCH '(- barcode : ${filter}) OR (- {code name article description} : ${raw_filter})'
 				GROUP BY
        				uuid
 EOT
 			;
-
+			
 			//$bind_values['fts_filter'] = $anchor_filter . ' AND ' . transform_fts_filter($fts_filter);
 
 			$with = @$selections === null && @$car === null ? 'WITH' : ',';

@@ -9,7 +9,7 @@ class XhrDeferredException {
 
 	}
 
-}
+};
 //------------------------------------------------------------------------------
 function post_json(obj, path, data) {
 

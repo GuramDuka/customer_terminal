@@ -166,36 +166,6 @@ EOT
 		);
 
 		$this->exec(<<<'EOT'
-			CREATE VIRTUAL TABLE IF NOT EXISTS products_fts USING fts5 (
-				uuid UNINDEXED,
-				code,
-				name,
-				article,
-				description,
-				prefix = '2 3 4',
-				detail = full,
-				columnsize = 1,
-        		tokenize = "unicode61 remove_diacritics 0");
-
-			-- Triggers to keep the FTS index up to date.
-			CREATE TRIGGER IF NOT EXISTS products_ai AFTER INSERT ON products FOR EACH ROW
-			BEGIN
-				INSERT INTO products_fts VALUES (new.uuid, new.code_fti, new.name_fti, new.article_fti, new.description_fti);
-			END;
-
-			CREATE TRIGGER IF NOT EXISTS products_ad AFTER DELETE ON products FOR EACH ROW
-			BEGIN
-				INSERT INTO products_fts VALUES (old.uuid, NULL, NULL, NULL, NULL);
-			END;
-
-			CREATE TRIGGER IF NOT EXISTS products_au AFTER UPDATE ON products FOR EACH ROW
-			BEGIN
-				INSERT INTO products_fts VALUES (new.uuid, new.code_fti, new.name_fti, new.article_fti, new.description_fti);
-			END;
-EOT
-		);
-
-		$this->exec(<<<'EOT'
 			CREATE TABLE IF NOT EXISTS categories (
 				uuid			BLOB PRIMARY KEY ON CONFLICT REPLACE,
 				marked			INTEGER,
@@ -266,39 +236,6 @@ EOT
 			. ' ON cars (parent_uuid, manufacturer_uuid, model_uuid, modification_uuid, year_uuid)'
 		);
 
-		/*$this->exec(<<<'EOT'
-			CREATE VIRTUAL TABLE IF NOT EXISTS cars_fts USING fts4 (uuid BLOB, name TEXT, notindexed=uuid, tokenize=unicode61);
-
-			CREATE TRIGGER IF NOT EXISTS cars_before_update_trigger
-			       BEFORE UPDATE
-			       ON cars
-			BEGIN
-			     DELETE FROM cars_fts WHERE uuid = old.uuid;
-			END;
-
-			CREATE TRIGGER IF NOT EXISTS cars_before_delete_trigger
-			       BEFORE DELETE
-			       ON cars
-			BEGIN
-			     DELETE FROM cars_fts WHERE uuid = old.uuid;
-			END;
-
-			CREATE TRIGGER IF NOT EXISTS cars_after_update_trigger
-			       AFTER UPDATE
-			       ON cars
-			BEGIN
-			     INSERT INTO cars_fts(uuid, name) VALUES (new.uuid, new.name);
-			END;
-
-			CREATE TRIGGER IF NOT EXISTS cars_after_insert_trigger
-			       AFTER INSERT
-			       ON cars
-			BEGIN
-			     INSERT INTO cars_fts(uuid, name) VALUES (new.uuid, new.name);
-			END;
-EOT
-		);*/
-
 		//$dimensions = [ 'manufacturer' => '_uuid', 'model' => '_uuid', 'modification' => '_uuid', 'year' => '_uuid' ];
 		//$this->create_unique_indexes_on_registry('cars', $dimensions);
 
@@ -363,39 +300,6 @@ EOT
 			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'properties_values_by_property'), -4)
 			. ' ON properties_values (property_uuid)'
 		);
-
-		/*$this->exec(<<<'EOT'
-			CREATE VIRTUAL TABLE IF NOT EXISTS properties_values_fts USING fts4 (uuid BLOB, value_b INTEGER, value_n NUMERIC, value_s TEXT, notindexed=uuid, tokenize=unicode61);
-
-			CREATE TRIGGER IF NOT EXISTS properties_values_before_update_trigger
-			       BEFORE UPDATE
-			       ON properties_values
-			BEGIN
-			     DELETE FROM properties_values_fts WHERE uuid = old.uuid;
-			END;
-
-			CREATE TRIGGER IF NOT EXISTS properties_values_before_delete_trigger
-			       BEFORE DELETE
-			       ON properties_values
-			BEGIN
-			     DELETE FROM properties_values_fts WHERE uuid = old.uuid;
-			END;
-
-			CREATE TRIGGER IF NOT EXISTS properties_values_after_update_trigger
-			       AFTER UPDATE
-			       ON properties_values
-			BEGIN
-			     INSERT INTO properties_values_fts(uuid, value_b, value_n, value_s) VALUES (new.uuid, new.value_b, new.value_n, new.value_s);
-			END;
-
-			CREATE TRIGGER IF NOT EXISTS properties_values_after_insert_trigger
-			       AFTER INSERT
-			       ON properties_values
-			BEGIN
-			     INSERT INTO properties_values_fts(uuid, value_b, value_n, value_s) VALUES (new.uuid, new.value_b, new.value_n, new.value_s);
-			END;
-EOT
-		);*/
 
 		$this->exec(<<<'EOT'
 			CREATE TABLE IF NOT EXISTS barcodes_registry (
@@ -649,6 +553,95 @@ EOT
 
 		$dimensions = [ 'category' => '_uuid', 'property' => '_uuid' ];
 		$this->create_unique_indexes_on_registry('products_properties_by_car_setup_registry', $dimensions);
+
+		$this->exec(<<<'EOT'
+			CREATE VIRTUAL TABLE IF NOT EXISTS products_fts USING fts5 (
+				uuid UNINDEXED,
+				code,
+				name,
+				article,
+				description,
+				barcode,
+				prefix = '2 3 4',
+				detail = full,
+				columnsize = 1,
+        		tokenize = "unicode61 remove_diacritics 0");
+
+			-- Triggers to keep the FTS index up to date.
+			CREATE TRIGGER IF NOT EXISTS products_ad AFTER DELETE ON products FOR EACH ROW
+			BEGIN
+				INSERT INTO products_fts VALUES (old.uuid, NULL, NULL, NULL, NULL, NULL);
+			END;
+
+			CREATE TRIGGER IF NOT EXISTS products_ai AFTER INSERT ON products FOR EACH ROW
+			BEGIN
+				INSERT INTO products_fts 
+					SELECT
+						p.uuid,
+						p.code_fti AS code,
+						p.name_fti AS name,
+						p.article_fti AS article,
+						p.description_fti AS description,
+						b.barcode
+					FROM
+						products AS p
+							LEFT JOIN barcodes_registry AS b
+							ON p.uuid = b.product_uuid
+					WHERE
+						p.uuid = new.uuid;
+			END;
+			-- identical
+			CREATE TRIGGER IF NOT EXISTS products_au AFTER UPDATE ON products FOR EACH ROW
+			BEGIN
+				INSERT INTO products_fts 
+					SELECT
+						p.uuid,
+						p.code_fti AS code,
+						p.name_fti AS name,
+						p.article_fti AS article,
+						p.description_fti AS description,
+						b.barcode
+					FROM
+						products AS p
+							LEFT JOIN barcodes_registry AS b
+							ON p.uuid = b.product_uuid
+					WHERE
+						p.uuid = new.uuid;
+			END;
+			-- identical
+			CREATE TRIGGER IF NOT EXISTS barcodes_registry_ai AFTER INSERT ON barcodes_registry FOR EACH ROW
+			BEGIN
+				INSERT INTO products_fts 
+					SELECT
+						p.uuid,
+						p.code_fti AS code,
+						p.name_fti AS name,
+						p.article_fti AS article,
+						p.description_fti AS description,
+						new.barcode AS barcode
+					FROM
+						products AS p
+					WHERE
+						p.uuid = new.product_uuid;
+			END;
+			-- identical
+			CREATE TRIGGER IF NOT EXISTS barcodes_registry_au AFTER UPDATE ON barcodes_registry FOR EACH ROW
+			BEGIN
+				INSERT INTO products_fts 
+					SELECT
+						p.uuid,
+						p.code_fti AS code,
+						p.name_fti AS name,
+						p.article_fti AS article,
+						p.description_fti AS description,
+						new.barcode AS barcode
+					FROM
+						products AS p
+					WHERE
+						p.uuid = new.product_uuid;
+			END;
+EOT
+		);
 
 	}
 

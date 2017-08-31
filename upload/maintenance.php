@@ -31,13 +31,16 @@ try {
 	$infobase->exec( <<<'EOT'
 		INSERT INTO products_fts
 			SELECT
-				uuid,
-				code,
-				name,
-				article,
-				description
+				p.uuid,
+				p.code_fti AS code,
+				p.name_fti AS name,
+				p.article_fti AS article,
+				p.description_fti AS description,
+				b.barcode
 			FROM
-				products
+				products AS p
+					LEFT JOIN barcodes_registry AS b
+					ON p.uuid = b.product_uuid
 EOT
 	);
 

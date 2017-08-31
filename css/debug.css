@@ -27,6 +27,7 @@
 	}
 
 	html > body > div[debug] {
+		z-index				: 30000;
 		display				: block;
 	}
 

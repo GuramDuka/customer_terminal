@@ -145,12 +145,12 @@
 		height				: inherit;
 		text-align			: left;
 		float				: left;
-		font-size			: 22px;
+		font-size			: 24px;
 		font-weight			: bolder;
 		text-overflow		: ellipsis;
 		text-decoration		: none;
 		text-transform		: uppercase;
-		max-width			: 20%;
+		max-width			: 40%;
 		color				: darkblue;
 		margin-left			: 16px;
 	}
@@ -190,12 +190,13 @@
 		width				: auto;
 		height				: auto;
 		margin-bottom		: 3px;
+		text-align			: left;
 	}
 
 	html > body > div[top] > div[cart_informer] > div[cinfo] > p {
 		width				: auto;
 		height				: auto;
-		float				: left;
+		float				: none;
 		font-size			: 28px;
 		font-weight			: bolder;
 		text-overflow		: ellipsis;
@@ -735,8 +736,8 @@
 		position			: fixed;
 		top					: 2.5%;
 		left				: 2.5%;
-		width				: 95%;
-		height				: 95%;
+		width				: calc(95% - 3px * 2);
+		height				: calc(95% - 3px * 2);
 		float				: none;
 		border				: 3px solid #dfba3c;
 		border-radius		: 7px;
@@ -996,8 +997,8 @@
 		position			: fixed;
 		top					: 2.5%;
 		left				: 2.5%;
-		width				: 95%;
-		height				: 95%;
+		width				: calc(95% - 3px * 2);
+		height				: calc(95% - 3px * 2);
 		float				: none;
 		border				: 3px solid #dfba3c;
 		border-radius		: 7px;
