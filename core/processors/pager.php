@@ -281,7 +281,7 @@ EOT
 					products_fts
 				WHERE
 					-- Search for matches in all columns except "barcode"
-					products_fts MATCH '(- barcode : ${filter}) OR (- {code name article description} : ${raw_filter})'
+					products_fts MATCH '(- barcode : ${filter}) OR (barcode : "${raw_filter}")'
 				GROUP BY
        				uuid
 EOT
