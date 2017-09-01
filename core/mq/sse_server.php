@@ -193,7 +193,7 @@ EOT
 		while( ob_get_level() > 0 )
 		    ob_end_clean();
 
-		$infobase->exec('BEGIN IMMEDIATE /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION');
+		$infobase->exec('BEGIN /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION');
 
 		$result = $st->execute();
 

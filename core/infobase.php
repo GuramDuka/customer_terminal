@@ -562,10 +562,10 @@ EOT
 				article,
 				description,
 				barcode,
-				prefix = '2 3 4',
+				--prefix = '2 3 4',
 				detail = full,
-				columnsize = 1,
-        		tokenize = "unicode61 remove_diacritics 0");
+				--columnsize = 1,
+        		tokenize = "unicode61");
 
 			-- Triggers to keep the FTS index up to date.
 			CREATE TRIGGER IF NOT EXISTS products_ad AFTER DELETE ON products FOR EACH ROW

@@ -22,6 +22,8 @@ class searcher_handler extends handler {
 		$this->infobase_->set_create_if_not_exists(false);
 		$this->infobase_->initialize();
 
+		$page = [];
+
 		extract($this->request_);
 
 		$this->infobase_->begin_transaction();
@@ -38,23 +40,23 @@ class searcher_handler extends handler {
 
 			$sql = <<<EOT
 				SELECT
-					MAX(rowid), uuid
+					MAX(a.rowid),
+					a.uuid
 				FROM
-					products_fts
+					products_fts AS a
 				WHERE
-					-- Search for matches in all columns except "barcode"
-					products_fts MATCH '(- barcode : ${filter}) OR (- {code name article description} : ${raw_filter})'
+					products_fts MATCH '(name : ${filter}) OR (barcode : "${raw_filter}")'
 				GROUP BY
        				uuid
 EOT
 			;
-			
+
 			$sql = <<<EOT
 				WITH fts_filter AS (
 					${sql}
 				)
 				SELECT DISTINCT
-					p.uuid					AS uuid,
+					a.uuid					AS uuid,
 					a.code					AS code,
 					a.name					AS name,
 					i.uuid					AS base_image_uuid,
@@ -76,35 +78,38 @@ EOT
 						ON a.uuid = r.product_uuid
 				ORDER BY
 					a.name
-				LIMIT 50 OFFSET 0
+				LIMIT 350 OFFSET 0
 EOT
 			;
 
-		}
+			$this->infobase_->dump_plan($sql);
 
-		$this->infobase_->dump_plan($sql);
+			$timer->restart();
 
-		$timer->restart();
+			$st = $this->infobase_->prepare($sql);
+			$result = $st->execute();
 
-		$st = $this->infobase_->prepare($sql);
-		$result = $st->execute();
+			while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
 
-		$page = [];
+				extract($r);
 
-		while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
+				$e = [
+					'uuid'		=> bin2uuid($uuid),
+					'code'		=> $code,
+					'name'		=> htmlspecialchars($name, ENT_HTML5),
+					'price'		=> $price,
+					'remainder'	=> $remainder,
+					'reserve'	=> $reserve,
+					'img_url'	=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext, true), ENT_HTML5),
+					'img_ico'	=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext, false), ENT_HTML5)
+				];
 
-			extract($r);
+				if( $base_image_uuid !== null )
+					$e['img_uuid'] = bin2uuid($base_image_uuid);
 
-			$page[] = [
-				'uuid'		=> bin2uuid($uuid),
-				'code'		=> $code,
-				'name'		=> htmlspecialchars($name, ENT_HTML5),
-				'price'		=> $price,
-				'remainder'	=> $remainder,
-				'reserve'	=> $reserve,
-				'img_url'	=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext, true), ENT_HTML5),
-				'img_ico'	=> htmlspecialchars(get_image_url($base_image_uuid, $base_image_ext, false), ENT_HTML5)
-			];
+				$page[] = $e;
+
+			}
 
 		}
 

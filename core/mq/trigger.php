@@ -27,7 +27,7 @@ class events_trigger {
 		config::$sqlite_cache_size = 4096;
 		$infobase = get_trigger_infobase();
 
-		$infobase->exec('BEGIN IMMEDIATE /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION');
+		$infobase->exec('BEGIN /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION');
 
 		$timestamp = $event = null;
 		$st = $infobase->prepare('INSERT INTO events (timestamp, ready, event) VALUES (:timestamp, 0, :event)');
@@ -56,10 +56,8 @@ class events_trigger {
 
 		$infobase = get_trigger_infobase();
 
-		$infobase->exec('BEGIN IMMEDIATE /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION');
-
+		$infobase->exec('BEGIN /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION');
 		$infobase->exec('UPDATE events SET ready = 1 WHERE NOT ready');
-
 		$infobase->exec('COMMIT TRANSACTION');
 
 	}

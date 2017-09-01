@@ -31,7 +31,7 @@ EOT
 
 	$rowid = null;
 
-	$infobase->exec('BEGIN IMMEDIATE /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION');
+	$infobase->exec('BEGIN /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION');
 
 	$result = $st->execute();
 	$events = [];
@@ -62,7 +62,7 @@ function confirm_receipt_events($events_ids) {
 	$st_del = $infobase->prepare('DELETE FROM events WHERE rowid = :rowid');
 	$st_del->bindParam(':rowid', $rowid);
 
-	$infobase->exec('BEGIN IMMEDIATE /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION');
+	$infobase->exec('BEGIN /* DEFERRED, IMMEDIATE, EXCLUSIVE */ TRANSACTION');
 
 	foreach( $events_ids as $rowid )
 		$st_del->execute();

@@ -94,6 +94,7 @@ class HtmlPageState {
 			cart_pages_					: 0,
 			alert_						: false,
 			large_img_view_				: false,
+			search_panel_				: false,
 			vk_							: false,
 			fts_filter_					: ''
 		};
@@ -555,7 +556,7 @@ class Render {
 		if( new_page_state.constants_ ) {
 			xpath_eval_single('html/body/div[@top]/div[@mag]').innerHTML = `
 				<p>&nbsp;</p>
-				<p>Магазин: ${new_page_state.constants_['ТекущийМагазинПредставление']}</p>
+				<p>${new_page_state.constants_['ТекущийМагазинПредставление']}</p>
 				<p>${new_page_state.constants_['ТекущийМагазинАдрес']}</p>
 			`;
 
@@ -2421,9 +2422,9 @@ class HtmlPageEvents extends HtmlPageState {
 			<div order>
 				<div txt>
 					<font>Заказ&nbsp;</font><font style="color:darkblue" blink2>№&nbsp;${order.number}</font>
-					<font> от ${this.date_formatter_.format(order.date)}</font>
+					<font> от ${this.date_formatter_.format(order.date).trim()}</font>
 					<font>, Сумма:&nbsp;${order.totals}₽</font>
-					<font>, Штрихкод:&nbsp;${order.barcode}</font>
+					<font>, EAN13:&nbsp;${order.barcode}</font>
 				</div>
 			</div>
 		`);
@@ -2633,7 +2634,7 @@ class HtmlPageEvents extends HtmlPageState {
 		}
 		catch( e ) {
 			console.log(e.message);
-			Render.debug(2, 'PLAY:&nbsp;' + e.message);
+			//Render.debug(2, 'PLAY:&nbsp;' + e.message);
 		}
 
 	}
@@ -2657,7 +2658,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 		for( let element of (elements instanceof Array ? elements : [elements]) ) {
 			element.text_type_handler_ = () => {
-				let stms = () => setTimeout(element.text_type_handler_, 900);
+				let stms = () => setTimeout(element.text_type_handler_, 300);
 
 				if( element.text_typed_ !== element.value ) {
 					delete element.text_typed_fired_;
@@ -2689,30 +2690,51 @@ class HtmlPageEvents extends HtmlPageState {
 
 	search_panel_text_type_handler(text) {
 
+		if( xpath_eval_single('html/body/div[@search_panel]/input[@vks]').value !== text )
+			return;
+
 		let request = {
 			'module'			: 'searcher',
 			'handler'			: 'searcher',
 			'fts_filter'		: text
 		};
 
-		let data = state.post_json('proxy.php', request);
+		let data = this.post_json('proxy.php', request);
 		//state.ellapsed_ += data.ellapsed;
-
-		let results = xpath_eval_single('html/body/div[@search_panel]/div[@results]');
-		results.innerHTML = '';
+		let html = '';
 
 		for( let p of data.products ) {
-			results.insertAdjacentHTML('beforeend', `
+			let name = p.name.replace(/ ,/, ',').trim();
+
+			/*for( let l = name.length, i = 0, j = 0; i < l; i++, j++ ) {
+				if( j >= 35 && name[i] === ' ' ) {
+					name = name.substr(0, i) + '<br>' + name.substr(i).trim();
+					l = name.length;
+					j = -1;
+				}
+			}*/
+
+			let pimg = p.img_uuid ? `<i pimg img_url="${p.img_url}" style="background-image:url(${p.img_ico})"></i>` : '';
+
+			html += `
 				<div result uuid="${p.uuid}" fliphin>
-					<font pcode style="color:darkblue" blink2>[${p.code}]</font>
-					<font pname> ${p.name}</font>
-					<font pprice>, ${Math.trunc(p.price)}₽</font>
-					<font premainder>, ${p.remainder}</font>
-					<font preserve>, ${p.reserve}</font>
+					<div txt${p.img_uuid ? ' have_img' : ''}>
+						<font pcode style="color:darkblue" blink2>[${p.code}]</font>
+						<font pname> ${name}</font>
+						<font pcomma>, </font>
+						<font pprice style="color:darkmagenta">${Math.trunc(p.price)}₽</font>
+						<font pcomma>, </font>
+						<font premainder style="color:navy">${p.remainder}</font>
+						<font pcomma>, </font>
+						<font preserve style="color:gray">${p.reserve}</font>
+					</div>
+					${pimg}
 				</div>
-			`);
+			`;
 		}
 
+		let results = xpath_eval_single('html/body/div[@search_panel]/div[@results]');
+		results.innerHTML = html;
 		this.setup_events(xpath_eval('div[@result]', results));
 
 	}
@@ -2996,27 +3018,77 @@ class HtmlPageEvents extends HtmlPageState {
 						new_page_state = this.switch_dst_middle_pitem(cur_page_state, cur_paging_state, element);
 
 					}
-					else if( attrs.search_panel && !attrs.touchmove ) {
-						alert('search_panel');
-						//this.setup_events(xpath_eval('html/body/div[@search_panel]/div[@results]/div[@result]'));
+					else if( attrs.search_panel ) {
+						if( document.activeElement === xpath_eval_single('input[@vks]', element) )
+							document.activeElement.blur();
+					}
+					else if( attrs.vks && attrs.btn && element.ascend('search_panel') && !attrs.touchmove ) {
+						// switch off search panel
+						let p = xpath_eval_single('html/body/div[@search_panel]');
+						p.display(false);
+						cur_page_state.search_panel_ = false;
 					}
 					else if( attrs.vks && element.ascend('search_panel') && !attrs.touchmove ) {
 
-						//if( e.target === element ) {
+						if( element === document.activeElement ) {
+							prevent_default = false;
+						}
+						else {
 							e.stopImmediatePropagation();
 							e.preventDefault();
 							e.target.focus();
 							e.target.click();
-						//}
+						}
 
 					}
-					else if( attrs.results && element.ascend('search_panel') && !attrs.touchmove ) {
-						alert('results');
+					else if( attrs.results && element.ascend('search_panel') ) {
+						if( document.activeElement === xpath_eval_single('input[@vks]', element.parentNode) )
+							document.activeElement.blur();
 					}
-					else if( attrs.result && element.ascend('result/search_panel') && !attrs.touchmove ) {
-						alert('result');
+					else if( attrs.result && element.ascend('results/search_panel') ) {
+						if( document.activeElement === xpath_eval_single('input[@vks]', element.parentNode.parentNode) )
+							document.activeElement.blur();
+
+						if( !attrs.touchmove ) {
+							let product = attrs.uuid.value;
+							let cart_entity = cur_page_state.cart_by_uuid_[product];
+
+							if( cart_entity ) {
+								if( cart_entity.buy_quantity < cart_entity.remainder ) {
+									[ new_page_state ] = this.clone_page_state();
+
+									cart_entity = new_page_state.cart_by_uuid_[product];
+
+									cart_entity.buy_quantity++;
+									cart_entity.modified = true;
+
+									this.render_.rewrite_cart(new_page_state);
+									this.barcode_scanner_rewrite(new_page_state, cur_page_state);
+									new_page_state.modified_ = true;
+								}
+							}
+							else {
+								[ new_page_state ] = this.clone_page_state();
+								this.render_.rewrite_cart(new_page_state, product, 1);
+								this.barcode_scanner_rewrite(new_page_state, cur_page_state);
+								new_page_state.modified_ = true;
+							}
+
+							if( new_page_state ) {
+								// switch off search panel
+								let p = xpath_eval_single('html/body/div[@search_panel]');
+								p.display(false);
+								new_page_state.search_panel_ = false;
+							}
+						}
 					}
 					else if( attrs.btn && attrs.vks ) {
+
+						// switch on search panel
+						let p = xpath_eval_single('html/body/div[@search_panel]');
+						p.display(true);
+						cur_page_state.search_panel_ = true;
+
 					}
 
 					if( attrs.touchmove )
@@ -3071,8 +3143,8 @@ class HtmlPageEvents extends HtmlPageState {
 					if( attrs.middle && this.debug_ && this.dct_ ) {
 						let distx = parseInt(e.clientX) - this.startx_;
 						let disty = parseInt(e.clientY) - this.starty_;
-						Render.debug(0, 'ME:&nbsp;' + this.startx_ + '&nbsp;' + this.starty_);
-						Render.debug(1, 'MM:&nbsp;' + distx + '&nbsp;' + disty);
+						//Render.debug(0, 'ME:&nbsp;' + this.startx_ + '&nbsp;' + this.starty_);
+						//Render.debug(1, 'MM:&nbsp;' + distx + '&nbsp;' + disty);
 					}
 					break;
 
@@ -3412,6 +3484,8 @@ class HtmlPageManager extends HtmlPageEvents {
 			let vks = xpath_eval_single('html/body/div[@search_panel]/input[@vks]');
 			this.setup_events(vks, false);
 			this.setup_text_type_event(vks);
+
+			this.setup_events(xpath_eval_single('html/body/div[@search_panel]/label[@vks]'), false);
 		}
 
 		this.setup_events(xpath_eval('html/body/div[@pcart]/div[@pcontrols]/div[@btn]'));
@@ -3497,22 +3571,9 @@ function dct_html_body() {
 		<div plargeimg fadein></div>
 		<div alert fadein></div>
 		<div search_panel>
-			<input vks placeholder="Вводите текст здесь для быстрого поиска ..." type="text" ontouchend="return vks_input.apply(this, arguments)">
-			<div results>
-				<!--<div result>1Масло моторное Castrol EDGE Professional<br> LongLifee III Titanium SAE 5W-30 синт. (1л)</div>
-				<div result>2Масло моторное Castrol EDGE Professional<br> LongLifee III Titanium SAE 5W-30 синт. (1л)</div>
-				<div result>3Масло моторное Castrol EDGE Professional<br> LongLifee III Titanium SAE 5W-30 синт. (1л)</div>
-				<div result>4Масло моторное Castrol EDGE Professional<br> LongLifee III Titanium SAE 5W-30 синт. (1л)</div>
-				<div result>5Масло моторное Castrol EDGE Professional<br> LongLifee III Titanium SAE 5W-30 синт. (1л)</div>
-				<div result>6Масло моторное Castrol EDGE Professional<br> LongLifee III Titanium SAE 5W-30 синт. (1л)</div>
-				<div result>7Масло моторное Castrol EDGE Professional<br> LongLifee III Titanium SAE 5W-30 синт. (1л)</div>
-				<div result>8Масло моторное Castrol EDGE Professional<br> LongLifee III Titanium SAE 5W-30 синт. (1л)</div>
-				<div result>9Масло моторное Castrol EDGE Professional<br> LongLifee III Titanium SAE 5W-30 синт. (1л)</div>
-				<div result>10Масло моторное Castrol EDGE Professional<br> LongLifee III Titanium SAE 5W-30 синт. (1л)</div>
-				<div result>11Масло моторное Castrol EDGE Professional<br> LongLifee III Titanium SAE 5W-30 синт. (1л)</div>
-				<div result>13Масло моторное Castrol EDGE Professional<br> LongLifee III Titanium SAE 5W-30 синт. (1л)</div>
-				<div result>14Масло моторное Castrol EDGE Professional<br> LongLifee III Titanium SAE 5W-30 синт. (1л)</div>-->
-			</div>
+			<input vks autofocus placeholder="Вводите текст поиска ..." type="text">
+			<label vks btn blink2></label>
+			<div results></div>
 		</div>
 		<audio id="scanner_beep">
 			<source src="assets/scanner/beep-07.ogg" type="audio/ogg">
@@ -3825,7 +3886,7 @@ function core() {
 		console.log(x1, y1, x2, y2, (x2 - x1 + 1) / (y2 - y1 + 1));
 		Render.debug(2, '' + x1 + ', ' + y1 + ', ' + x2 + ', ' + y2 + ', ' + (x2 - x1 + 1) / (y2 - y1 + 1));
 	}*/
-	Render.debug(2, res().dpi);
-	Render.debug(3, verge.aspect(screen));
+	//Render.debug(2, res().dpi);
+	//Render.debug(3, verge.aspect(screen));
 }
 //------------------------------------------------------------------------------

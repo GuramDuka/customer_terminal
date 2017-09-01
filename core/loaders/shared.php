@@ -108,7 +108,7 @@ function transform_fts_filter($filter) {
 	$filter = mb_stri_replace(' AND ', ' AND* ', $filter);
 	$filter = mb_stri_replace(' И ', ' AND* ', $filter);
 
-	$p = ' ';
+	/*$p = ' ';
 	$l = mb_strlen($filter);
 
 	for( $i = 0; $i < $l; $i++ ) {
@@ -125,16 +125,26 @@ function transform_fts_filter($filter) {
 
 		$p = $s;
 
-	}
+	}*/
 
 	$filter = mb_str_replace(' OR* ', ' OR ', $filter);
 	$filter = mb_str_replace(' AND* ', ' AND ', $filter);
 	$filter = mb_str_replace('/', ' ', $filter);
 	$filter = mb_str_replace('\\', ' ', $filter);
+	$filter = mb_str_replace('"', '', $filter);
+	$filter = mb_str_replace('*', '', $filter);
 
-	$filter .= '*';
+	$filter = mb_stri_replace(' OR ', "\tOR\t", $filter);
+	$filter = mb_stri_replace(' AND ', "\tAND\t", $filter);
 
-	return $filter;
+	while( mb_strpos($filter, '  ') !== FALSE )
+		$filter = mb_stri_replace('  ', ' ', $filter);
+
+	$filter = mb_stri_replace(' ', '"* AND "', $filter);
+	$filter = mb_stri_replace("\tOR\t", '"* OR "', $filter);
+	$filter = mb_stri_replace("\tAND\t", '"* AND "', $filter);
+
+	return '"' . $filter . '"*';
 
 }
 //------------------------------------------------------------------------------
