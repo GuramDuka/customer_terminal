@@ -53,23 +53,46 @@ function load_css(url, callback) {
 }
 //------------------------------------------------------------------------------
 function core_gear_loader() {
-	let r = res();
-	let e = document.createElement('style');
-	e.innerHTML = `
-		:root {
-			--dppx					: ${r.dppx};
-			--dpi					: ${r.dpi};
-			--dpcm					: ${r.dpcm};
-			--dpmm					: ${r.dpmm};
-			--smart-phone			: ${SmartPhone.isAny() ? 1 : 0};
-			--screen-width			: ${screen.width};
-			--screen-height			: ${screen.height};
-			--screen-aspect-ratio	: ${screen.width / screen.height};
-			--screen-portrait		: ${screen.width <= screen.height ? 1 : 0};
-			--screen-landscape		: ${screen.width > screen.height ? 1 : 0};
+	let style_id = (() => {
+		let a = new Uint32Array(3);
+		window.crypto.getRandomValues(a);
+		return a[0].toString() + a[1].toString() + a[2].toString();
+	})();
+	let resizer = e => {
+		let r = res();
+		let [ww, wh] = window_size();
+		let html = `
+			:root {
+				--dppx					: ${r.dppx};
+				--dpi					: ${r.dpi};
+				--dpcm					: ${r.dpcm};
+				--dpmm					: ${r.dpmm};
+				--smart-phone			: ${SmartPhone.isAny() ? 1 : 0};
+				--window-width			: ${ww};
+				--window-height			: ${wh};
+				--screen-width			: ${screen.width};
+				--screen-height			: ${screen.height};
+				--screen-aspect-ratio	: ${screen.width / screen.height};
+				--screen-portrait		: ${screen.width <= screen.height ? 1 : 0};
+				--screen-landscape		: ${screen.width > screen.height ? 1 : 0};
+			}
+		`;
+
+		let style = document.getElementById(style_id);
+
+		if( !style ) {
+			style = document.createElement('style');
+			style.setAttribute('id', style_id);
+			let head = document.getElementsByTagName('head')[0];
+			head.appendChild(style);
 		}
-	`;
-	document.getElementsByTagName('head')[0].appendChild(e);
+
+		style.innerHTML = html;
+	};
+
+	resizer();
+
+	add_event(window, 'resize', resizer, false);
 
 	(location_search().dct ?
     	() => load_css('css/default.css',

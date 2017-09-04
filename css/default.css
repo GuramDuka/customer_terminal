@@ -1,34 +1,84 @@
 @font-face {
+	font-family	: "Arial";
+	src			: url("../assets/fonts/arial/arialn.ttf");
+	font-weight	: normal;
+	font-style	: normal;
+}
+
+@font-face {
+	font-family	: "Arial";
+	src			: url("../assets/fonts/arial/arialnb.ttf");
+	font-weight	: bold;
+	font-style	: normal;
+}
+
+@font-face {
 	font-family	: "droid";
-	src			: url('../assets/fonts/droid.ttf');
+	src			: url("../assets/fonts/droid.ttf");
 	font-weight	: normal;
 	font-style	: normal;
 }
 
 @font-face {
 	font-family	: "Digital-7";
-	src			: url('../assets/fonts/digital-7.ttf');
+	src			: url("../assets/fonts/digital-7.ttf");
 	font-weight	: normal;
 	font-style	: normal;
 }
 
 @font-face {
 	font-family	: "Digital-7";
-	src			: url('../assets/fonts/digital-7 (italic).ttf');
+	src			: url("../assets/fonts/digital-7 (italic).ttf");
 	font-weight	: normal;
 	font-style	: italic;
 }
 
 @font-face {
 	font-family	: "Digital-7 Mono";
-	src			: url('../assets/fonts/digital-7 (mono).ttf');
+	src			: url("../assets/fonts/digital-7 (mono).ttf");
 	font-weight	: normal;
 	font-style	: normal;
 }
 
 @font-face {
 	font-family	: "Attentica_4F_UltraLight";
-	src			: url('../assets/fonts/Attentica_4F_UltraLight.ttf');
+	src			: url("../assets/fonts/Attentica_4F_UltraLight.ttf");
+	font-weight	: normal;
+	font-style	: normal;
+}
+
+@font-face {
+	font-family: "UKIJ Saet";
+  	src			: url("../assets/fonts/ukij-saet.ttf");
+	font-weight	: normal;
+	font-style	: normal;
+}
+
+@font-face {
+	font-family	: "Roboto Regular";
+  	src			: url("../assets/fonts/Roboto-Regular.ttf");
+	font-weight	: normal;
+	font-style	: normal;
+}
+
+@font-face {
+	font-family	: "Roboto Light";
+  	src			: url("../assets/fonts/Roboto-Light.ttf");
+	font-weight	: lighter;
+	font-style	: normal;
+}
+
+@font-face {
+	font-family	: "Roboto Bold";
+  	src			: url("../assets/fonts/Roboto-Bold.ttf");
+	font-weight	: bold;
+	font-style	: normal;
+}
+
+@font-face {
+	font-family	: "Roboto Condensed";
+  	src			: url("../assets/fonts/Roboto-Condensed.ttf");
+	font-stretch: condensed;
 	font-weight	: normal;
 	font-style	: normal;
 }
@@ -41,6 +91,7 @@
 		/*font-variant		: small-caps;*/
 		font-stretch		: ultra-condensed;
 		cursor				: none;
+		/*font-family			: "ArialTTF";*/
 	}
 
 	html > body {
@@ -48,9 +99,9 @@
 		border				: solid 0px black;
 		margin				: 0mm;
 		text-align			: center;
-		font-family			: "Arial";
 		color				: black;
 		overflow			: hidden;
+		font-family			: "Arial";
 	}
 
 	div, img, i, br, p, span, pre, hr {
@@ -162,7 +213,7 @@
 		background-size		: contain;
 		background-repeat	: no-repeat;
 		background-position	: center center;
-		background-image	: url('../assets/logo.jpg')/*, linear-gradient(transparent, gold)*/;
+		background-image	: url("../assets/logo.jpg")/*, linear-gradient(transparent, gold)*/;
 	}
 
 	html > body > div[top] > div[cart_informer] {
@@ -361,11 +412,11 @@
 	}
 
 	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > div[value] > span[check_box][ico] {
-		background-image	: url('../assets/check_box_uncheck.ico');
+		background-image	: url("../assets/check_box_uncheck.ico");
 	}
 
 	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > div[value][checked] > span[check_box][ico] {
-		background-image	: url('../assets/check_box_mix.ico');
+		background-image	: url("../assets/check_box_mix.ico");
 	}
 
 	html > body > div[categories] > div[selections_frame] > div[property] > div[values] > div[value] > span[check_box][txt] {
@@ -435,11 +486,11 @@
 	}
 
 	html > body > div[categories] > div[select_by_car_frame] > div[selector] > span[search_field][ico] {
-		background-image	: url('../assets/search_field.ico');
+		background-image	: url("../assets/search_field.ico");
 	}
 
 	html > body > div[categories] > div[select_by_car_frame] > div[selector] > span[list_box][ico] {
-		background-image	: url('../assets/list_box.ico');
+		background-image	: url("../assets/list_box.ico");
 	}
 
 	html > body > div[categories] > div[select_by_car_frame] > div[selector] > span[label] {
@@ -948,7 +999,7 @@
 		background-size		: contain;
 		background-repeat	: no-repeat;
 		background-position	: center bottom;
-		background-image	: url('../assets/mount.png'),	linear-gradient(transparent, gold);
+		background-image	: url("../assets/mount.png"),	linear-gradient(transparent, gold);
 								/*linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet),*/
 		position			: fixed;
 		top					: calc(100% - 128px);

@@ -1666,7 +1666,7 @@ class HtmlPageEvents extends HtmlPageState {
 					xpath_eval_single('p[@node_name]'			, head, iframe).innerHTML = data.order.name;
 					xpath_eval_single('p[@uuid]'				, head, iframe).innerHTML = data.order.uuid;
 					xpath_eval_single('p[@number]'				, head, iframe).innerHTML = 'Заказ&nbsp;:&nbsp;' + data.order.number;
-					xpath_eval_single('p[@date]'				, head, iframe).innerHTML = 'Время&nbsp;:&nbsp;' + this.date_formatter_.format(data.order.date);//.toLocaleFormat('%d.%m.%Y %H:%M:%S');
+					xpath_eval_single('p[@date]'				, head, iframe).innerHTML = 'Время&nbsp;:&nbsp;' + this.date_formatter_(data.order.date);//.toLocaleFormat('%d.%m.%Y %H:%M:%S');
 					xpath_eval_single('p[@barcode]'				, head, iframe).innerHTML = 'EAN13&nbsp;:&nbsp;' + data.order.barcode;
 
 					let table = xpath_eval_single('html/body/div[@table]', iframe, iframe);
@@ -2084,7 +2084,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 		let date = new Date;
 
-		console.log(this.date_formatter_.format(date) + ': current page reloaded on user idle away');
+		console.log(this.date_formatter_(date) + ': current page reloaded on user idle away');
 		//console.log(date.toLocaleFormat('%d.%m.%Y %H:%M:%S') + ': current page reloaded on user idle away');
 
 		return new_page_state;
@@ -2100,7 +2100,7 @@ class HtmlPageEvents extends HtmlPageState {
 		this.render_.rewrite_page();
 
 		let date = new Date;
-		console.log(this.date_formatter_.format(date) + ': products on current page changed, reloaded');
+		console.log(this.date_formatter_(date) + ': products on current page changed, reloaded');
 
 		return new_page_state;
 
@@ -2114,7 +2114,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 	window_resize_handler() {
 
-		let [ w, h ] = window_size();
+		/*let [ w, h ] = window_size();
 		let b = xpath_eval_single('html/body');
 		let sp = SmartPhone.isAny();
 
@@ -2149,13 +2149,13 @@ class HtmlPageEvents extends HtmlPageState {
 				this.deviceHeight_ = h;
 			}
 
-			/*if( this.dct_ ) {
-				let icon_scan = xpath_eval_single('html/body/i[@btn and @scan]');
-				icon_scan.style.top = 'calc(100% - 9.999%)';
-				icon_scan.style.left = 'calc(100% - 10.5mm)';
-				icon_scan.style.width = '10mm';
-				icon_scan.style.height = '10mm';
-			}*/
+			//if( this.dct_ ) {
+			//	let icon_scan = xpath_eval_single('html/body/i[@btn and @scan]');
+			//	icon_scan.style.top = 'calc(100% - 9.999%)';
+			//	icon_scan.style.left = 'calc(100% - 10.5mm)';
+			//	icon_scan.style.width = '10mm';
+			//	icon_scan.style.height = '10mm';
+			//}
 		}
 		else {
 			b.style.width  = w + 'px';
@@ -2174,7 +2174,7 @@ class HtmlPageEvents extends HtmlPageState {
 			}
 			else
 				p.removeAttribute('style');
-		}
+		}*/
 	}
 
 	get_quagga_params() {
@@ -2422,7 +2422,7 @@ class HtmlPageEvents extends HtmlPageState {
 			<div order>
 				<div txt>
 					<font>Заказ&nbsp;</font><font style="color:darkblue" blink2>№&nbsp;${order.number}</font>
-					<font> от ${this.date_formatter_.format(order.date).trim()}</font>
+					<font> от ${this.date_formatter_(order.date).trim()}</font>
 					<font>, Сумма:&nbsp;${order.totals}₽</font>
 					<font>, EAN13:&nbsp;${order.barcode}</font>
 				</div>
@@ -3024,8 +3024,8 @@ class HtmlPageEvents extends HtmlPageState {
 					}
 					else if( attrs.vks && attrs.btn && element.ascend('search_panel') && !attrs.touchmove ) {
 						// switch off search panel
-						let p = xpath_eval_single('html/body/div[@search_panel]');
-						p.display(false);
+						xpath_eval_single('html/body/div[@search_panel]').display(false);
+						xpath_eval_single('html/body/i[@btn and @vks]').display(true);
 						cur_page_state.search_panel_ = false;
 					}
 					else if( attrs.vks && element.ascend('search_panel') && !attrs.touchmove ) {
@@ -3076,8 +3076,8 @@ class HtmlPageEvents extends HtmlPageState {
 
 							if( new_page_state ) {
 								// switch off search panel
-								let p = xpath_eval_single('html/body/div[@search_panel]');
-								p.display(false);
+								xpath_eval_single('html/body/div[@search_panel]').display(false);
+								xpath_eval_single('html/body/i[@btn and @vks]').display(true);
 								new_page_state.search_panel_ = false;
 							}
 						}
@@ -3085,8 +3085,10 @@ class HtmlPageEvents extends HtmlPageState {
 					else if( attrs.btn && attrs.vks ) {
 
 						// switch on search panel
-						let p = xpath_eval_single('html/body/div[@search_panel]');
-						p.display(true);
+						xpath_eval_single('html/body/div[@search_panel]').display(true);
+						xpath_eval_single('html/body/i[@btn and @vks]').display(false);
+						xpath_eval_single('html/body/div[@search_panel]/input[@vks]').focus();
+						xpath_eval_single('html/body/div[@search_panel]/input[@vks]').click();
 						cur_page_state.search_panel_ = true;
 
 					}
@@ -3119,7 +3121,9 @@ class HtmlPageEvents extends HtmlPageState {
 					//	Render.debug(1, 'TM:&nbsp;' + Math.trunc(distx) + '&nbsp;' + Math.trunc(disty));
 					//}
 					//Render.debug(1, e.currentTarget.innerHTML);
-					element.setAttribute('touchmove', '');
+					if( typeof element.setAttribute === 'function' )
+						element.setAttribute('touchmove', '');
+
 					prevent_default = false;
 					break;
 
@@ -3449,15 +3453,20 @@ class HtmlPageManager extends HtmlPageEvents {
 
 		this.window_resize_handler();
 
-		this.date_formatter_ = new Intl.DateTimeFormat('ru-RU', {
-			year	: 'numeric', 
-			month	: '2-digit',
-			day		: '2-digit',
-			hour	: '2-digit',
-			minute	: '2-digit',
-			second	: '2-digit',
-			hour12	: false
-		});
+		// Intl not work under android
+		//this.date_formatter_ = date => {
+		//	let f = new Intl.DateTimeFormat('ru-RU', {
+		//		year	: 'numeric', 
+		//		month	: '2-digit',
+		//		day		: '2-digit',
+		//		hour	: '2-digit',
+		//		minute	: '2-digit',
+		//		second	: '2-digit',
+		//		hour12	: false
+		//	});
+		//	return f.format(date);
+		//};
+		this.date_formatter_ = date => strftime('%d.%m.%Y %H:%M:%S', date);
 
 		Render.hide_cursor();
 

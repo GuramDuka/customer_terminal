@@ -59,16 +59,10 @@
 	}
 
 	html > body {
-		/*width				: 17%;
-		height				: 100%;
-		width				: 70mm;
-		height				: 140mm;*/
-		/*border				: solid 1px black;*/
+		width				: calc(var(--window-width) * 1px);
+		min-height			: calc((var(--screen-height) - var(--screen-height) / 3) * 1px);
+		height				: calc(var(--window-height) * 1px);
 	}
-
-	/*div {
-		border				: solid 1px red;
-	}*/
 
 	html > body > div[top] {
 		height				: 10%;
@@ -415,8 +409,8 @@
 		top					: 2%;
 		left				: 2%;
 		width				: calc(96% - 3px * 2);
-		min-height			: calc(var(--dpmm) * 11 * 1px);
-		max-height			: calc(96% - 3px * 2);
+		height				: calc(96% - 3px * 2);
+		min-height			: calc((var(--screen-height) - var(--screen-height) / 3) * 1px);
 		float				: none;
 		border				: 3px solid #dfba3c;
 		border-radius		: 7px;
@@ -465,11 +459,11 @@
 		width				: calc(100% - 2px);
 		margin-top			: 4px;
 		/*border				: 1px solid black;*/
-		height				: calc(100% - 6%);
-		background-color	: transparent;
-		overflow			: auto;
+		height				: calc(100%);
+		/*min-height			: calc(var(--dpmm) * 11 * 1px);*/
 		float				: none;
 		background-color	: transparent;
+		overflow			: auto;
 	}
 
 	html > body > div[search_panel] > div[results] > div[result] {

@@ -76,9 +76,11 @@ EOT
 						ON a.uuid = q.product_uuid
 						LEFT JOIN reserves_registry AS r
 						ON a.uuid = r.product_uuid
+				WHERE
+					COALESCE(q.quantity, 0) > 0
 				ORDER BY
 					a.name
-				LIMIT 350 OFFSET 0
+				LIMIT 250 OFFSET 0
 EOT
 			;
 
