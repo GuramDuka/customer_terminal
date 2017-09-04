@@ -3617,15 +3617,15 @@ function cst_html_body() {
 			</div>
 		</div>
 		<div categories></div>
-		<div btn back>
+		<div btn back fadein>
 			<img btn_ico src="assets/arrows/arrow_undo.ico">
 			<span btn_txt>НАЗАД</span>
 		</div>
-		<div btn selections>
+		<div btn selections fadein>
 			<img btn_ico src="assets/filter.ico">
 			<span btn_txt>&nbsp;&nbsp;ФИЛЬТР&nbsp;&nbsp;</span>
 		</div>
-		<div btn select_by_car>
+		<div btn select_by_car fadein>
 			<img btn_ico src="assets/car.ico">
 			<span btn_txt>АВТОМОБИЛЬ</span>
 		</div>
