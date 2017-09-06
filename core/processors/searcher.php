@@ -33,7 +33,7 @@ class searcher_handler extends handler {
 		if( mb_strlen($fts_filter) < 1 )
 			$fts_filter = null;
 
-		if( $fts_filter !== null ) {
+		if( $fts_filter !== null && @$view === 'products' ) {
 
 			$filter = $this->infobase_->escapeString(transform_fts_filter($fts_filter));
 			$raw_filter = $this->infobase_->escapeString($fts_filter);
@@ -45,6 +45,7 @@ class searcher_handler extends handler {
 				FROM
 					products_fts AS a
 				WHERE
+					-- TODO: for sqlite 3.20 -> products_fts MATCH '(name : (${filter})) OR (barcode : ("${raw_filter}"))'
 					products_fts MATCH '(name : ${filter}) OR (barcode : "${raw_filter}")'
 				GROUP BY
        				uuid
@@ -72,7 +73,7 @@ EOT
 						ON a.base_image_uuid = i.uuid
 						LEFT JOIN prices_registry AS p
 						ON a.uuid = p.product_uuid
-						LEFT JOIN remainders_registry AS q
+						INNER JOIN remainders_registry AS q
 						ON a.uuid = q.product_uuid
 						LEFT JOIN reserves_registry AS r
 						ON a.uuid = r.product_uuid
@@ -116,6 +117,72 @@ EOT
 		}
 
 		$this->response_['products'] = $page;
+
+		$page = [];
+
+		if( $fts_filter !== null && @$view === 'customers' ) {
+
+			$filter = $this->infobase_->escapeString(transform_fts_filter($fts_filter));
+			$raw_filter = $this->infobase_->escapeString($fts_filter);
+
+			$sql = <<<EOT
+				SELECT
+					MAX(a.rowid),
+					a.uuid
+				FROM
+					customers_fts AS a
+				WHERE
+					-- TODO: for sqlite 3.20 -> customers_fts MATCH '({name description} : (${filter})) OR (inn : ("${raw_filter}"))'
+					customers_fts MATCH '({name description} : ${filter}) OR (inn : "${raw_filter}")'
+				GROUP BY
+       				uuid
+EOT
+			;
+
+			$sql = <<<EOT
+				WITH fts_filter AS (
+					${sql}
+				)
+				SELECT DISTINCT
+					a.uuid,
+					a.code,
+					a.name,
+					a.inn,
+					a.description
+				FROM
+					customers AS a
+						INNER JOIN fts_filter AS f
+						ON a.uuid = f.uuid
+				ORDER BY
+					a.name
+				LIMIT 250 OFFSET 0
+EOT
+			;
+
+			$this->infobase_->dump_plan($sql);
+
+			$timer->restart();
+
+			$st = $this->infobase_->prepare($sql);
+			$result = $st->execute();
+
+			while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
+
+				extract($r);
+
+				$page[] = [
+					'uuid'			=> bin2uuid($uuid),
+					'code'			=> $code,
+					'name'			=> htmlspecialchars($name, ENT_HTML5),
+					'inn'			=> htmlspecialchars($inn, ENT_HTML5),
+					'description'	=> htmlspecialchars($description, ENT_HTML5),
+				];
+
+			}
+
+		}
+
+		$this->response_['customers'] = $page;
 
 		$this->infobase_->commit_transaction();
 

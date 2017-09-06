@@ -22,6 +22,7 @@ try {
 	$infobase->initialize();
 
 	$infobase->exec("DROP TABLE IF EXISTS products_fts");
+	$infobase->exec("DROP TABLE IF EXISTS customers_fts");
 	$infobase->create_scheme();
 
 	$infobase = new srv1c\infobase;
@@ -44,10 +45,24 @@ try {
 EOT
 	);
 
+	$infobase->exec( <<<'EOT'
+		INSERT INTO customers_fts
+			SELECT
+				p.uuid,
+				p.name_fti AS name,
+				p.inn AS inn,
+				p.description_fti AS description
+			FROM
+				customers AS p
+EOT
+	);
+
     error_log("SQLITE FTS RECREATE, ellapsed: " . $timer->ellapsed_string($timer->last_nano_time()));
 
 	$tbls = [
 		'products_fts'			=> <<<'EOT'
+EOT
+		'customers_fts'			=> <<<'EOT'
 EOT
 	];
 
@@ -59,29 +74,6 @@ EOT
 		    error_log("SQLITE ${tbl} ${cmd}, ellapsed: " . $timer->ellapsed_string($timer->last_nano_time()));
 
 	}
-
-	/*$sql = <<<EOT
-		SELECT DISTINCT
-			uuid, code, name
-		FROM
-			products_fts
-		WHERE
-			products_fts MATCH 'ATR65*'
-EOT
-	;
-	$st = $infobase->prepare($sql);
-	$result = $st->execute();
-	while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
-		extract($r);
-
-		$p[] = [
-			'uuid'		=> bin2uuid($uuid),
-			'code'		=> $code,
-			'name'		=> htmlspecialchars($name, ENT_HTML5)
-		];
-
-    	error_log(var_export($p));
-	}*/
 
 	$tinfobase = get_trigger_infobase();
 

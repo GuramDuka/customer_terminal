@@ -53,11 +53,15 @@ function load_css(url, callback) {
 }
 //------------------------------------------------------------------------------
 function core_gear_loader() {
+	let qp = location_search();
+	let md = new MobileDetect(window.navigator.userAgent);
+
 	let style_id = (() => {
 		let a = new Uint32Array(3);
 		window.crypto.getRandomValues(a);
 		return a[0].toString() + a[1].toString() + a[2].toString();
 	})();
+
 	let resizer = e => {
 		let r = res();
 		let [ww, wh] = window_size();
@@ -67,7 +71,9 @@ function core_gear_loader() {
 				--dpi					: ${r.dpi};
 				--dpcm					: ${r.dpcm};
 				--dpmm					: ${r.dpmm};
-				--smart-phone			: ${SmartPhone.isAny() ? 1 : 0};
+				--desktop				: ${!SmartPhone.isAny() && !md.mobile() && !md.tablet() && !md.phone() ? 1 : 0};
+				--tablet				: ${md.tablet() ? 1 : 0};
+				--smart-phone			: ${SmartPhone.isAny() || md.phone() ? 1 : 0};
 				--window-width			: ${ww};
 				--window-height			: ${wh};
 				--screen-width			: ${screen.width};
@@ -75,9 +81,9 @@ function core_gear_loader() {
 				--screen-aspect-ratio	: ${screen.width / screen.height};
 				--screen-portrait		: ${screen.width <= screen.height ? 1 : 0};
 				--screen-landscape		: ${screen.width > screen.height ? 1 : 0};
+				--debug					: ${qp.dbg || qp.debug ? 1 : 0};
 			}
 		`;
-
 		let style = document.getElementById(style_id);
 
 		if( !style ) {
@@ -94,7 +100,7 @@ function core_gear_loader() {
 
 	add_event(window, 'resize', resizer, false);
 
-	(location_search().dct ?
+	(qp.dct ?
     	() => load_css('css/default.css',
 		() => load_css('css/load.css',
 		() => load_css('css/dct.css',
@@ -115,6 +121,7 @@ function core_chain_loader() {
 	() => load_script('js/barcode.js',
 	() => load_script('js/core-estimator.js',
 	() => load_script('js/detect-browser.js',
-	() => load_script('js/core.js', core_gear_loader))))))))));
+	() => load_script('js/mobile-detect.js',
+	() => load_script('js/core.js', core_gear_loader)))))))))));
 }
 //------------------------------------------------------------------------------

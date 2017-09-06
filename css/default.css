@@ -110,6 +110,17 @@
 		width				: 100%;
 	}
 
+	i[rouble] {
+		width				: auto;
+		height				: auto;
+		color				: transparent;
+		background-color	: transparent;
+		background-size		: 87% 55.5%;
+		background-repeat	: no-repeat;
+		background-position	: center;
+		background-image	: url("../assets/Rouble_official_sign.svg");
+	}
+
 	div {
 		float				: left;
 		overflow			: hidden;

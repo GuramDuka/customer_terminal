@@ -256,7 +256,7 @@ class Render {
 					+ '</div>';
 				;
 
-			element.innerHTML = html;
+			element.innerHTML = html.replace(/(?:[\r\n\t])/g, '');
 
 			state.setup_events(xpath_eval('div[@pitem]/div[@pimg]', element));
 			state.setup_events(xpath_eval('div[@pitem]/div[@btn]', element));
@@ -288,7 +288,7 @@ class Render {
 				name		= product.name + ' [' + product.code + ']';
 				img_uuid 	= product.img;
 				img_url 	= product.img_url;
-				price		= Math.trunc(product.price) + '&nbsp;₽';
+				price		= Math.trunc(product.price) + '&nbsp;<i rouble>&psi;</i>';//₽';
 				quantity	= this.get_remainder(product) + this.get_reserve(product);
 
 				style.visibility = 'visible';
@@ -380,7 +380,7 @@ class Render {
 		}
 
         let pproperties_element = xpath_eval_single('div[@pmid]/div[@pproperties]', pinfo_element);
-		pproperties_element.innerHTML = html;
+		pproperties_element.innerHTML = html.replace(/(?:[\r\n\t])/g, '');
 
 		// 13 rows -> 350px on my display debug
 		// x rows  <- y px  on target display
@@ -398,7 +398,7 @@ class Render {
 		for( let e of xpath_eval('div[@pmid]/div[@pproperties]/div[@pproperty]/span[@pproperty_value]', pinfo_element) )
 			e.style.width = proportions[1];
 
-		xpath_eval_single('div[@pright]/p[@pprice]'		, pinfo_element).innerHTML	= 'Цена&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;' + Math.trunc(product.price) + '&nbsp;₽';
+		xpath_eval_single('div[@pright]/p[@pprice]'		, pinfo_element).innerHTML	= 'Цена&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;' + Math.trunc(product.price) + '&nbsp;<i rouble>&psi;</i>';//₽';
 		xpath_eval_single('div[@pright]/p[@pquantity]'	, pinfo_element).innerHTML	= 'Остаток&nbsp;:&nbsp;' + this.get_remainder(product) + this.get_reserve(product);
 		xpath_eval_single('div[@pright]/p[@pincart]'	, pinfo_element).innerHTML	= cart_entity ? 'Заказано:&nbsp;' + cart_entity.buy_quantity : '';
 
@@ -415,7 +415,7 @@ class Render {
 
 		}
 
-		xpath_eval_single('div[@pright]/div[@premainders]', pinfo_element).innerHTML = html;
+		xpath_eval_single('div[@pright]/div[@premainders]', pinfo_element).innerHTML = html.replace(/(?:[\r\n\t])/g, '');
 		xpath_eval_single('div[@pright]/p[@premainders_head]', pinfo_element).fade(data.remainders.length > 0);
 
 		for( let e of xpath_eval('div[@pright]/hr', pinfo_element) )
@@ -423,7 +423,7 @@ class Render {
 
 		e = xpath_eval_single('div[@pmid]/div[@pdescription]', pinfo_element);
 		//e.innerHTML = product.description ? product.description_in_html ? product.description : `<pre>${product.description}</pre>` : '';
-		e.innerHTML = product.description ? product.description : '';
+		e.innerHTML = product.description ? product.description.replace(/(?:[\r\n\t])/g, '') : '';
 
 		// when description rollup then rolldown
 		pproperties_element.fadein();
@@ -449,7 +449,7 @@ class Render {
 			let cinfo = xpath_eval_single('div[@cinfo]', pcrin);
 
 			xpath_eval_single('p[@ccount]'	, cinfo).innerHTML = 'В корзине: ' + ccount;// + ' товар' + (ccount == 1 ? '' : ccount <= 4 ? 'а' : 'ов');
-			xpath_eval_single('p[@csum]'	, cinfo).innerHTML = 'На сумму : ' + csum + '₽';// + '&nbsp;₽';
+			xpath_eval_single('p[@csum]'	, cinfo).innerHTML = 'На сумму : ' + csum + '<i rouble>&psi;</i>';// + '&nbsp;₽';
 
 		}
 
@@ -502,7 +502,7 @@ class Render {
 					+ '</div>'
 				;
 
-			element.innerHTML = html;
+			element.innerHTML = html.replace(/(?:[\r\n\t])/g, '');
 
 			state.setup_events(xpath_eval('div[@pitem]/div[@btn]', element));
 
@@ -523,8 +523,8 @@ class Render {
 				xpath_eval_single('span[@pno]'				, a).innerHTML				= n + 1;
 				xpath_eval_single('div[@pimg]'				, a).style.backgroundImage	= 'url(' + e.img_url + ')';
 				xpath_eval_single('span[@pname]'			, a).innerHTML				= e.name + ' [' + e.code + ']';
-				xpath_eval_single('span[@pprice]'			, a).innerHTML				= Math.trunc(e.price) + '&nbsp;₽';
-				xpath_eval_single('span[@psum]'				, a).innerHTML				= Math.trunc(e.price) * e.buy_quantity + '&nbsp;₽';
+				xpath_eval_single('span[@pprice]'			, a).innerHTML				= Math.trunc(e.price) + '&nbsp;<i rouble>&psi;</i>';//₽';
+				xpath_eval_single('span[@psum]'				, a).innerHTML				= Math.trunc(e.price) * e.buy_quantity + '&nbsp;<i rouble>&psi;</i>';//₽';
 				xpath_eval_single('span[@pbuy_quantity]'	, a).innerText				= e.buy_quantity;
 
 				if( e.buy_quantity > 1 )
@@ -558,7 +558,7 @@ class Render {
 				<p>&nbsp;</p>
 				<p>${new_page_state.constants_['ТекущийМагазинПредставление']}</p>
 				<p>${new_page_state.constants_['ТекущийМагазинАдрес']}</p>
-			`;
+			`.replace(/(?:[\r\n\t])/g, '');
 
 			delete new_page_state.constants_;
 		}
@@ -788,7 +788,7 @@ class Render {
 		new_paging_state.selections_state_ = data.setup;
 
 		let element = xpath_eval_single('html/body/div[@categories]/div[@selections_frame and @uuid=\'' + new_page_state.category_ + '\']');
-		element.innerHTML = html;
+		element.innerHTML = html.replace(/(?:[\r\n\t])/g, '');
 
 		state.setup_events(xpath_eval('div[@property]/div[@values]/div[@value]', element));
 
@@ -837,7 +837,7 @@ class Render {
 
 		let frame = xpath_eval_single('html/body/div[@categories]/div[@select_by_car_frame and @uuid=\'' + new_page_state.category_ + '\']');
 		let e = xpath_eval_single('div[@values]', frame);
-		e.innerHTML = html;
+		e.innerHTML = html.replace(/(?:[\r\n\t])/g, '');
 
 		state.setup_events(xpath_eval('div[@value]', e));
 
@@ -959,7 +959,7 @@ class Render {
 
 		}
 
-		element.innerHTML = html;
+		element.innerHTML = html.replace(/(?:[\r\n\t])/g, '');
 
 		// set events for new a[@btc] elements
 		state.setup_animation_events(xpath_eval('//*[@fadein or @fadeout]', element));
@@ -1678,18 +1678,18 @@ class HtmlPageEvents extends HtmlPageState {
 
 						html = html + `
 							<p product>
-							${i + 1}. ${e.name + ' [' + e.code + ']'} ${Math.trunc(e.price) + '₽'} ${e.buy_quantity + '&nbsp;шт'}
-							<span psum>&nbsp;=${Math.trunc(e.price) * e.buy_quantity + '₽'}</span>
+							${i + 1}. ${e.name + ' [' + e.code + ']'} ${Math.trunc(e.price) + '<i rouble>&psi;</i>'} ${e.buy_quantity + '&nbsp;шт'}
+							<span psum>&nbsp;=${Math.trunc(e.price) * e.buy_quantity + '<i rouble>&psi;</i>'}</span>
 							</p>`
 						;
 
 					}
 
-					table.innerHTML = html;
+					table.innerHTML = html.replace(/(?:[\r\n\t])/g, '');
 
 					let footer = xpath_eval_single('html/body/div[@footer]', iframe, iframe);
 					xpath_eval_single('p[@totals]/span[@txt]'	, footer, iframe).innerHTML = 'Сумма:';
-					xpath_eval_single('p[@totals]/span[@sum]'	, footer, iframe).innerHTML = data.order.totals + '₽';
+					xpath_eval_single('p[@totals]/span[@sum]'	, footer, iframe).innerHTML = data.order.totals + '<i rouble>&psi;</i>';
 
 					let barcode = data.order.barcode;
 					//barcode = data.order.barcode_eangnivc;
@@ -2325,11 +2325,12 @@ class HtmlPageEvents extends HtmlPageState {
 							<font pbuy_quantity></font>
 						</div>
 						<i pimg></i>
+						<br>
 						<div btn plus_one></div>
 						<div pbuy_quantity></div>
 						<div btn minus_one></div>
 					</div>
-				`);
+				`.replace(/(?:[\r\n\t])/g, ''));
 
 				e = g();
 
@@ -2342,7 +2343,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 			xpath_eval_single('font[@pcode]' , txt).innerHTML = `[${p.code}]`;
 			xpath_eval_single('font[@pname]' , txt).innerHTML = p.name;
-			xpath_eval_single('font[@pprice]', txt).innerHTML = `, ${Math.trunc(p.price)}₽`;
+			xpath_eval_single('font[@pprice]', txt).innerHTML = `, ${Math.trunc(p.price)}<i rouble>&psi;</i>`;//₽`;
 
 			let bq = xpath_eval_single('font[@pbuy_quantity]', txt);
 			bq.innerHTML = `${p.buy_quantity}`;
@@ -2367,8 +2368,8 @@ class HtmlPageEvents extends HtmlPageState {
 			// name += '<font triangle style="color:black;font-size:250%">▼</font>';
 
 			xpath_eval_single('div[@pbuy_quantity]', e).innerHTML = '<span>Кол-во&nbsp;: ' + p.buy_quantity
-				+ "\n" + '<br>Сумма&nbsp;&nbsp;: ' + Math.trunc(p.price) * p.buy_quantity + '₽'
-				+ "\n" + '<br>Остаток: ' + p.remainder
+				+ '<br>Сумма&nbsp;&nbsp;: ' + Math.trunc(p.price) * p.buy_quantity + '<i rouble>&psi;</i>'
+				+ '<br>Остаток: ' + p.remainder
 				+ '</span>';
 
 			n++;
@@ -2403,10 +2404,17 @@ class HtmlPageEvents extends HtmlPageState {
 		}
 
 		if( new_page_state.orders_ && new_page_state.orders_.length !== 0 ) {
-			new_page_state.orders_.sort((a, b) => a.date - b.date);
+			let orders = [];
+
+			for( let n in new_page_state.orders_ )
+				if( new_page_state.orders_.hasOwnProperty(n) )
+					orders.push(new_page_state.orders_[n]);
+
+			orders.sort((a, b) => a.date - b.date);
+
 			let panel;
 
-			for( let order of new_page_state.orders_ )
+			for( let order of orders )
 				panel = this.barcode_scanner_insert_order(order, panel);
 
 			delete new_page_state.orders_;
@@ -2419,15 +2427,18 @@ class HtmlPageEvents extends HtmlPageState {
 
 		panel = panel || xpath_eval_single('html/body/div[@middle]/div[@orders_panel]');
 		panel.insertAdjacentHTML('afterbegin', `
-			<div order>
+			<div order uuid="${order.uuid}" customer_uuid="${order.customer_uuid}">
 				<div txt>
 					<font>Заказ&nbsp;</font><font style="color:darkblue" blink2>№&nbsp;${order.number}</font>
 					<font> от ${this.date_formatter_(order.date).trim()}</font>
-					<font>, Сумма:&nbsp;${order.totals}₽</font>
+					<font>, </font><font customer_name>${order.customer}</font>
+					<font>, Сумма:&nbsp;${order.totals}<i rouble>&psi;</i></font>
 					<font>, EAN13:&nbsp;${order.barcode}</font>
 				</div>
+				<div btn customer></div>
+				<div btn remove></div>
 			</div>
-		`);
+		`.replace(/(?:[\r\n\t])/g, ''));
 
 		let iframe = document.createElement('iframe');
 		iframe.setAttribute('seamless', '');
@@ -2446,6 +2457,9 @@ class HtmlPageEvents extends HtmlPageState {
 		};
 
 		//xpath_eval_single('div[@order]', panel).appendChild(iframe);
+
+		this.setup_events(xpath_eval('div[@order and @uuid=\'' + order.uuid + '\']', panel));
+		this.setup_events(xpath_eval('div[@order and @uuid=\'' + order.uuid + '\']/div[@btn]', panel));
 
 		return panel;
 
@@ -2693,9 +2707,12 @@ class HtmlPageEvents extends HtmlPageState {
 		if( xpath_eval_single('html/body/div[@search_panel]/input[@vks]').value !== text )
 			return;
 
+		let panel = xpath_eval_single('html/body/div[@search_panel]');
+
 		let request = {
 			'module'			: 'searcher',
 			'handler'			: 'searcher',
+			'view'				: panel.attributes.view.value,
 			'fts_filter'		: text
 		};
 
@@ -2703,38 +2720,53 @@ class HtmlPageEvents extends HtmlPageState {
 		//state.ellapsed_ += data.ellapsed;
 		let html = '';
 
-		for( let p of data.products ) {
-			let name = p.name.replace(/ ,/, ',').trim();
+		if( data.products && data.products.length !== 0 ) {
+			for( let p of data.products ) {
+				let name = p.name.replace(/ ,/, ',').trim();
 
-			/*for( let l = name.length, i = 0, j = 0; i < l; i++, j++ ) {
-				if( j >= 35 && name[i] === ' ' ) {
-					name = name.substr(0, i) + '<br>' + name.substr(i).trim();
-					l = name.length;
-					j = -1;
-				}
-			}*/
+				/*for( let l = name.length, i = 0, j = 0; i < l; i++, j++ ) {
+					if( j >= 35 && name[i] === ' ' ) {
+						name = name.substr(0, i) + '<br>' + name.substr(i).trim();
+						l = name.length;
+						j = -1;
+					}
+				}*/
 
-			let pimg = p.img_uuid ? `<i pimg img_url="${p.img_url}" style="background-image:url(${p.img_ico})"></i>` : '';
+				let pimg = p.img_uuid ? `<i pimg img_url="${p.img_url}" style="background-image:url(${p.img_ico})"></i>` : '';
 
-			html += `
-				<div result uuid="${p.uuid}" fliphin>
-					<div txt${p.img_uuid ? ' have_img' : ''}>
-						<font pcode style="color:darkblue" blink2>[${p.code}]</font>
-						<font pname> ${name}</font>
-						<font pcomma>, </font>
-						<font pprice style="color:darkmagenta">${Math.trunc(p.price)}₽</font>
-						<font pcomma>, </font>
-						<font premainder style="color:navy">${p.remainder}</font>
-						<font pcomma>, </font>
-						<font preserve style="color:gray">${p.reserve}</font>
+				html += `
+					<div result uuid="${p.uuid}" fliphin>
+						<div txt${p.img_uuid ? ' have_img' : ''}>
+							<font pcode style="color:darkblue" blink2>[${p.code}]</font>
+							<font pname> ${name}</font>
+							<font pcomma>, </font>
+							<font pprice style="color:darkmagenta">${Math.trunc(p.price)}<i rouble>&psi;</i></font>
+							<font pcomma>, </font>
+							<font premainder style="color:navy">${p.remainder}</font>
+							<font pcomma>, </font>
+							<font preserve style="color:gray">${p.reserve}</font>
+						</div>
+						${pimg}
 					</div>
-					${pimg}
-				</div>
-			`;
+				`;
+			}
+		}
+		else if( data.customers && data.customers.length !== 0 ) {
+			for( let p of data.customers ) {
+				let inn = p.inn.isEmpty() ? '' : '[' + p.inn + '] ';
+				html += `
+					<div result uuid="${p.uuid}" fliphin>
+						<div txt>
+							<font pcode style="color:darkblue" blink2>${inn}</font>
+							<font pname>${p.name}</font>
+						</div>
+					</div>
+				`;
+			}
 		}
 
-		let results = xpath_eval_single('html/body/div[@search_panel]/div[@results]');
-		results.innerHTML = html;
+		let results = xpath_eval_single('div[@results]', panel);
+		results.innerHTML = html.replace(/(?:[\r\n\t])/g, '');
 		this.setup_events(xpath_eval('div[@result]', results));
 
 	}
@@ -2742,10 +2774,14 @@ class HtmlPageEvents extends HtmlPageState {
 	//dispatch_handler(e) {
 	events_handler(e) {
 
-		let prevent_default = true;
+		let prevent_default = true, show_alert = false;
 
 		this.current_event_ = e;
 
+		let state				= this;
+		let cur_page_state 		= state.page_state_;
+		let cur_paging_state 	= state.page_state_.paging_state_by_category_[state.page_state_.category_];
+		let new_page_state;
 		let x;
 
 		try {
@@ -2768,17 +2804,12 @@ class HtmlPageEvents extends HtmlPageState {
 
 			}
 
-			let state		= this;
 			let element		= e.currentTarget ? e.currentTarget : e.deferredTarget;
 			let attrs		= element && element.attributes ? element.attributes : {};
 
 			this.start_		= e.start ? e.start : mili_time();
 			e.start			= this.start_;
 			this.ellapsed_	= 0;
-
-			let cur_page_state = state.page_state_;
-			let cur_paging_state = state.page_state_.paging_state_by_category_[state.page_state_.category_];
-			let new_page_state;
 
 			switch( e.type ) {
 
@@ -3018,6 +3049,61 @@ class HtmlPageEvents extends HtmlPageState {
 						new_page_state = this.switch_dst_middle_pitem(cur_page_state, cur_paging_state, element);
 
 					}
+					else if( attrs.order && element.ascend('orders_panel')
+						&& !(e.target.attributes.btn && e.target.ascend('order/orders_panel'))
+						&& !attrs.touchmove ) {
+						
+						for( let p of xpath_eval('div[@btn]', element) )
+							p.display(!attrs.expanded);
+
+						if( attrs.expanded )
+							element.removeAttribute('expanded');
+						else
+							element.setAttribute('expanded', '');
+
+					}
+					else if( attrs.btn && element.ascend('order/orders_panel') && !attrs.touchmove ) {
+
+						let order = element.parentNode.attributes.uuid.value;
+
+						// switch on search panel
+						if( attrs.customer ) {
+							let panel = xpath_eval_single('html/body/div[@search_panel]');
+							panel.display(true);
+							panel.setAttribute('view', 'customers');
+							panel.setAttribute('order', order);
+							xpath_eval_single('html/body/i[@btn and @vks]').display(false);
+							xpath_eval_single('input[@vks]', panel).focus();
+							xpath_eval_single('input[@vks]', panel).click();
+							cur_page_state.search_panel_ = true;
+						}
+						else if( attrs.remove ) {
+							[ new_page_state ] = this.clone_page_state();
+
+							let request = {
+								'module'		: 'orderer',
+								'handler'		: 'orderer',
+								'order'			: order,
+								'remove'		: true
+							};
+
+							show_alert = true;
+							let data = this.post_json('proxy.php', request);
+
+							if( data.errno !== 0 )
+								throw new Error(data.error + "\n" + data.stacktrace);
+
+							new_page_state.modified_ = true;
+
+							if( new_page_state && new_page_state.modified_ ) {
+
+								let p = xpath_eval_single('html/body/div[@middle]/div[@orders_panel]/div[@order and @uuid=\'' + order + '\']');
+								p.parentNode.removeChild(p);
+
+								new_page_state.search_panel_ = false;
+							}
+						}
+					}
 					else if( attrs.search_panel ) {
 						if( document.activeElement === xpath_eval_single('input[@vks]', element) )
 							document.activeElement.blur();
@@ -3046,10 +3132,9 @@ class HtmlPageEvents extends HtmlPageState {
 							document.activeElement.blur();
 					}
 					else if( attrs.result && element.ascend('results/search_panel') ) {
-						if( document.activeElement === xpath_eval_single('input[@vks]', element.parentNode.parentNode) )
-							document.activeElement.blur();
+						let panel = element.parentNode.parentNode;
 
-						if( !attrs.touchmove ) {
+						if( !attrs.touchmove && panel.attributes.view.value === 'products' ) {
 							let product = attrs.uuid.value;
 							let cart_entity = cur_page_state.cart_by_uuid_[product];
 
@@ -3074,10 +3159,47 @@ class HtmlPageEvents extends HtmlPageState {
 								new_page_state.modified_ = true;
 							}
 
-							if( new_page_state ) {
+							if( new_page_state && new_page_state.modified_ ) {
 								// switch off search panel
-								xpath_eval_single('html/body/div[@search_panel]').display(false);
+								panel.display(false);
 								xpath_eval_single('html/body/i[@btn and @vks]').display(true);
+
+								if( document.activeElement === xpath_eval_single('input[@vks]', panel) )
+									document.activeElement.blur();
+
+								new_page_state.search_panel_ = false;
+							}
+						}
+						else if( !attrs.touchmove && panel.attributes.view.value === 'customers' ) {
+							[ new_page_state ] = this.clone_page_state();
+							let order = panel.attributes.order.value;
+
+							let request = {
+								'module'		: 'orderer',
+								'handler'		: 'orderer',
+								'order'			: order,
+								'customer'		: attrs.uuid.value
+							};
+
+							show_alert = true;
+							let data = this.post_json('proxy.php', request);
+
+							if( data.errno !== 0 )
+								throw new Error(data.error + "\n" + data.stacktrace);
+
+							new_page_state.modified_ = true;
+
+							if( new_page_state && new_page_state.modified_ ) {
+								// switch off search panel
+								panel.display(false);
+								xpath_eval_single('html/body/i[@btn and @vks]').display(true);
+
+								if( document.activeElement === xpath_eval_single('input[@vks]', panel) )
+									document.activeElement.blur();
+
+								xpath_eval_single('html/body/div[@middle]/div[@orders_panel]/div[@order and @uuid=\'' + order + '\']/div[@txt]/font[@customer_name]').innerHTML =
+									xpath_eval_single('div[@txt]/font[@pname]', element).innerHTML;
+
 								new_page_state.search_panel_ = false;
 							}
 						}
@@ -3085,12 +3207,21 @@ class HtmlPageEvents extends HtmlPageState {
 					else if( attrs.btn && attrs.vks ) {
 
 						// switch on search panel
-						xpath_eval_single('html/body/div[@search_panel]').display(true);
+						let panel = xpath_eval_single('html/body/div[@search_panel]');
+						panel.display(true).setAttribute('view', 'products');
 						xpath_eval_single('html/body/i[@btn and @vks]').display(false);
-						xpath_eval_single('html/body/div[@search_panel]/input[@vks]').focus();
-						xpath_eval_single('html/body/div[@search_panel]/input[@vks]').click();
+						xpath_eval_single('input[@vks]', panel).focus();
+						xpath_eval_single('input[@vks]', panel).click();
 						cur_page_state.search_panel_ = true;
 
+					}
+					else if( attrs.logo && element.ascend('top') ) {
+						// switch on auth panel
+						let panel = xpath_eval_single('html/body/div[@auth_panel]');
+						panel.display(true);
+						let p = xpath_eval_single('input[@login_user]', panel);
+						p.focus();
+						p.click();
 					}
 
 					if( attrs.touchmove )
@@ -3206,8 +3337,13 @@ class HtmlPageEvents extends HtmlPageState {
 				x = ex;
 				e.deferredTarget = e.currentTarget ? e.currentTarget : e.deferredTarget;
 			}
-			else
+			else {
+				if( show_alert ) {
+					this.show_alert('<pre error>' + ex.message + "\n" + ex.stack + '</pre>', cur_page_state);
+					console.error(ex.message);
+				}
 				throw ex;
+			}
 
 		}
 		finally {
@@ -3495,6 +3631,7 @@ class HtmlPageManager extends HtmlPageEvents {
 			this.setup_text_type_event(vks);
 
 			this.setup_events(xpath_eval_single('html/body/div[@search_panel]/label[@vks]'), false);
+			this.setup_events(xpath_eval_single('html/body/div[@top]/div[@logo]'), false);
 		}
 
 		this.setup_events(xpath_eval('html/body/div[@pcart]/div[@pcontrols]/div[@btn]'));
@@ -3583,6 +3720,15 @@ function dct_html_body() {
 			<input vks autofocus placeholder="Вводите текст поиска ..." type="text">
 			<label vks btn blink2></label>
 			<div results></div>
+		</div>
+		<div auth_panel>
+			<input login_user placeholder="Регистрационное имя ..." type="text">
+			<br>
+			<input login_pass placeholder="Пароль ..." type="password">
+			<br>
+			<label btn vk_login blink2></label>
+			<label btn vk_logout blink2></label>
+			<label btn vk_cancel></label>
 		</div>
 		<audio id="scanner_beep">
 			<source src="assets/scanner/beep-07.ogg" type="audio/ogg">
@@ -3747,7 +3893,7 @@ function core() {
 	if( qp.debug && qp.dct && !SmartPhone.isAny() )
 		t += '<img debug_barcode src="assets/scanner/barcode-7638900411416.svg">';
 
-	document.getElementsByTagName('body')[0].insertAdjacentHTML('beforeend', t);
+	document.getElementsByTagName('body')[0].insertAdjacentHTML('beforeend', t.replace(/(?:[\r\n\t])/g, ''));
 	//document.getElementsByTagName('title')[0].innerText = 'Терминал сбора данных, ТСД (data collection terminal, DCT)';
 
 	if( qp.debug ) {
@@ -3760,7 +3906,7 @@ function core() {
 			<div debug="4"></div><div debug="5"></div>
 			<div debug="6"></div><div debug="7"></div>
 			<div debug="8"></div><div debug="9"></div>
-		`;
+		`.replace(/(?:[\r\n\t])/g, '');
 
 		let body = document.getElementsByTagName('body')[0];
 		body.appendChild(div);

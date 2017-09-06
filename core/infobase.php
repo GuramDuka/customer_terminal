@@ -555,6 +555,20 @@ EOT
 		$this->create_unique_indexes_on_registry('products_properties_by_car_setup_registry', $dimensions);
 
 		$this->exec(<<<'EOT'
+			CREATE TABLE IF NOT EXISTS customers (
+				uuid				BLOB PRIMARY KEY ON CONFLICT REPLACE,
+				marked				INTEGER,
+				code				TEXT,
+				name				TEXT,
+				name_fti			TEXT,
+				inn					TEXT,
+				description			TEXT,
+				description_fti		TEXT
+			) WITHOUT ROWID
+EOT
+		);
+
+		$this->exec(<<<'EOT'
 			CREATE VIRTUAL TABLE IF NOT EXISTS products_fts USING fts5 (
 				uuid UNINDEXED,
 				code,
@@ -639,6 +653,30 @@ EOT
 						products AS p
 					WHERE
 						p.uuid = new.product_uuid;
+			END;
+			-- customers fts
+			CREATE VIRTUAL TABLE IF NOT EXISTS customers_fts USING fts5 (
+				uuid UNINDEXED,
+				name,
+				inn,
+				description,
+				detail = full,
+        		tokenize = "unicode61");
+
+			-- Triggers to keep the FTS index up to date.
+			CREATE TRIGGER IF NOT EXISTS customers_ad AFTER DELETE ON customers FOR EACH ROW
+			BEGIN
+				INSERT INTO customers_fts VALUES (old.uuid, NULL, NULL, NULL);
+			END;
+
+			CREATE TRIGGER IF NOT EXISTS customers_ai AFTER INSERT ON customers FOR EACH ROW
+			BEGIN
+				INSERT INTO customers_fts VALUES (new.uuid, new.name_fti, new.inn, new.description_fti);
+			END;
+			-- identical
+			CREATE TRIGGER IF NOT EXISTS customers_au AFTER UPDATE ON customers FOR EACH ROW
+			BEGIN
+				INSERT INTO customers_fts VALUES (new.uuid, new.name_fti, new.inn, new.description_fti);
 			END;
 EOT
 		);

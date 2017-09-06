@@ -15,7 +15,7 @@
 	}
 
 	*[spin] {
-		animation			: spin 4s linear infinite;
+		animation			: spin 1500ms linear /*cubic-bezier(0.5, 0.2, 0.1, 0.7)*/ infinite;
 	}
 
 	@keyframes flipv {
@@ -181,7 +181,7 @@
 
 	html > body > i[btn][scan] {
 		background-image	: url(../assets/scanner/if_barcode_173153.svg);
-		top					: calc(100% - 9.5% - var(--smart-phone) * 0.5%);
+		top					: calc(100% - 9.5% - var(--smart-phone) * 0.5% - var(--debug) * var(--desktop) * 88%);
 		left				: calc(100% - calc(var(--dpmm) * 9 * 1px));
 		width				: calc(var(--dpmm) * 9 * 1px);
 		height				: calc(var(--dpmm) * 9 * 1px);
@@ -191,7 +191,7 @@
 	html > body > i[btn][order] {
 		background-image	: url(../assets/80e2334a553b118e3a09d7a44b266cd0.svg);
 		left				: calc(0% + 1px);
-		top					: calc(100% - 9.5% - var(--smart-phone) * 0.5%);
+		top					: calc(100% - 9.5% - var(--smart-phone) * 0.5% - var(--debug) * var(--desktop) * 88%);
 		width				: calc(var(--dpmm) * 9 * 1px);
 		height				: calc(var(--dpmm) * 9 * 1px);
 	}
@@ -199,7 +199,7 @@
 	html > body > i[btn][vks] {
 		background-image	: url(../assets/keyboard.svg);
 		left				: calc(var(--dpmm) * 8 * 1px + 1px);
-		top					: calc(100% - 9.5% - var(--smart-phone) * 0.5%);
+		top					: calc(100% - 9.5% - var(--smart-phone) * 0.5% - var(--debug) * var(--desktop) * 88%);
 		height				: calc(var(--dpmm) * 6 * 1px);
 		display				: inline-block;
 	}
@@ -312,8 +312,8 @@
 	html > body > div[middle] > div[pitem] > div[btn][plus_one], div[btn][minus_one] {
 		display				: none;
 		float				: left;
-		width				: calc(var(--dpmm) * 10 * 1px); /* 10mm */
-		height				: calc(var(--dpmm) * 10 * 1px); /* 10mm */
+		width				: calc(var(--dpmm) * 9 * 1px);
+		height				: calc(var(--dpmm) * 9 * 1px);
 		padding				: 0;
 		margin				: 0;
 		margin-bottom		: 2px;
@@ -356,7 +356,7 @@
 		/*white-space			: nowrap;*/
 		word-wrap			: break-word;
 		white-space			: normal;
-		font-size			: 80%;
+		font-size			: 90%;
 		font-weight			: bold;
 		text-align			: left;
 		text-overflow		: ellipsis;
@@ -389,6 +389,30 @@
 		border				: 0;
 		padding				: 0;
 		margin				: 0;
+	}
+
+	html > body > div[middle] > div[orders_panel] > div[order] > div[btn] {
+		display				: none;
+		float				: left;
+		width				: calc(var(--dpmm) * 9 * 1px);
+		height				: calc(var(--dpmm) * 9 * 1px);
+		padding				: 0;
+		margin				: 0;
+		line-height			: 0;
+		vertical-align		: middle;
+		text-align			: center;
+		background-size		: 80% 80%;
+		background-repeat	: no-repeat;
+		background-position	: center;
+		margin-left			: 2px;
+	}
+
+	html > body > div[middle] > div[orders_panel] > div[order] > div[btn][customer] {
+		background-image	: url(../assets/specialist-user.svg);
+	}
+
+	html > body > div[middle] > div[orders_panel] > div[order] > div[btn][remove] {
+		background-image	: url(../assets/remove-order.svg);
 	}
 
 	html > body > img[debug_barcode] {
@@ -427,8 +451,8 @@
 		background-size		: contain;
 		background-repeat	: no-repeat;
 		background-position	: center;
-		width				: calc(var(--dpmm) * (6 - var(--smart-phone) * 1.7) * 1px);
-		height				: calc(var(--dpmm) * (6 - var(--smart-phone) * 1.7) * 1px);
+		width				: calc(var(--dpmm) * (6 - var(--smart-phone) * 1.1) * 1px);
+		height				: calc(var(--dpmm) * (6 - var(--smart-phone) * 1.1) * 1px);
 		display				: inline-block;
 		margin				: 0;
 		padding				: 0;
@@ -452,15 +476,13 @@
 		margin-bottom		: 4px;
 		border-radius		: 3px;
 		box-shadow			: 0 0 5px rgba(0, 0, 0, 0.5);
-		font-size			: 100%;
+		font-size			: calc(100% + var(--smart-phone) * 50%);
 	}
 
 	html > body > div[search_panel] > div[results] {
 		width				: calc(100% - 2px);
 		margin-top			: 4px;
-		/*border				: 1px solid black;*/
 		height				: calc(100%);
-		/*min-height			: calc(var(--dpmm) * 11 * 1px);*/
 		float				: none;
 		background-color	: transparent;
 		overflow			: auto;
@@ -471,7 +493,8 @@
 		width				: calc(100% - 2px);
 		min-height			: calc(var(--dpmm) * 5 * 1px);
 		background-color	: transparent;
-		padding-bottom		: 4px;
+		padding-top			: 2px;
+		padding-bottom		: 2px;
 		margin-top			: 2px;
 		margin-left			: 2px;
 		margin-right		: 2px;
@@ -514,6 +537,60 @@
 		background-size		: 100% auto;
 		background-repeat	: no-repeat;
 		background-position	: right top;
+	}
+
+	html > body > div[auth_panel] {
+		display				: none;
+		z-index				: 900;
+		position			: absolute;
+		top					: calc(50% - (var(--dpmm) * 25 / 2) * 1px);
+		left				: calc(50% - (var(--dpmm) * 41 / 2) * 1px);
+		width				: calc(var(--dpmm) * 41 * 1px);
+		height				: auto;
+		float				: none;
+		border				: 3px solid #dfba3c;
+		border-radius		: 7px;
+		box-shadow			: none;
+		background-color	: white;
+		background-size		: contain;
+		background-repeat	: no-repeat;
+		background-position	: center;
+	}
+
+	html > body > div[auth_panel] > label[btn] {
+		background-color	: transparent;
+		background-size		: contain;
+		background-repeat	: no-repeat;
+		background-position	: center;
+		width				: calc(var(--dpmm) * 9 * 1px);
+		height				: calc(var(--dpmm) * 7 * 1px);
+		display				: inline-block;
+		margin				: 0;
+		padding				: 0;
+		float				: none;
+		border				: 0;
+		margin				: calc(var(--dpmm) * 1 * 1px);
+	}
+
+	html > body > div[auth_panel] > label[btn][vk_login] {
+		background-image	: url(../assets/login.svg);
+	}
+
+	html > body > div[auth_panel] > label[btn][vk_logout] {
+		background-image	: url(../assets/logout.svg);
+	}
+
+	html > body > div[auth_panel] > label[btn][vk_cancel] {
+		background-image	: url(../assets/cancel2.svg);
+	}
+
+	html > body > div[auth_panel] > input {
+		width				: 90%;
+		padding				: 0;
+		border-radius		: 3px;
+		box-shadow			: 0 0 2px rgba(0, 0, 0, 0.8);
+		font-size			: calc(100% + var(--smart-phone) * 37% - var(--desktop) * 22%);
+		margin				: calc(var(--dpmm) * 1 * 1px);
 	}
 
 }

@@ -281,7 +281,8 @@ EOT
 					products_fts
 				WHERE
 					-- Search for matches in all columns except "barcode"
-					products_fts MATCH '(- barcode : ${filter}) OR (barcode : "${raw_filter}")'
+					-- TODO: for sqlite 3.20 -> products_fts MATCH '(-barcode : (${filter})) OR (barcode : ("${raw_filter}"))'
+					products_fts MATCH '(-barcode : ${filter}) OR (barcode : "${raw_filter}")'
 				GROUP BY
        				uuid
 EOT

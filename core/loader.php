@@ -34,6 +34,7 @@ class loader_handler extends handler {
 			'shops',
 			'images',
 			'products',
+			'customers',
 			'categories',
 			'properties',
 			'properties_values',
