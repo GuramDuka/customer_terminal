@@ -10,7 +10,7 @@ require_once LOADERS_DIR . 'shared.php';
 //------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------
-class orderer_handler extends handler {
+class authorizer_handler extends handler {
 
 	protected $infobase_;
 	protected $session_uuid_;
@@ -76,39 +76,29 @@ EOT
 
 		extract($this->request_);
 
-		$request = [
-			'exchange_node' => $exchange_node,
-			'order'			=> $order
-		];
+		if( @$login !== null ) {
 
-		if( @$customer !== null )
-			$request['customer'] = $customer;
-		else if( @$remove !== null )
-			$request['remove'] = $remove;
+			$request = [
+				'exchange_node' => $exchange_node,
+				'user'			=> $user,
+				'pass'			=> $pass	// sha256 hash
+			];
 
-		$data = request_exchange_node($exchange_url . '/order', $exchange_user, $exchange_pass, $request);
-		$this->response_['order'] = $data;
+			$data = request_exchange_node($exchange_url . '/auth', $exchange_user, $exchange_pass, $request);
+			$this->response_['auth'] = $data;
 
-		$orders = @$_SESSION['ORDERS'];
-
-		if( $orders === null )
-			$orders = [];
-		else
-			$orders = unserialize(bzdecompress(base64_decode($orders)));
-
-		if( @$customer !== null ) {
-			$orders[$order]['customer_uuid'] = $data['customer_uuid'];
-			$orders[$order]['customer'] = $data['customer'];
+			if( @$data['authorized'] === true )
+				$_SESSION['AUTH'] = $data;
 		}
-		else if( @$this->request_['remove'] !== null ) {
-			unset($orders[$order]);
-		}
+		else {
+			$auth = @$_SESSION['AUTH'];
 
-		if( count($orders) !== 0 ) {
-			$_SESSION['ORDERS'] = base64_encode(bzcompress(serialize($orders), 9));
-		}
-		else if( @$_SESSION['ORDERS'] !== null ) {
-			unset($_SESSION['ORDERS']);
+			if( @$logout !== null && $auth !== null ) {
+				unset($_SESSION['AUTH']);
+			}
+			else if( $auth !== null ) {
+				$this->response_['auth'] = $auth;
+			}
 		}
 
 		$ellapsed = $timer->nano_time(false);
@@ -116,7 +106,7 @@ EOT
 		$this->response_['ellapsed'] = $ellapsed;
 
 		if( config::$log_timing )
-		    error_log('customer order changed, ellapsed: ' . $timer->ellapsed_string($ellapsed));
+		    error_log('authorizer, ellapsed: ' . $timer->ellapsed_string($ellapsed));
 
     }
 

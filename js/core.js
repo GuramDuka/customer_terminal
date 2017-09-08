@@ -113,13 +113,19 @@ class HtmlPageState {
 		if( !current_event.deferred_xhrs_ )
 			current_event.deferred_xhrs_ = {};
 
-		let MD5 = new Hashes.MD5;
-		let hash = MD5.hex(path + "\n\n" + request);
+		if( !this.md5_ )
+			this.md5_ = new Hashes.MD5;
+
+		let hash = this.md5_.hex(path + "\n\n" + request);
 		let xhr = current_event.deferred_xhrs_[hash];
 
 		if( xhr ) {
-			if( xhr.status !== 200 )
-				throw new Error(xhr.status.toString() + ' ' + xhr.statusText + "\n" + xhr.responseText);
+			if( xhr.status !== 200 ) {
+				let status = xhr.status;
+				let statusText = xhr.statusText;
+				let responseText = xhr.responseText;
+				throw new Error(status.toString() + ' ' + statusText + "\n" + responseText);
+			}
 
 			response = JSON.parse(xhr.responseText, JSON.dateParser);
 		}
@@ -288,7 +294,7 @@ class Render {
 				name		= product.name + ' [' + product.code + ']';
 				img_uuid 	= product.img;
 				img_url 	= product.img_url;
-				price		= Math.trunc(product.price) + '&nbsp;<i rouble>&psi;</i>';//₽';
+				price		= product.price + '&nbsp;<i rouble>&psi;</i>';//₽';
 				quantity	= this.get_remainder(product) + this.get_reserve(product);
 
 				style.visibility = 'visible';
@@ -398,7 +404,7 @@ class Render {
 		for( let e of xpath_eval('div[@pmid]/div[@pproperties]/div[@pproperty]/span[@pproperty_value]', pinfo_element) )
 			e.style.width = proportions[1];
 
-		xpath_eval_single('div[@pright]/p[@pprice]'		, pinfo_element).innerHTML	= 'Цена&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;' + Math.trunc(product.price) + '&nbsp;<i rouble>&psi;</i>';//₽';
+		xpath_eval_single('div[@pright]/p[@pprice]'		, pinfo_element).innerHTML	= 'Цена&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;' + product.price + '&nbsp;<i rouble>&psi;</i>';//₽';
 		xpath_eval_single('div[@pright]/p[@pquantity]'	, pinfo_element).innerHTML	= 'Остаток&nbsp;:&nbsp;' + this.get_remainder(product) + this.get_reserve(product);
 		xpath_eval_single('div[@pright]/p[@pincart]'	, pinfo_element).innerHTML	= cart_entity ? 'Заказано:&nbsp;' + cart_entity.buy_quantity : '';
 
@@ -523,8 +529,8 @@ class Render {
 				xpath_eval_single('span[@pno]'				, a).innerHTML				= n + 1;
 				xpath_eval_single('div[@pimg]'				, a).style.backgroundImage	= 'url(' + e.img_url + ')';
 				xpath_eval_single('span[@pname]'			, a).innerHTML				= e.name + ' [' + e.code + ']';
-				xpath_eval_single('span[@pprice]'			, a).innerHTML				= Math.trunc(e.price) + '&nbsp;<i rouble>&psi;</i>';//₽';
-				xpath_eval_single('span[@psum]'				, a).innerHTML				= Math.trunc(e.price) * e.buy_quantity + '&nbsp;<i rouble>&psi;</i>';//₽';
+				xpath_eval_single('span[@pprice]'			, a).innerHTML				= e.price + '&nbsp;<i rouble>&psi;</i>';//₽';
+				xpath_eval_single('span[@psum]'				, a).innerHTML				= e.price * e.buy_quantity + '&nbsp;<i rouble>&psi;</i>';//₽';
 				xpath_eval_single('span[@pbuy_quantity]'	, a).innerText				= e.buy_quantity;
 
 				if( e.buy_quantity > 1 )
@@ -1610,8 +1616,14 @@ class HtmlPageEvents extends HtmlPageState {
 					'quantity'	: e.buy_quantity
 				});
 
-			if( this.dct_ )
+			if( this.dct_ ) {
 				request.paper = true;
+
+				if( cur_page_state.authorized_ && cur_page_state.auth_ ) {
+					request.user = cur_page_state.auth_.user_uuid;
+					request.pass = cur_page_state.auth_.pass;
+				}
+			}
 
 			let data = this.post_json('proxy.php', request);
 
@@ -1678,8 +1690,8 @@ class HtmlPageEvents extends HtmlPageState {
 
 						html = html + `
 							<p product>
-							${i + 1}. ${e.name + ' [' + e.code + ']'} ${Math.trunc(e.price) + '<i rouble>&psi;</i>'} ${e.buy_quantity + '&nbsp;шт'}
-							<span psum>&nbsp;=${Math.trunc(e.price) * e.buy_quantity + '<i rouble>&psi;</i>'}</span>
+							${i + 1}. ${e.name + ' [' + e.code + ']'} ${e.price + '<i rouble>&psi;</i>'} ${e.buy_quantity + '&nbsp;шт'}
+							<span psum>&nbsp;=${e.price * e.buy_quantity + '<i rouble>&psi;</i>'}</span>
 							</p>`
 						;
 
@@ -2074,6 +2086,28 @@ class HtmlPageEvents extends HtmlPageState {
 		}
 	}
 
+	startup_auth_handler(cur_page_state, cur_paging_state) {
+
+		let [ new_page_state ] = this.clone_page_state();
+
+		let request = {
+			'module'	: 'authorizer',
+			'handler'	: 'authorizer'
+		};
+
+		let data = this.post_json('proxy.php', request);
+
+		if( data.errno === 0 && data.auth && data.auth.authorized ) {
+			new_page_state.modified_ = true;
+			new_page_state.auth_ = data.auth;
+			new_page_state.authorized_ = data.auth.authorized;
+		
+			xpath_eval_single('html/body/div[@top]/div[@auth]').innerHTML = `<br>Авторизовано: ${data.auth.user}`;
+		}
+
+		return new_page_state;
+	}
+
 	idle_away_reload_handler(cur_page_state, cur_paging_state, element) {
 
 		let [ new_page_state, new_paging_state ] = this.clone_page_state();
@@ -2217,6 +2251,10 @@ class HtmlPageEvents extends HtmlPageState {
 			for( let e of xpath_eval('div[@btn]', element) )
 				e.display(false);
 
+			let e = xpath_eval_single('div[@btn and @discount]', element);
+			for( let q of xpath_eval('div[@discount_value or (@btn and (@discount_price or @discount_percent or @discount_accept))]', element) )
+				q.display(false);
+
 			xpath_eval_single('div[@pbuy_quantity]', element).display(false);
 			//xpath_eval_single('div[@txt]/font[@pprice]', element).display(true);
 			xpath_eval_single('div[@txt]/font[@pcomma]', element).display(true);
@@ -2225,7 +2263,18 @@ class HtmlPageEvents extends HtmlPageState {
 		}
 		else {
 			for( let e of xpath_eval('div[@btn]', element) )
-				e.display(true);
+				e.display(e.attributes.discount ? new_page_state.authorized_ : true);
+
+			let e = xpath_eval_single('div[@btn and @discount]', element);
+			for( let q of xpath_eval('div[@discount_value or (@btn and (@discount_price or @discount_percent or @discount_accept))]', element) )
+				q.display(e.attributes.expanded
+					&& (
+						!q.attributes.btn
+						|| (q.attributes.discount_price && e.attributes.mode.value === 'price')
+						|| (q.attributes.discount_percent && e.attributes.mode.value === 'percent')
+						|| q.attributes.discount_accept
+					)
+				);
 
 			xpath_eval_single('div[@pbuy_quantity]', element).display(true);
 			//xpath_eval_single('div[@txt]/font[@pprice]', element).display(false);
@@ -2287,6 +2336,61 @@ class HtmlPageEvents extends HtmlPageState {
 
 	}
 
+	btn_dst_discount_accept_handler(cur_page_state, product, mode, value) {
+
+		let cart_entity = cur_page_state.cart_by_uuid_[product];
+
+		if( cart_entity ) {
+
+			let [ new_page_state ] = this.clone_page_state();
+
+			cart_entity = new_page_state.cart_by_uuid_[product];
+			cart_entity.price = value;
+			cart_entity.modified = true;
+
+			this.render_.rewrite_cart(new_page_state);
+			this.barcode_scanner_rewrite(new_page_state, cur_page_state);
+
+			new_page_state.modified_ = true;
+
+			return new_page_state;
+
+		}
+
+	}
+
+	btn_dst_discount_value_handler(cur_page_state, product, discount_mode, discount_value) {
+
+		let cart_entity = cur_page_state.cart_by_uuid_[product];
+
+		if( cart_entity ) {
+
+			let [ new_page_state ] = this.clone_page_state();
+
+			cart_entity = new_page_state.cart_by_uuid_[product];
+
+			let n = Number.parseFloat(discount_value);
+
+			if( discount_value === Number.NaN );
+
+			if( discount_mode === 'price' )
+				n = n;
+			else if( discount_mode === 'percent' ) 
+				n = round(cart_entity.price * n / 100, 2);
+
+
+			let discount_mode = xpath_eval_single('div[@btn and @discount]', element.parentNode).attributes.mode;
+			xpath_eval_single('div[@btn and @discount]', element.parentNode).attributes.value = n;
+			let discount_value = xpath_eval_single('div[@discount_value]/input[@discount_value]', element.parentNode).value;
+
+			new_page_state.modified_ = true;
+
+			return new_page_state;
+
+		}
+
+	}
+
 	barcode_scanner_rewrite(new_page_state, cur_page_state) {
 
 		let m = xpath_eval_single('html/body/div[@middle]/div[@scanner]');
@@ -2306,7 +2410,8 @@ class HtmlPageEvents extends HtmlPageState {
 
 			if( o.buy_quantity === p.buy_quantity
 				&& o.price === p.price
-				&& o.remainder === p.remainder )
+				&& o.remainder === p.remainder
+				&& new_page_state.authorized_ === cur_page_state.authorized_ )
 				continue;
 
 			modified = true;
@@ -2325,10 +2430,20 @@ class HtmlPageEvents extends HtmlPageState {
 							<font pbuy_quantity></font>
 						</div>
 						<i pimg></i>
-						<br>
 						<div btn plus_one></div>
 						<div pbuy_quantity></div>
 						<div btn minus_one></div>
+						<div btn discount mode="price"></div>
+						<div discount_value>
+							<input discount_value type="number">
+							<br>
+							<font>Цена&nbsp;: </font><font price></font><i rouble>&psi;</i></font>
+							<br>
+							<font>Сумма: </font><font summ></font><i rouble>&psi;</i></font>
+						</div>
+						<div btn discount_price></div>
+						<div btn discount_percent></div>
+						<div btn discount_accept></div>
 					</div>
 				`.replace(/(?:[\r\n\t])/g, ''));
 
@@ -2336,6 +2451,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 				this.setup_events(xpath_eval('i[@pimg]', e));
 				this.setup_events(xpath_eval('div[@btn]', e));
+				this.setup_events(xpath_eval('div[@discount_value]/input[@discount_value]', e));
 				this.setup_events(e);
 			}
 
@@ -2343,7 +2459,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 			xpath_eval_single('font[@pcode]' , txt).innerHTML = `[${p.code}]`;
 			xpath_eval_single('font[@pname]' , txt).innerHTML = p.name;
-			xpath_eval_single('font[@pprice]', txt).innerHTML = `, ${Math.trunc(p.price)}<i rouble>&psi;</i>`;//₽`;
+			xpath_eval_single('font[@pprice]', txt).innerHTML = `, ${p.price}<i rouble>&psi;</i>`;//₽`;
 
 			let bq = xpath_eval_single('font[@pbuy_quantity]', txt);
 			bq.innerHTML = `${p.buy_quantity}`;
@@ -2368,9 +2484,26 @@ class HtmlPageEvents extends HtmlPageState {
 			// name += '<font triangle style="color:black;font-size:250%">▼</font>';
 
 			xpath_eval_single('div[@pbuy_quantity]', e).innerHTML = '<span>Кол-во&nbsp;: ' + p.buy_quantity
-				+ '<br>Сумма&nbsp;&nbsp;: ' + Math.trunc(p.price) * p.buy_quantity + '<i rouble>&psi;</i>'
+				+ '<br>Сумма&nbsp;&nbsp;: ' + p.price * p.buy_quantity + '<i rouble>&psi;</i>'
 				+ '<br>Остаток: ' + p.remainder
 				+ '</span>';
+
+			let dis = xpath_eval_single('div[@btn and @discount]', e);
+			dis.display(new_page_state.authorized_ && e.attributes.expanded);
+
+			for( let q of xpath_eval('div[@discount_value or (@btn and (@discount_price or @discount_percent or @discount_accept))]', e) )
+				q.display(dis.attributes.expanded
+					&& (
+						!q.attributes.btn
+						|| (q.attributes.discount_price && dis.attributes.mode.value === 'price')
+						|| (q.attributes.discount_percent && dis.attributes.mode.value === 'percent')
+						|| q.attributes.discount_accept
+					)
+				);
+
+			xpath_eval_single('div[@discount_value]/input[@discount_value]', e).value = p.price;
+			xpath_eval_single('div[@discount_value]/font[@price]', e).innerHTML = p.price;
+			xpath_eval_single('div[@discount_value]/font[@summ]', e).innerHTML = p.price * p.buy_quantity;
 
 			n++;
 		}
@@ -2740,7 +2873,7 @@ class HtmlPageEvents extends HtmlPageState {
 							<font pcode style="color:darkblue" blink2>[${p.code}]</font>
 							<font pname> ${name}</font>
 							<font pcomma>, </font>
-							<font pprice style="color:darkmagenta">${Math.trunc(p.price)}<i rouble>&psi;</i></font>
+							<font pprice style="color:darkmagenta">${p.price}<i rouble>&psi;</i></font>
 							<font pcomma>, </font>
 							<font premainder style="color:navy">${p.remainder}</font>
 							<font pcomma>, </font>
@@ -3027,6 +3160,8 @@ class HtmlPageEvents extends HtmlPageState {
 						new_page_state = this.btn_cheque_cart_informer_handler(cur_page_state);
 
 					}
+					else if( attrs.discount_value && element.ascend('discount_value/pitem/middle') && !attrs.touchmove ) {
+					}
 					else if( attrs.btn && element.ascend('pitem/middle') && !attrs.touchmove ) {
 						// change cart
 						let product = element.parentNode.attributes.uuid.value;
@@ -3041,9 +3176,48 @@ class HtmlPageEvents extends HtmlPageState {
 							new_page_state = this.btn_dst_minus_one_pitem_handler(cur_page_state, product);
 
 						}
+						else if( attrs.discount ) {
+
+							if( attrs.expanded )
+								element.removeAttribute('expanded');
+							else
+								element.setAttribute('expanded', '');
+
+							for( let q of xpath_eval('div[@discount_value or (@btn and (@discount_price or @discount_percent or @discount_accept))]', element.parentNode) )
+								q.display(attrs.expanded
+									&& (
+										!q.attributes.btn
+										|| (q.attributes.discount_price && attrs.mode.value === 'price')
+										|| (q.attributes.discount_percent && attrs.mode.value === 'percent')
+										|| q.attributes.discount_accept
+									)
+								);
+
+							if( attrs.expanded ) {
+								let p = xpath_eval_single('div[@discount_value]/input[@discount_value]', element.parentNode);
+								p.focus();
+								p.click();
+							}
+						}
+						else if( attrs.discount_price ) {
+							let btn = xpath_eval_single('div[@btn and @discount]', element.parentNode);
+							btn.attributes.mode = 'percent';
+							element.display(false);
+							xpath_eval_single('div[@btn and @discount_percent]', element.parentNode).display(true);
+						}
+						else if( attrs.discount_percent ) {
+							let btn = xpath_eval_single('div[@btn and @discount]', element.parentNode);
+							btn.attributes.mode = 'price';
+							element.display(false);
+							xpath_eval_single('div[@btn and @discount_price]', element.parentNode).display(true);
+						}
+						else if( attrs.discount_accept ) {
+							let value = xpath_eval_single('div[@btn and @discount]', element.parentNode).attributes.value;
+							new_page_state = this.btn_dst_discount_accept_handler(cur_page_state, product, value);
+						}
 					}
 					else if( attrs.pitem && element.ascend('middle')
-						&& !((e.target.attributes.btn || e.target.attributes.pimg) && e.target.ascend('pitem/middle'))
+						&& !(((e.target.attributes.btn || e.target.attributes.pimg) && e.target.ascend('pitem/middle')) || e.target.ascend('discount_value/pitem/middle'))
 						&& !attrs.touchmove ) {
 
 						new_page_state = this.switch_dst_middle_pitem(cur_page_state, cur_paging_state, element);
@@ -3086,6 +3260,11 @@ class HtmlPageEvents extends HtmlPageState {
 								'order'			: order,
 								'remove'		: true
 							};
+
+							if( cur_page_state.authorized_ && cur_page_state.auth_ ) {
+								request.user = cur_page_state.auth_.user_uuid;
+								request.pass = cur_page_state.auth_.pass;
+							}
 
 							show_alert = true;
 							let data = this.post_json('proxy.php', request);
@@ -3181,6 +3360,11 @@ class HtmlPageEvents extends HtmlPageState {
 								'customer'		: attrs.uuid.value
 							};
 
+							if( cur_page_state.authorized_ && cur_page_state.auth_ ) {
+								request.user = cur_page_state.auth_.user_uuid;
+								request.pass = cur_page_state.auth_.pass;
+							}
+
 							show_alert = true;
 							let data = this.post_json('proxy.php', request);
 
@@ -3204,7 +3388,7 @@ class HtmlPageEvents extends HtmlPageState {
 							}
 						}
 					}
-					else if( attrs.btn && attrs.vks ) {
+					else if( attrs.btn && attrs.vks && !attrs.touchmove ) {
 
 						// switch on search panel
 						let panel = xpath_eval_single('html/body/div[@search_panel]');
@@ -3215,13 +3399,108 @@ class HtmlPageEvents extends HtmlPageState {
 						cur_page_state.search_panel_ = true;
 
 					}
-					else if( attrs.logo && element.ascend('top') ) {
+					else if( attrs.logo && element.ascend('top') && !attrs.touchmove ) {
 						// switch on auth panel
 						let panel = xpath_eval_single('html/body/div[@auth_panel]');
 						panel.display(true);
+
 						let p = xpath_eval_single('input[@login_user]', panel);
 						p.focus();
 						p.click();
+
+						p = xpath_eval_single('label[@vk_logout]', panel);
+						p.display(cur_page_state.authorized_);
+
+					}
+					else if( attrs.login_user && element.ascend('auth_panel') && !attrs.touchmove ) {
+						if( document.activeElement !== element ) {
+							element.focus();
+							element.click();
+						}
+					}
+					else if( attrs.login_pass && element.ascend('auth_panel') && !attrs.touchmove ) {
+						if( document.activeElement !== element ) {
+							element.focus();
+							element.click();
+						}
+					}
+					else if( attrs.btn && element.ascend('auth_panel') && !attrs.touchmove ) {
+
+						if( attrs.vk_login ) {
+							[ new_page_state ] = this.clone_page_state();
+							let panel = element.parentNode;
+
+							let request = {
+								'module'	: 'authorizer',
+								'handler'	: 'authorizer',
+								'login'		: true,
+								'user'		: xpath_eval_single('input[@login_user]', panel).value,
+								'pass'		: xpath_eval_single('input[@login_pass]', panel).value
+							};
+
+							if( !this.sha256_ )
+								this.sha256_ = new Hashes.SHA256;
+
+							request.pass = this.sha256_.hex(request.pass).toUpperCase();
+
+							show_alert = true;
+							let data = this.post_json('proxy.php', request);
+
+							if( data.errno !== 0 )
+								throw new Error(data.error + "\n" + data.stacktrace);
+
+							new_page_state.modified_ = true;
+							new_page_state.auth_ = data.auth;
+							new_page_state.authorized_ = data.auth && data.auth.authorized;
+
+							if( new_page_state.authorized_ ) {
+								element.parentNode.display(false);
+								xpath_eval_single('html/body/div[@top]/div[@auth]').innerHTML = `<br>Авторизовано: ${data.auth.user}`;
+							}
+							else {
+								for(;;) {
+									let error_panel = xpath_single('div[@error]', panel);
+
+									if( error_panel ) {
+										error_panel.innerHTML = 'Ошибка авторизации, неверное имя или пароль';
+										setTimeout(() => panel.removeChild(error_panel), 5000);
+										break;
+									}
+
+									panel.insertAdjacentHTML('beforeend', '<div error></div>');
+								}
+							}
+
+							this.barcode_scanner_rewrite(new_page_state, cur_page_state);
+						}
+						else if( element.attributes.vk_logout ) {
+							[ new_page_state ] = this.clone_page_state();
+							let panel = e.target.parentNode;
+
+							let request = {
+								'module'	: 'authorizer',
+								'handler'	: 'authorizer',
+								'logout'	: true
+							};
+
+							show_alert = true;
+							let data = this.post_json('proxy.php', request);
+
+							if( data.errno !== 0 )
+								throw new Error(data.error + "\n" + data.stacktrace);
+
+							new_page_state.modified_ = true;
+							delete new_page_state.auth_;
+							new_page_state.authorized_ = false;
+
+							element.parentNode.display(false);
+							xpath_eval_single('html/body/div[@top]/div[@auth]').innerHTML = '';
+							this.barcode_scanner_rewrite(new_page_state, cur_page_state);
+						}
+						else if( element.attrs.vk_cancel ) {
+							element.parentNode.display(false);
+						}
+
 					}
 
 					if( attrs.touchmove )
@@ -3304,6 +3583,10 @@ class HtmlPageEvents extends HtmlPageState {
 
 				case 'startup'		:
 					new_page_state = this.startup_handler(cur_page_state, cur_paging_state, element);
+					break;
+
+				case 'startup_auth'		:
+					new_page_state = this.startup_auth_handler(cur_page_state, cur_paging_state);
 					break;
 
 				case 'away'			:
@@ -3630,8 +3913,12 @@ class HtmlPageManager extends HtmlPageEvents {
 			this.setup_events(vks, false);
 			this.setup_text_type_event(vks);
 
-			this.setup_events(xpath_eval_single('html/body/div[@search_panel]/label[@vks]'), false);
+			this.setup_events(xpath_eval('html/body/div[@search_panel]/label'), false);
+			this.setup_events(xpath_eval('html/body/div[@search_panel]/input'), false);
 			this.setup_events(xpath_eval_single('html/body/div[@top]/div[@logo]'), false);
+
+			this.setup_events(xpath_eval('html/body/div[@auth_panel]/label'), false);
+			this.setup_events(xpath_eval('html/body/div[@auth_panel]/input'), false);
 		}
 
 		this.setup_events(xpath_eval('html/body/div[@pcart]/div[@pcontrols]/div[@btn]'));
@@ -3672,7 +3959,11 @@ class HtmlPageManager extends HtmlPageEvents {
 			add_event(window, 'barcode', e => this.events_handler(e), false);
 
 		add_event(window, 'startup', e => this.events_handler(e), false);
-		setTimeout(() => window.dispatchEvent(new CustomEvent('startup')));
+		add_event(window, 'startup_auth', e => this.events_handler(e), false);
+		setTimeout(() => {
+			window.dispatchEvent(new CustomEvent('startup_auth'));
+			window.dispatchEvent(new CustomEvent('startup'));
+		});
 	}
 }
 //------------------------------------------------------------------------------
@@ -3680,6 +3971,7 @@ function dct_html_body() {
 	return `
 		<div top>
 			<div logo></div>
+			<div auth></div>
 			<div cart_informer>
 				<div cinfo>
 					<p ccount></p>

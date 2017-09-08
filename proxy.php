@@ -39,6 +39,9 @@ class proxy_handler extends srv1c\handler {
 				'orderer' => [
 					'orderer'		=> true
 				],
+				'authorizer' => [
+					'authorizer'	=> true
+				],
 				'searcher' => [
 					'searcher'		=> true
 				],

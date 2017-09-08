@@ -70,21 +70,29 @@
 
 	html > body > div[top] > div[logo] {
 		float				: left;
-		min-width			: 17.5%;
+		width				: 17.5%;
 		height				: 100%;
 		margin-right		: 2px;
 	}
 
-	html > body > div[top] > div[mag] {
+	html > body > div[top] > div[auth] {
 		float				: left;
-		font-size			: 45%;
-		margin-left			: 0.1%;
+		width				: 20%;
 		height				: 100%;
+		margin-right		: 2px;
+		word-wrap			: break-word;
+		white-space			: normal;
+		font-size			: 55%;
+		font-weight			: bolder;
+		text-overflow		: ellipsis;
+		text-decoration		: none;
+		text-transform		: uppercase;
+		text-align			: left;
 	}
 
 	html > body > div[top] > div[cart_informer] {
 		float				: right;
-		min-width			: 55%;
+		width				: 55%;
 		height				: 90%;
 	}
 
@@ -250,6 +258,22 @@
 		height				: auto;
 		min-height			: calc(var(--dpmm) * 11 * 1px);
 		float				: left;
+		padding-top			: 2px;
+		border-top			: 3px solid #dfba3c;
+		border-radius		: 5px;
+		box-shadow			: 0 0 10px rgba(0, 0, 0, 0.5);
+		text-align			: left;
+		word-wrap			: break-word;
+		white-space			: normal;
+		vertical-align		: top;
+	}
+
+	html > body > div[middle] > div[pitem] > div[txt] {
+		position			: relative;
+		top					: 0;
+		left				: 0;
+		width				: 100%;
+		height				: auto;
 		/*white-space			: nowrap;*/
 		word-wrap			: break-word;
 		white-space			: normal;
@@ -260,18 +284,7 @@
 		text-decoration		: none;
 		text-transform		: uppercase;
 		vertical-align		: top;
-		padding-top			: 2px;
-		border-top			: 3px solid #dfba3c;
-		border-radius		: 5px;
-		box-shadow			: 0 0 10px rgba(0, 0, 0, 0.5);
-	}
-
-	html > body > div[middle] > div[pitem] > div[txt] {
-		position			: relative;
-		top					: 0;
-		left				: 0;
-		width				: 100%;
-		height				: auto;
+		float				: none;
 	}
 
 	html > body > div[middle] > div[pitem] > div[txt][have_img] {
@@ -293,12 +306,12 @@
 
 	html > body > div[middle] > div[pitem] > div[pbuy_quantity] {
 		display				: none;
-		float				: left;
+		float				: none;
 		width				: auto;
 		height				: auto;
 		min-height			: calc(var(--dpmm) * 10 * 1px);
 		font-family			: "droid";
-		font-size			: calc(100% - (1 - var(--smart-phone)) * 30% + var(--smart-phone) * 20%);
+		font-size			: calc(100% - var(--smart-phone) * 5% - var(--desktop) * 35%);
 		font-weight			: bold;
 		text-align			: left;
 		text-overflow		: ellipsis;
@@ -309,9 +322,9 @@
 		margin-right		: 2px;
 	}
 
-	html > body > div[middle] > div[pitem] > div[btn][plus_one], div[btn][minus_one] {
+	html > body > div[middle] > div[pitem] > div[btn] {
 		display				: none;
-		float				: left;
+		float				: none;
 		width				: calc(var(--dpmm) * 9 * 1px);
 		height				: calc(var(--dpmm) * 9 * 1px);
 		padding				: 0;
@@ -333,6 +346,44 @@
 
 	html > body > div[middle] > div[pitem] > div[btn][minus_one] {
 		background-image	: url(../assets/minus.ico);
+	}
+
+	html > body > div[middle] > div[pitem] > div[btn][discount] {
+		background-image	: url(../assets/discount.svg);
+		margin-left			: 2px;
+	}
+
+	html > body > div[middle] > div[pitem] > div[btn][discount_price] {
+		background-image	: url(../assets/discount_price.svg);
+		margin-left			: 2px;
+	}
+
+	html > body > div[middle] > div[pitem] > div[btn][discount_percent] {
+		background-image	: url(../assets/discount_percent.svg);
+		margin-left			: 2px;
+	}
+
+	html > body > div[middle] > div[pitem] > div[btn][discount_accept] {
+		background-image	: url(../assets/discount_accept.svg);
+		margin-left			: 2px;
+	}
+
+	html > body > div[middle] > div[pitem] > div[discount_value] {
+		display				: none;
+		float				: none;
+		width				: auto;
+		height				: auto;
+		min-height			: calc(var(--dpmm) * 10 * 1px);
+		font-family			: "droid";
+		font-size			: calc(100% - var(--smart-phone) * 5% - var(--desktop) * 35%);
+		font-weight			: bold;
+		text-align			: left;
+		text-overflow		: ellipsis;
+		text-decoration		: none;
+		text-transform		: uppercase;
+		vertical-align		: middle;
+		margin-left			: 2px;
+		margin-right		: 2px;
 	}
 
 	html > body > div[middle] > div[orders_panel] {
@@ -543,8 +594,8 @@
 		display				: none;
 		z-index				: 900;
 		position			: absolute;
-		top					: calc(50% - (var(--dpmm) * 25 / 2) * 1px);
-		left				: calc(50% - (var(--dpmm) * 41 / 2) * 1px);
+		top					: calc(1px * var(--window-height) / 2 - (var(--dpmm) * 25 / 2) * 1px);
+		left				: calc(1px * var(--window-width) / 2 - (var(--dpmm) * 41 / 2) * 1px);
 		width				: calc(var(--dpmm) * 41 * 1px);
 		height				: auto;
 		float				: none;

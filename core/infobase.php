@@ -498,6 +498,7 @@ EOT
 				session_uuid	BLOB NOT NULL,
 				product_uuid	BLOB NOT NULL,
 				quantity		NUMERIC NOT NULL,
+				price			NUMERIC,
 				UNIQUE(session_uuid, product_uuid) ON CONFLICT REPLACE
 			) /*WITHOUT ROWID*/
 EOT

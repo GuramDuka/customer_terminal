@@ -19,16 +19,16 @@ class carter_handler extends handler {
 
 		$sql = <<<EOT
 			SELECT
-				b.product_uuid			AS uuid,
-				b.quantity				AS buy_quantity,
-				a.code					AS code,
-				a.name					AS name,
-				i.uuid					AS base_image_uuid,
-				i.ext					AS base_image_ext,
-				COALESCE(q.quantity, 0)	AS remainder,
-				COALESCE(p.price, 0)	AS price,
-				COALESCE(r.quantity, 0)	AS reserve,
-				bcr.barcode				AS barcode
+				b.product_uuid					AS uuid,
+				b.quantity						AS buy_quantity,
+				a.code							AS code,
+				a.name							AS name,
+				i.uuid							AS base_image_uuid,
+				i.ext							AS base_image_ext,
+				COALESCE(q.quantity, 0)			AS remainder,
+				COALESCE(b.price, p.price, 0)	AS price,
+				COALESCE(r.quantity, 0)			AS reserve,
+				bcr.barcode						AS barcode
 			FROM
 				cart AS b
 					LEFT JOIN products AS a
@@ -169,7 +169,7 @@ EOT
 		if( @$this->request_['paper'] !== null )
 			$order_request['paper'] = true;
 
-		$data = request_exchange_node($exchange_url, $exchange_user, $exchange_pass, $order_request);
+		$data = request_exchange_node($exchange_url . '/order', $exchange_user, $exchange_pass, $order_request);
 		$data['name'] = $exchange_node_name;
 		//$data['barcode_eangnivc'] = htmlspecialchars($data['barcode_eangnivc'], ENT_HTML5);
 
@@ -210,11 +210,22 @@ EOT
 			$timer->restart();
 
 			$sql = <<<'EOT'
-				REPLACE INTO cart (
-					session_uuid, product_uuid, quantity
-				) VALUES (
-					:session_uuid, :product_uuid, :quantity
-				)
+				REPLACE INTO cart
+				SELECT
+					n.session_uuid,
+					n.product_uuid,
+					n.quantity,
+					COALESCE(n.price, b.price) AS price
+				FROM
+					(SELECT
+						:session_uuid	AS session_uuid,
+						:product_uuid	AS product_uuid,
+						:quantity		AS quantity,
+						:price			AS price
+					) AS n
+						LEFT JOIN cart AS b
+						ON n.session_uuid = b.session_uuid
+							AND n.product_uuid = b.product_uuid
 EOT
 			;
 
@@ -243,7 +254,6 @@ EOT
 				extract($product);
 
 				$product_uuid = uuid2bin(@$uuid);
-				$quantity = @$quantity;
 
 				if( @$barcode !== null ) {
 					$st_barcode->bindValue(':barcode', $barcode);
@@ -255,7 +265,8 @@ EOT
 
 				if( $product_uuid !== null ) {
 					$st->bindValue(':product_uuid'	, $product_uuid, SQLITE3_BLOB);
-					$st->bindValue(':quantity'		, floatval($quantity));
+					$st->bindValue(':quantity'		, @$quantity);
+					$st->bindValue(':price'			, @$price);
 					$st->execute();
 				}
 
@@ -266,7 +277,8 @@ EOT
 				SELECT
 					c.session_uuid,
 					c.product_uuid,
-					q.quantity
+					q.quantity,
+					c.price
 				FROM
 					cart AS c
 					INNER JOIN remainders_registry AS q
