@@ -709,7 +709,8 @@ class Render {
 
 			let req = {
 				'uuid'		: e.uuid,
-				'quantity'	: e.buy_quantity
+				'quantity'	: e.buy_quantity,
+				'price'		: e.price
 			};
 
 			request.products.push(req);
@@ -2336,7 +2337,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 	}
 
-	btn_dst_discount_accept_handler(cur_page_state, product, mode, value) {
+	btn_dst_discount_accept_handler(cur_page_state, product, value) {
 
 		let cart_entity = cur_page_state.cart_by_uuid_[product];
 
@@ -2345,7 +2346,7 @@ class HtmlPageEvents extends HtmlPageState {
 			let [ new_page_state ] = this.clone_page_state();
 
 			cart_entity = new_page_state.cart_by_uuid_[product];
-			cart_entity.price = value;
+			cart_entity.price = Number.parseFloat(value);
 			cart_entity.modified = true;
 
 			this.render_.rewrite_cart(new_page_state);
@@ -2354,41 +2355,61 @@ class HtmlPageEvents extends HtmlPageState {
 			new_page_state.modified_ = true;
 
 			return new_page_state;
-
 		}
-
 	}
 
-	btn_dst_discount_value_handler(cur_page_state, product, discount_mode, discount_value) {
+	discount_value_text_type_handler(element, cur_page_state, text) {
 
+		if( element.value !== text )
+			return;
+
+		let product = element.parentNode.parentNode.attributes.uuid.value;
 		let cart_entity = cur_page_state.cart_by_uuid_[product];
 
 		if( cart_entity ) {
+			let n = Number.parseFloat(text);
 
-			let [ new_page_state ] = this.clone_page_state();
+			if( !Number.isNaN(n) ) {
+				let holder = xpath_eval_single('div[@btn and @discount]', element.parentNode.parentNode);
+				let mode = holder.attributes.mode.value;
 
-			cart_entity = new_page_state.cart_by_uuid_[product];
+				if( mode === 'price' )
+					n = n;
+				else if( mode === 'percent' ) 
+					n = Math.max(0, round(cart_entity.price - cart_entity.price * n / 100, 2));
 
-			let n = Number.parseFloat(discount_value);
+				holder.setAttribute('value', n);
 
-			if( discount_value === Number.NaN );
-
-			if( discount_mode === 'price' )
-				n = n;
-			else if( discount_mode === 'percent' ) 
-				n = round(cart_entity.price * n / 100, 2);
-
-
-			let discount_mode = xpath_eval_single('div[@btn and @discount]', element.parentNode).attributes.mode;
-			xpath_eval_single('div[@btn and @discount]', element.parentNode).attributes.value = n;
-			let discount_value = xpath_eval_single('div[@discount_value]/input[@discount_value]', element.parentNode).value;
-
-			new_page_state.modified_ = true;
-
-			return new_page_state;
-
+				let e = xpath_eval_single('div[@discount_value]', element.parentNode.parentNode);
+				xpath_eval_single('font[@price]', e).innerHTML = n;
+				xpath_eval_single('font[@summ]', e).innerHTML = n * cart_entity.buy_quantity;
+			}
 		}
+	}
 
+	switch_dst_discount_middle_pitem(element) {
+
+		if( element.attributes.expanded )
+			element.removeAttribute('expanded');
+		else
+			element.setAttribute('expanded', '');
+
+		for( let q of xpath_eval('div[@discount_value or (@btn and (@discount_price or @discount_percent or @discount_accept))]', element.parentNode) )
+			q.display(attrs.expanded
+				&& (
+					!q.attributes.btn
+					|| (q.attributes.discount_price && attrs.mode.value === 'price')
+					|| (q.attributes.discount_percent && attrs.mode.value === 'percent')
+					|| q.attributes.discount_accept
+				)
+			);
+
+		let p = xpath_eval_single('div[@discount_value]/input[@discount_value]', element.parentNode);
+
+		if( element.attributes.expanded ) {
+			p.focus();
+			p.click();
+		}
 	}
 
 	barcode_scanner_rewrite(new_page_state, cur_page_state) {
@@ -2434,8 +2455,8 @@ class HtmlPageEvents extends HtmlPageState {
 						<div pbuy_quantity></div>
 						<div btn minus_one></div>
 						<div btn discount mode="price"></div>
-						<div discount_value>
-							<input discount_value type="number">
+						<div discount_value setup>
+							<input discount_value text_type type="number">
 							<br>
 							<font>Цена&nbsp;: </font><font price></font><i rouble>&psi;</i></font>
 							<br>
@@ -2449,9 +2470,9 @@ class HtmlPageEvents extends HtmlPageState {
 
 				e = g();
 
+				this.setup_events(xpath_eval('div[@discount_value]/input[@discount_value]', e));
 				this.setup_events(xpath_eval('i[@pimg]', e));
 				this.setup_events(xpath_eval('div[@btn]', e));
-				this.setup_events(xpath_eval('div[@discount_value]/input[@discount_value]', e));
 				this.setup_events(e);
 			}
 
@@ -2501,9 +2522,17 @@ class HtmlPageEvents extends HtmlPageState {
 					)
 				);
 
-			xpath_eval_single('div[@discount_value]/input[@discount_value]', e).value = p.price;
-			xpath_eval_single('div[@discount_value]/font[@price]', e).innerHTML = p.price;
-			xpath_eval_single('div[@discount_value]/font[@summ]', e).innerHTML = p.price * p.buy_quantity;
+			let dv = xpath_eval_single('div[@discount_value]', e);
+
+			if( dv.attributes.setup ) {
+				xpath_eval_single('input[@discount_value]', dv).value = p.price;
+				xpath_eval_single('font[@price]', dv).innerHTML = p.price;
+				xpath_eval_single('font[@summ]', dv).innerHTML = p.price * p.buy_quantity;
+				dv.removeAttribute('setup');
+			}
+
+			if( dis.attributes.value && !dis.attributes.value.value.isEmpty() )
+				xpath_eval_single('font[@summ]', dv).innerHTML = Number.parseFloat(dis.attributes.value.value) * p.buy_quantity;
 
 			n++;
 		}
@@ -2801,11 +2830,24 @@ class HtmlPageEvents extends HtmlPageState {
 
 	}
 
-	setup_text_type_event(elements) {
+	setup_text_type_event(elements, delay_ms = 300) {
 
 		for( let element of (elements instanceof Array ? elements : [elements]) ) {
+			if( !element.attributes || !element.attributes.text_type )
+				continue;
+
+			if( element.text_type_timeout_id_ )
+				clearTimeout(element.text_type_timeout_id_);
+
+			if( delay_ms === null )
+				continue;
+
 			element.text_type_handler_ = () => {
-				let stms = () => setTimeout(element.text_type_handler_, 300);
+				delete element.text_type_timeout_id_;
+
+				let stms = () => {
+					element.text_type_timeout_id_ = setTimeout(element.text_type_handler_, delay_ms);
+				};
 
 				if( element.text_typed_ !== element.value ) {
 					delete element.text_typed_fired_;
@@ -2826,13 +2868,14 @@ class HtmlPageEvents extends HtmlPageState {
 				}
 			};
 
+			if( !element.text_typed_event_ )
+				add_event(element, 'text_type', e => this.events_handler(e), false);
+
 			element.text_typed_ = element.value;
 			element.text_typed_fired_ = true;
+			element.text_typed_event_ = true;
 			element.text_type_handler_();
-
-			add_event(element, 'text_type', e => this.events_handler(e), false);
 		}
-
 	}
 
 	search_panel_text_type_handler(text) {
@@ -3160,8 +3203,6 @@ class HtmlPageEvents extends HtmlPageState {
 						new_page_state = this.btn_cheque_cart_informer_handler(cur_page_state);
 
 					}
-					else if( attrs.discount_value && element.ascend('discount_value/pitem/middle') && !attrs.touchmove ) {
-					}
 					else if( attrs.btn && element.ascend('pitem/middle') && !attrs.touchmove ) {
 						// change cart
 						let product = element.parentNode.attributes.uuid.value;
@@ -3178,43 +3219,33 @@ class HtmlPageEvents extends HtmlPageState {
 						}
 						else if( attrs.discount ) {
 
-							if( attrs.expanded )
-								element.removeAttribute('expanded');
-							else
-								element.setAttribute('expanded', '');
+							this.switch_dst_discount_middle_pitem(element);
 
-							for( let q of xpath_eval('div[@discount_value or (@btn and (@discount_price or @discount_percent or @discount_accept))]', element.parentNode) )
-								q.display(attrs.expanded
-									&& (
-										!q.attributes.btn
-										|| (q.attributes.discount_price && attrs.mode.value === 'price')
-										|| (q.attributes.discount_percent && attrs.mode.value === 'percent')
-										|| q.attributes.discount_accept
-									)
-								);
-
-							if( attrs.expanded ) {
-								let p = xpath_eval_single('div[@discount_value]/input[@discount_value]', element.parentNode);
-								p.focus();
-								p.click();
-							}
 						}
 						else if( attrs.discount_price ) {
 							let btn = xpath_eval_single('div[@btn and @discount]', element.parentNode);
-							btn.attributes.mode = 'percent';
+							btn.setAttribute('mode', 'percent');
 							element.display(false);
 							xpath_eval_single('div[@btn and @discount_percent]', element.parentNode).display(true);
 						}
 						else if( attrs.discount_percent ) {
 							let btn = xpath_eval_single('div[@btn and @discount]', element.parentNode);
-							btn.attributes.mode = 'price';
+							btn.setAttribute('mode', 'price');
 							element.display(false);
 							xpath_eval_single('div[@btn and @discount_price]', element.parentNode).display(true);
 						}
 						else if( attrs.discount_accept ) {
-							let value = xpath_eval_single('div[@btn and @discount]', element.parentNode).attributes.value;
-							new_page_state = this.btn_dst_discount_accept_handler(cur_page_state, product, value);
+							let holder = xpath_eval_single('div[@btn and @discount]', element.parentNode);
+							if( holder.attributes.value ) {
+								let value = holder.attributes.value.value;
+								if( !value.isEmpty() ) {
+									new_page_state = this.btn_dst_discount_accept_handler(cur_page_state, product, value);
+									this.switch_dst_discount_middle_pitem(holder);
+								}
+							}
 						}
+					}
+					else if( attrs.discount_value && element.ascend('discount_value/pitem/middle') && !attrs.touchmove ) {
 					}
 					else if( attrs.pitem && element.ascend('middle')
 						&& !(((e.target.attributes.btn || e.target.attributes.pimg) && e.target.ascend('pitem/middle')) || e.target.ascend('discount_value/pitem/middle'))
@@ -3563,8 +3594,16 @@ class HtmlPageEvents extends HtmlPageState {
 					break;
 
 				case 'blur'			:		
+					this.setup_text_type_event(element, null);
 					break;
+
 				case 'focus'		:
+					if( attrs.vks && element.ascend('search_panel') )
+						this.setup_text_type_event(element);
+					else if( attrs.discount_value && element.ascend('discount_value/pitem/middle') )
+						this.setup_text_type_event(element, 100);
+					else
+						this.setup_text_type_event(element);
 					break;
 
 				case 'contextmenu'	:
@@ -3575,6 +3614,8 @@ class HtmlPageEvents extends HtmlPageState {
 				case 'text_type'	:
 					if( attrs.vks && element.ascend('search_panel') )
 						this.search_panel_text_type_handler(e.detail);
+					else if( attrs.discount_value && element.ascend('discount_value/pitem/middle') )
+						this.discount_value_text_type_handler(element, cur_page_state, e.detail);
 					break;
 
 				case 'barcode'		:
@@ -3909,10 +3950,6 @@ class HtmlPageManager extends HtmlPageEvents {
 			this.setup_events(xpath_eval('html/body/i[@btn]'));
 			this.setup_events(xpath_eval_single('html/body/div[@search_panel]/div[@results]'));
 
-			let vks = xpath_eval_single('html/body/div[@search_panel]/input[@vks]');
-			this.setup_events(vks, false);
-			this.setup_text_type_event(vks);
-
 			this.setup_events(xpath_eval('html/body/div[@search_panel]/label'), false);
 			this.setup_events(xpath_eval('html/body/div[@search_panel]/input'), false);
 			this.setup_events(xpath_eval_single('html/body/div[@top]/div[@logo]'), false);
@@ -4009,7 +4046,7 @@ function dct_html_body() {
 		<div plargeimg fadein></div>
 		<div alert fadein></div>
 		<div search_panel>
-			<input vks autofocus placeholder="Вводите текст поиска ..." type="text">
+			<input vks text_type placeholder="Вводите текст поиска ..." type="text">
 			<label vks btn blink2></label>
 			<div results></div>
 		</div>
