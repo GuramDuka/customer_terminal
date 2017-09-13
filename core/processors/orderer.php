@@ -21,7 +21,8 @@ class orderer_handler extends handler {
 			'exchange_node'					=> null,
 			'exchange_url'					=> null,
 			'exchange_user'					=> null,
-			'exchange_pass'					=> null
+			'exchange_pass'					=> null,
+			'pending_orders'				=> null
 		];
 
 		extract($constants);
@@ -83,32 +84,64 @@ EOT
 
 		if( @$customer !== null )
 			$request['customer'] = $customer;
-		else if( @$remove !== null )
+		if( @$remove !== null )
 			$request['remove'] = $remove;
 
-		$data = request_exchange_node($exchange_url . '/order', $exchange_user, $exchange_pass, $request);
-		$this->response_['order'] = $data;
+		$data = null;
 
-		$orders = @$_SESSION['ORDERS'];
+		if( @$pending_orders ) {
+			$request_json = json_encode($request, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
-		if( $orders === null )
-			$orders = [];
-		else
-			$orders = unserialize(bzdecompress(base64_decode($orders)));
+			$sql = <<<'EOT'
+				REPLACE INTO pending_orders (
+					session_uuid, order_uuid, request, data
+				) VALUES (
+					:session_uuid, :order_uuid, :request, ''
+				)
+EOT
+			;
 
-		if( @$customer !== null ) {
-			$orders[$order]['customer_uuid'] = $data['customer_uuid'];
-			$orders[$order]['customer'] = $data['customer'];
+			$st = $this->infobase_->prepare($sql);
+			$st->bindValue(':session_uuid', $this->session_uuid_, SQLITE3_BLOB);
+			$st->bindValue(':order_uuid', uuid2bin($order), SQLITE3_BLOB);
+			$st->bindValue(':request', $request_json);
+			$st->execute();
 		}
-		else if( @$this->request_['remove'] !== null ) {
-			unset($orders[$order]);
+		else if( @$customer !== null ) {
+			$data = request_exchange_node($exchange_url . '/order', $exchange_user, $exchange_pass, $request);
+			$this->response_['order'] = $data;
+		}
+		else if( @$remove !== null ) {
+			$data = request_exchange_node($exchange_url . '/order', $exchange_user, $exchange_pass, $request);
+			$this->response_['order'] = $data;
 		}
 
-		if( count($orders) !== 0 ) {
-			$_SESSION['ORDERS'] = base64_encode(bzcompress(serialize($orders), 9));
+		if( @$pending_orders ) {
+			//$this->infobase_->begin_transaction();
+			//$this->infobase_->commit_transaction();
 		}
-		else if( @$_SESSION['ORDERS'] !== null ) {
-			unset($_SESSION['ORDERS']);
+		else if( $data !== null ) {
+			$orders = @$_SESSION['ORDERS'];
+
+			if( $orders === null )
+				$orders = [];
+			else
+				$orders = unserialize(bzdecompress(base64_decode($orders)));
+
+			if( @$customer !== null ) {
+				$orders[$order]['customer_uuid'] = $data['customer_uuid'];
+				$orders[$order]['customer'] = $data['customer'];
+			}
+			else if( @$this->request_['remove'] !== null ) {
+				unset($orders[$order]);
+			}
+
+			if( count($orders) !== 0 ) {
+				$_SESSION['ORDERS'] = base64_encode(bzcompress(serialize($orders), 9));
+			}
+			else if( @$_SESSION['ORDERS'] !== null ) {
+				unset($_SESSION['ORDERS']);
+			}
 		}
 
 		$ellapsed = $timer->nano_time(false);

@@ -17,8 +17,7 @@ class loader_handler extends handler {
 		if( config::$log_loader_request )
 			error_log(var_export($this->request_, true));
 
-		$infobase = new infobase;
-		$infobase->initialize();
+		$infobase = null;
 
 		$loaders = [
 			'constants',
@@ -51,6 +50,11 @@ class loader_handler extends handler {
 			if( $objects === null || count($objects) === 0 )
 				continue;
 
+			if( $infobase === null ) {
+				$infobase = new infobase;
+				$infobase->initialize();
+			}
+
 			require_once LOADERS_DIR . $loader_name . '.php';
 
 			$class_name = "srv1c\\${loader_name}_loader";
@@ -63,10 +67,32 @@ class loader_handler extends handler {
 
 		if( @$this->request_['rewrite_pages'] ) {
 
+			if( $infobase === null ) {
+				$infobase = new infobase;
+				$infobase->initialize();
+			}
+
 			require_once LOADERS_DIR . 'pages_writer.php';
 
 			rewrite_pages($infobase);
 
+		}
+
+		if( @$this->request_['pending_orders'] !== null ) {
+			require_once LOADERS_DIR . 'pending_orders.php';
+			$class_name = "srv1c\\pending_orders";
+			$class_object = new $class_name;
+			$class_object->set_parameters($this->request_['pending_orders']);
+			$class_object->handler();
+			$this->response_['pending_orders'] = $class_object->get_response();
+		}
+
+		if( @$this->request_['maintenance'] !== null ) {
+			require_once LOADERS_DIR . 'maintenance.php';
+			$class_name = "srv1c\\maintenancer";
+			$class_object = new $class_name;
+			$class_object->set_parameters($this->request_['maintenance']);
+			$class_object->handler();
 		}
 
     }

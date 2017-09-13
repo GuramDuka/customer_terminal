@@ -130,15 +130,15 @@ class HtmlPageState {
 			response = JSON.parse(xhr.responseText, JSON.dateParser);
 		}
 		else {
-			xhr = new XMLHttpRequest;
-			xhr.open('POST', path, true);
+			let xhr = new XMLHttpRequest;
 			xhr.timeout = 180000;
+			xhr.open('PUT', path, true);
 			xhr.setRequestHeader('Content-Type'		, 'application/json; charset=utf-8');
-			xhr.setRequestHeader('If-Modified-Since', 'Sat, 1 Jan 2000 00:00:00 GMT');
-			xhr.setRequestHeader('Cache-Control'	, 'no-store, no-cache, must-revalidate, max-age=0');
+			xhr.setRequestHeader('If-Modified-Since'	, 'Sat, 1 Jan 2000 00:00:00 GMT');
+			xhr.setRequestHeader('Cache-Control'		, 'no-store, no-cache, must-revalidate, max-age=0');
 
 			xhr.onreadystatechange = () => {
-				if( xhr.readyState === XMLHttpRequest.DONE )
+				if( xhr.readyState === XMLHttpRequest.DONE && xhr.status !== 0 )
 					object.events_handler(current_event);
 			};
 
@@ -300,6 +300,7 @@ class Render {
 				style.visibility = 'visible';
 
 				a.setAttribute('uuid'		, uuid);
+				a.setAttribute('price'		, product.price);
 				a.setAttribute('remainder'	, product.remainder);
 				a.setAttribute('reserve'	, product.reserve);
 
@@ -362,6 +363,7 @@ class Render {
 		pbuy_quantity.innerText = cart_entity ? cart_entity.buy_quantity : '-';
 
 		pinfo_element.setAttribute('uuid'		, product.uuid);
+		pinfo_element.setAttribute('price'		, product.price);
 		pinfo_element.setAttribute('remainder'	, product.remainder);
 		pinfo_element.setAttribute('reserve'	, product.reserve);
 
@@ -568,7 +570,6 @@ class Render {
 
 			delete new_page_state.constants_;
 		}
-
 	}
 
 	rewrite_info(new_page_state = null) {
@@ -663,7 +664,7 @@ class Render {
 
 	}
 
-	rewrite_cart(new_page_state = null, product = null_uuid, buy_quantity = null) {
+	rewrite_cart(new_page_state = null, product = null_uuid, buy_quantity = null, buy_price = null) {
 
 		let state = this.state_;
 
@@ -692,9 +693,15 @@ class Render {
 			if( !request.products )
 				request.products = [];
 
+			let price = typeof buy_price === 'string' ? Number.parseFloat(buy_price) : buy_price;
+
+			if( Number.isNaN(price) )
+				price = 0;
+
 			request.products.push({
 				'uuid'		: product,
-				'quantity'	: buy_quantity
+				'quantity'	: buy_quantity,
+				'price'		: price
 			});
 
 		}
@@ -1521,13 +1528,13 @@ class HtmlPageEvents extends HtmlPageState {
 
 	}
 
-	btn_buy_pright_pinfo_handler(product, buy_quantity) {
+	btn_buy_pright_pinfo_handler(product, buy_quantity, buy_price) {
 
 		let [ new_page_state ] = this.clone_page_state();
 
 		new_page_state.modified_ = true;
 
-		this.render_.rewrite_cart(new_page_state, product, buy_quantity);
+		this.render_.rewrite_cart(new_page_state, product, buy_quantity, buy_price);
 
 		return new_page_state;
 
@@ -1548,7 +1555,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 		if( element.attributes.buy ) {
 
-			new_page_state = this.btn_buy_pright_pinfo_handler(product, buy_quantity);
+			new_page_state = this.btn_buy_pright_pinfo_handler(product, buy_quantity, element.parentNode.parentNode.attributes.price.value);
 
 		}
 		else if( element.attributes.plus_one ) {
@@ -1641,7 +1648,7 @@ class HtmlPageEvents extends HtmlPageState {
 				this.render_.rewrite_cart(new_page_state);
 			};
 
-			if( data.order.availability ) {
+			if( data.order && data.order.availability ) {
 				// fail, modify buy quantities and show cart alert
 
 				for( let p of data.order.availability ) {
@@ -1723,8 +1730,13 @@ class HtmlPageEvents extends HtmlPageState {
 			}
 			else if( this.dct_ ) {
 				clear_cart();
+
 				this.barcode_scanner_rewrite(new_page_state, cur_page_state);
-				this.barcode_scanner_insert_order(data.order);
+
+				if( this.pending_orders_ )
+					this.setup_pending_orders_refresh();
+				else
+					this.barcode_scanner_insert_order(data.order);
 			}
 
 			new_page_state.product_ = null_uuid;
@@ -2389,24 +2401,26 @@ class HtmlPageEvents extends HtmlPageState {
 
 	switch_dst_discount_middle_pitem(element) {
 
-		if( element.attributes.expanded )
+		let a = element.attributes;
+
+		if( a.expanded )
 			element.removeAttribute('expanded');
 		else
 			element.setAttribute('expanded', '');
 
 		for( let q of xpath_eval('div[@discount_value or (@btn and (@discount_price or @discount_percent or @discount_accept))]', element.parentNode) )
-			q.display(attrs.expanded
+			q.display(a.expanded
 				&& (
 					!q.attributes.btn
-					|| (q.attributes.discount_price && attrs.mode.value === 'price')
-					|| (q.attributes.discount_percent && attrs.mode.value === 'percent')
+					|| (q.attributes.discount_price && a.mode.value === 'price')
+					|| (q.attributes.discount_percent && a.mode.value === 'percent')
 					|| q.attributes.discount_accept
 				)
 			);
 
 		let p = xpath_eval_single('div[@discount_value]/input[@discount_value]', element.parentNode);
 
-		if( element.attributes.expanded ) {
+		if( a.expanded ) {
 			p.focus();
 			p.click();
 		}
@@ -2442,7 +2456,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 			if( !e ) {
 				m.insertAdjacentHTML('afterend', `
-					<div pitem="${n}" uuid="${p.uuid}" fliphin>
+					<div pitem="${n}" uuid="${p.uuid}" price="${p.price}" fliphin>
 						<div txt${p.img_uuid ? ' have_img' : ''}>
 							<font pcode style="color:darkblue" blink2></font>
 							<font pname></font>
@@ -2552,6 +2566,7 @@ class HtmlPageEvents extends HtmlPageState {
 			xpath_eval_single('html/body/div[@mount]/p[@address]').innerHTML =
 				'Адрес: ' + new_page_state.constants_['ТекущийМагазинАдрес'];
 
+			this.pending_orders_ = new_page_state.constants_.pending_orders;
 			delete new_page_state.constants_;
 		}
 
@@ -2565,7 +2580,7 @@ class HtmlPageEvents extends HtmlPageState {
 			panel.removeAttribute('style');
 		}
 
-		if( new_page_state.orders_ && new_page_state.orders_.length !== 0 ) {
+		if( new_page_state.orders_ ) {
 			let orders = [];
 
 			for( let n in new_page_state.orders_ )
@@ -2574,12 +2589,33 @@ class HtmlPageEvents extends HtmlPageState {
 
 			orders.sort((a, b) => a.date - b.date);
 
-			let panel;
+			let panel = xpath_eval_single('html/body/div[@middle]/div[@orders_panel]');
 
-			for( let order of orders )
-				panel = this.barcode_scanner_insert_order(order, panel);
+			for( let order of orders ) {
+				let p = xpath_single('div[@uuid=\'' + order.uuid + '\']', panel);
+
+				if( !p || p.attributes.customer_uuid.value !== order.customer_uuid )
+					modified = true;
+
+				this.barcode_scanner_insert_order(order);
+			}
+
+			for( let p of xpath_eval('div[@uuid]', panel) ) {
+				let i = orders.findIndex(order => order.uuid === p.attributes.uuid.value);
+				if( i < 0 ) {
+					panel.removeChild(p);
+					modified = true;
+				}
+			}
 
 			delete new_page_state.orders_;
+		}
+
+		if( !modified && this.pending_orders_refresh_timeout_id_ ) {
+			this.setup_pending_orders_refresh();
+		}
+		else if( modified && this.pending_orders_refresh_timeout_id_ ) {
+			delete this.pending_orders_refresh_timeout_id_;
 		}
 
 		return modified;
@@ -2588,21 +2624,33 @@ class HtmlPageEvents extends HtmlPageState {
 	barcode_scanner_insert_order(order, panel) {
 
 		panel = panel || xpath_eval_single('html/body/div[@middle]/div[@orders_panel]');
-		panel.insertAdjacentHTML('afterbegin', `
-			<div order uuid="${order.uuid}" customer_uuid="${order.customer_uuid}">
-				<div txt>
-					<font>Заказ&nbsp;</font><font style="color:darkblue" blink2>№&nbsp;${order.number}</font>
-					<font> от ${this.date_formatter_(order.date).trim()}</font>
-					<font>, </font><font customer_name>${order.customer}</font>
-					<font>, Сумма:&nbsp;${order.totals}<i rouble>&psi;</i></font>
-					<font>, EAN13:&nbsp;${order.barcode}</font>
-				</div>
-				<div btn customer></div>
-				<div btn remove></div>
-			</div>
-		`.replace(/(?:[\r\n\t])/g, ''));
 
-		let iframe = document.createElement('iframe');
+		let e = xpath_single('div[@uuid=\'' + order.uuid + '\']', panel);
+
+		if( e ) {
+			e.setAttribute('customer_uuid', order.customer_uuid);
+			xpath_eval_single('div[@txt]/font[@customer_name]', e).innerHTML = order.customer;
+		}
+		else {
+			panel.insertAdjacentHTML('afterbegin', `
+				<div order uuid="${order.uuid}" customer_uuid="${order.customer_uuid}">
+					<div txt>
+						<font>Заказ&nbsp;</font><font style="color:darkblue" blink2>№&nbsp;${order.number}</font>
+						<font> от ${this.date_formatter_(order.date).trim()}</font>
+						<font>, </font><font customer_name>${order.customer}</font>
+						<font>, Сумма:&nbsp;${order.totals}<i rouble>&psi;</i></font>
+						<font>, EAN13:&nbsp;${order.barcode}</font>
+					</div>
+					<div btn customer></div>
+					<div btn remove></div>
+				</div>
+			`.replace(/(?:[\r\n\t])/g, ''));
+
+			this.setup_events(xpath_eval('div[@order and @uuid=\'' + order.uuid + '\']', panel));
+			this.setup_events(xpath_eval('div[@order and @uuid=\'' + order.uuid + '\']/div[@btn]', panel));
+		}
+
+		/*let iframe = document.createElement('iframe');
 		iframe.setAttribute('seamless', '');
 		iframe.setAttribute('frameborder', 0);
 		iframe.setAttribute('scrolling', 'no');
@@ -2616,14 +2664,19 @@ class HtmlPageEvents extends HtmlPageState {
 			
 			//for( let e of xpath_eval('html/body/*', doc, doc) )
 			//	e.style.width = '10px';
-		};
+		};*/
 
 		//xpath_eval_single('div[@order]', panel).appendChild(iframe);
 
-		this.setup_events(xpath_eval('div[@order and @uuid=\'' + order.uuid + '\']', panel));
-		this.setup_events(xpath_eval('div[@order and @uuid=\'' + order.uuid + '\']/div[@btn]', panel));
-
 		return panel;
+
+	}
+
+	setup_pending_orders_refresh() {
+
+		this.pending_orders_refresh_timeout_id_ = setTimeout(() => {
+			window.dispatchEvent(new CustomEvent('barcode'));
+		}, 5000);
 
 	}
 
@@ -2671,7 +2724,6 @@ class HtmlPageEvents extends HtmlPageState {
 
 			if( modified && code )
 				this.scanner_beep();
-
 
 			new_page_state.modified_ = true;
 
@@ -2911,7 +2963,7 @@ class HtmlPageEvents extends HtmlPageState {
 				let pimg = p.img_uuid ? `<i pimg img_url="${p.img_url}" style="background-image:url(${p.img_ico})"></i>` : '';
 
 				html += `
-					<div result uuid="${p.uuid}" fliphin>
+					<div result uuid="${p.uuid}" price="${p.price}" fliphin>
 						<div txt${p.img_uuid ? ' have_img' : ''}>
 							<font pcode style="color:darkblue" blink2>[${p.code}]</font>
 							<font pname> ${name}</font>
@@ -3123,7 +3175,7 @@ class HtmlPageEvents extends HtmlPageState {
 					}
 					else if( attrs.buy && element.ascend('pitem/ptable/plist') ) {
 
-						new_page_state = this.btn_buy_pright_pinfo_handler(element.parentNode.attributes.uuid.value, 1);
+						new_page_state = this.btn_buy_pright_pinfo_handler(element.parentNode.attributes.uuid.value, 1, element.parentNode.attributes.price.value);
 
 					}
 					else if( attrs.btn && attrs.drop && element.ascend('cart_informer') ) {
@@ -3307,8 +3359,13 @@ class HtmlPageEvents extends HtmlPageState {
 
 							if( new_page_state && new_page_state.modified_ ) {
 
-								let p = xpath_eval_single('html/body/div[@middle]/div[@orders_panel]/div[@order and @uuid=\'' + order + '\']');
-								p.parentNode.removeChild(p);
+								if( this.pending_orders_ ) {
+									this.setup_pending_orders_refresh();
+								}
+								else {
+									let p = xpath_eval_single('html/body/div[@middle]/div[@orders_panel]/div[@order and @uuid=\'' + order + '\']');
+									p.parentNode.removeChild(p);
+								}
 
 								new_page_state.search_panel_ = false;
 							}
@@ -3364,7 +3421,7 @@ class HtmlPageEvents extends HtmlPageState {
 							}
 							else {
 								[ new_page_state ] = this.clone_page_state();
-								this.render_.rewrite_cart(new_page_state, product, 1);
+								this.render_.rewrite_cart(new_page_state, product, 1, attrs.price.value);
 								this.barcode_scanner_rewrite(new_page_state, cur_page_state);
 								new_page_state.modified_ = true;
 							}
@@ -3412,8 +3469,13 @@ class HtmlPageEvents extends HtmlPageState {
 								if( document.activeElement === xpath_eval_single('input[@vks]', panel) )
 									document.activeElement.blur();
 
-								xpath_eval_single('html/body/div[@middle]/div[@orders_panel]/div[@order and @uuid=\'' + order + '\']/div[@txt]/font[@customer_name]').innerHTML =
-									xpath_eval_single('div[@txt]/font[@pname]', element).innerHTML;
+								if( this.pending_orders_ ) {
+									this.setup_pending_orders_refresh();
+								}
+								else {
+									xpath_eval_single('html/body/div[@middle]/div[@orders_panel]/div[@order and @uuid=\'' + order + '\']/div[@txt]/font[@customer_name]').innerHTML =
+										xpath_eval_single('div[@txt]/font[@pname]', element).innerHTML;
+								}
 
 								new_page_state.search_panel_ = false;
 							}

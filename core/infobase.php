@@ -44,7 +44,7 @@ class infobase extends \SQLite3 {
 			$this->exec("PRAGMA page_size = ${pgsz}");
 			$this->exec('PRAGMA journal_mode = WAL');
 			$this->exec('PRAGMA count_changes = OFF');
-			$this->exec('PRAGMA auto_vacuum = NONE');
+			$this->exec('PRAGMA auto_vacuum = INCREMENTAL');
 
 		}
 
@@ -554,6 +554,37 @@ EOT
 
 		$dimensions = [ 'category' => '_uuid', 'property' => '_uuid' ];
 		$this->create_unique_indexes_on_registry('products_properties_by_car_setup_registry', $dimensions);
+
+		$this->exec(<<<'EOT'
+			CREATE TABLE IF NOT EXISTS pending_orders (
+				session_uuid		BLOB NOT NULL,
+				order_uuid			BLOB NOT NULL,
+				request				TEXT,
+				data				TEXT NOT NULL,
+				UNIQUE(session_uuid, order_uuid) ON CONFLICT REPLACE
+			) /*WITHOUT ROWID*/
+EOT
+		);
+
+		$this->exec(
+			'CREATE UNIQUE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'pending_orders_by_session_uuid_order_uuid'), -4)
+			. ' ON pending_orders (session_uuid, order_uuid)'
+		);
+
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'pending_orders_by_session_uuid_data'), -4)
+			. ' ON pending_orders (session_uuid, data)'
+		);
+
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'pending_orders_by_order_uuid'), -4)
+			. ' ON pending_orders (order_uuid)'
+		);
+
+		$this->exec(
+			'CREATE INDEX IF NOT EXISTS i' . substr(hash('haval256,3', 'pending_orders_by_data'), -4)
+			. ' ON pending_orders (data)'
+		);
 
 		$this->exec(<<<'EOT'
 			CREATE TABLE IF NOT EXISTS customers (

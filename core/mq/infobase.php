@@ -17,7 +17,7 @@ function get_trigger_infobase() {
 
 	$infobase->exec('PRAGMA journal_mode = WAL');
 	$infobase->exec('PRAGMA count_changes = OFF');
-	$infobase->exec('PRAGMA auto_vacuum = NONE');
+	$infobase->exec('PRAGMA auto_vacuum = INCREMENTAL');
 
 	$cachesz = config::$sqlite_cache_size;
 	$infobase->exec("PRAGMA cache_size = -${cachesz}");

@@ -105,7 +105,8 @@ EOT
 			'exchange_node_name'			=> null,
 			'exchange_url'					=> null,
 			'exchange_user'					=> null,
-			'exchange_pass'					=> null
+			'exchange_pass'					=> null,
+			'pending_orders'				=> null
 		];
 
 		extract($constants);
@@ -136,6 +137,8 @@ EOT
 
 			if( $bin2uuid && $value_type === 4 )
 				$a[$name] = bin2uuid(@$value);
+			else if( $value_type === 1 )
+				$a[$name] = $value === 0 ? false : true;
 			else
 				$a[$name] = $value;
 
@@ -151,6 +154,7 @@ EOT
 
 		$order_request = [ 'exchange_node' => bin2uuid($exchange_node) ];
 		$order_products = [];
+		$totals = 0;
 
 		foreach( $order as $e ) {
 
@@ -162,29 +166,62 @@ EOT
 				'quantity'	=> $quantity
 			];
 
+			$totals += $price * $quantity;
+
 		}
 
 		$order_request['products'] = $order_products;
 
+		if( @$this->request_['user'] !== null )
+			$order_request['user'] = $this->request_['user'];
+		if( @$this->request_['pass'] !== null )
+			$order_request['pass'] = $this->request_['pass'];
+
 		if( @$this->request_['paper'] !== null )
 			$order_request['paper'] = true;
+		
+		$data = null;
 
-		$data = request_exchange_node($exchange_url . '/order', $exchange_user, $exchange_pass, $order_request);
-		$data['name'] = $exchange_node_name;
+		if( @$pending_orders ) {
+			$pending_order_uuid = random_bytes(16);
+			$order_request['pending_uuid'] = bin2uuid($pending_order_uuid);
+			$request_json = json_encode($order_request, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+			$st = $this->infobase_->prepare(<<<'EOT'
+				REPLACE INTO pending_orders (
+					session_uuid, order_uuid, request, data
+				) VALUES (
+					:session_uuid, :order_uuid, :request, ''
+				)
+EOT
+			);
+			$st->bindValue(':session_uuid', $this->session_uuid_, SQLITE3_BLOB);
+			$st->bindValue(':order_uuid', $pending_order_uuid, SQLITE3_BLOB);
+			$st->bindValue(':request', $request_json);
+			$st->execute();
+		}
+		else {
+			$online = mb_strlen(trim($exchange_user)) !== 0 && mb_strlen(trim($exchange_pass)) !== 0;
+			$data = request_exchange_node($exchange_url . '/order', $exchange_user, $exchange_pass, $order_request);
+			$data['name'] = $exchange_node_name;
+		}
+
 		//$data['barcode_eangnivc'] = htmlspecialchars($data['barcode_eangnivc'], ENT_HTML5);
 
-		$this->response_['order'] = $data;
+		if( $data !== null ) {
+			$this->response_['order'] = $data;
 
-		if( @$this->request_['paper'] !== null ) {
-			$orders = @$_SESSION['ORDERS'];
+			if( @$this->request_['paper'] !== null ) {
+				$orders = @$_SESSION['ORDERS'];
 
-			if( $orders === null )
-				$orders = [];
-			else
-				$orders = unserialize(bzdecompress(base64_decode($orders)));
+				if( $orders === null )
+					$orders = [];
+				else
+					$orders = unserialize(bzdecompress(base64_decode($orders)));
 
-			$orders[$data['uuid']] = $data;
-			$_SESSION['ORDERS'] = base64_encode(bzcompress(serialize($orders), 9));
+				$orders[$data['uuid']] = $data;
+				$_SESSION['ORDERS'] = base64_encode(bzcompress(serialize($orders), 9));
+			}
 		}
 	}
 
@@ -215,7 +252,7 @@ EOT
 					n.session_uuid,
 					n.product_uuid,
 					n.quantity,
-					COALESCE(n.price, b.price) AS price
+					COALESCE(n.price, b.price, p.price) AS price
 				FROM
 					(SELECT
 						:session_uuid	AS session_uuid,
@@ -226,6 +263,8 @@ EOT
 						LEFT JOIN cart AS b
 						ON n.session_uuid = b.session_uuid
 							AND n.product_uuid = b.product_uuid
+						LEFT JOIN prices_registry AS p
+						ON n.product_uuid = p.product_uuid
 EOT
 			;
 
@@ -314,6 +353,7 @@ EOT
 			$c = $this->fetch_constants();
 
 			$this->response_['constants'] = [
+				'pending_orders'				=> $c['pending_orders'],
 				'ТекущийМагазинАдрес'			=> $c['ТекущийМагазинАдрес'],
 				'ТекущийМагазинПредставление'	=> $c['ТекущийМагазинПредставление']
 			];
@@ -339,6 +379,61 @@ EOT
 				$orders = [];
 			else
 				$orders = unserialize(bzdecompress(base64_decode($orders)));
+
+			$sql = <<<'EOT'
+				SELECT
+					order_uuid, data
+				FROM
+					pending_orders
+				WHERE
+					session_uuid = :session_uuid
+					AND data <> ''
+EOT
+			;
+
+			$st = $this->infobase_->prepare($sql);
+			$st->bindParam(':session_uuid', $this->session_uuid_, SQLITE3_BLOB);
+
+			$sql = <<<'EOT'
+				DELETE FROM pending_orders
+				WHERE
+					session_uuid = :session_uuid
+					AND order_uuid = :order_uuid
+EOT
+			;
+
+			$st_del = $this->infobase_->prepare($sql);
+			$st_del->bindParam(':session_uuid', $this->session_uuid_, SQLITE3_BLOB);
+
+			$this->infobase_->begin_transaction();
+
+			$change = false;
+
+			$result = $st->execute();
+
+			while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
+				extract($r);
+
+				$data = json_decode($data, true, 512, JSON_BIGINT_AS_STRING);
+				$uuid = $data['uuid'];
+
+				if( @$data['removed'] ) {
+					unset($orders[$uuid]);
+				}
+				else {
+					$orders[$uuid] = $data;
+				}
+
+				$st_del->bindValue(':order_uuid', $order_uuid, SQLITE3_BLOB);
+				$st_del->execute();
+
+				$change = true;
+			}
+
+			$this->infobase_->commit_transaction();
+
+			if( $change )
+				$_SESSION['ORDERS'] = base64_encode(bzcompress(serialize($orders), 9));
 
 			$this->response_['orders'] = $orders;
 		}

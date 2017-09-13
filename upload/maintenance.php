@@ -62,6 +62,7 @@ EOT
 	$tbls = [
 		'products_fts'			=> <<<'EOT'
 EOT
+		,
 		'customers_fts'			=> <<<'EOT'
 EOT
 	];
@@ -78,7 +79,9 @@ EOT
 	$tinfobase = get_trigger_infobase();
 
 	$timer->restart();
+	$infobase->exec('PRAGMA auto_vacuum = INCREMENTAL');
 	$infobase->exec('VACUUM');
+	$tinfobase->exec('PRAGMA auto_vacuum = INCREMENTAL');
 	$tinfobase->exec('VACUUM');
     error_log('SQLITE VACUUM, ellapsed: ' . $timer->ellapsed_string($timer->last_nano_time()));
 

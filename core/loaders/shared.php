@@ -168,7 +168,7 @@ function get_pgnon($order, $direction, $pgno, $n) {
 
 }
 //------------------------------------------------------------------------------
-function request_exchange_node($exchange_url_hide, $exchange_user_hide, $exchange_pass_hide, $request_hide) {
+function request_exchange_node($exchange_url_hide, $exchange_user_hide, $exchange_pass_hide, $request_hide, $request_json_encoded = false) {
 
 	// remove secure data from stacktrace
 	$exchange_url = $exchange_url_hide;
@@ -177,7 +177,7 @@ function request_exchange_node($exchange_url_hide, $exchange_user_hide, $exchang
 	$exchange_user_hide = '';
 	$exchange_pass = $exchange_pass_hide;
 	$exchange_pass_hide = '';
-	$request = $request_hide;
+	$request = $request_json_encoded ? $request_hide : json_encode($request_hide, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 	$request_hide = '';
 
 	$ch = curl_init();
@@ -206,7 +206,7 @@ function request_exchange_node($exchange_url_hide, $exchange_user_hide, $exchang
 	curl_setopt($ch, CURLOPT_VERBOSE			, false);
 	curl_setopt($ch, CURLOPT_POST				, true);
 	curl_setopt($ch, CURLOPT_FOLLOWLOCATION		, true);
-	curl_setopt($ch, CURLOPT_POSTFIELDS			, json_encode($request, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+	curl_setopt($ch, CURLOPT_POSTFIELDS			, $request);
 	//curl_setopt($ch, CURLOPT_USERAGENT		, "Mozilla/4.0 (Windows; U; Windows NT 5.0; En; rv:1.8.0.2) Gecko/20070306 Firefox/1.0.0.4");
 	curl_setopt($ch, CURLOPT_HEADER				, true);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER		, true);
