@@ -2,22 +2,38 @@
 //------------------------------------------------------------------------------
 namespace {
 //------------------------------------------------------------------------------
+function nano_time() {
+
+	$t = gettimeofday();
+
+	return bcadd(bcmul($t['sec'], 1000000000), $t['usec'] * 1000);
+
+}
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------
 // before use don'n forget execute cmd "bcdedit /set useplatformclock true"
 class nano_timer {
 
 	protected $counter_;
+	protected $ellapsed_;
 	protected $freq_;
 	protected $nano_mult_;
 	protected $nano_sum_;
+	protected static $hrtime_loaded_;
 
 	public function __construct($start = true) {
 
 		//parent::__construct();
 
-		$this->counter_ = new HRTime\StopWatch;//PerformanceCounter;
-		$this->freq_ = $this->counter_->getFrequency();
+		if( self::$hrtime_loaded_ === null )
+			self::$hrtime_loaded_ = extension_loaded('hrtime');
+
+		if( self::$hrtime_loaded_ ) {
+			$this->counter_ = new HRTime\StopWatch;//PerformanceCounter;
+			$this->freq_ = $this->counter_->getFrequency();
+		}
+
 		$this->nano_mult_ = 1000000000;
 
 		if( $start )
@@ -39,19 +55,28 @@ class nano_timer {
 
 	public function start() {
 
-		if( $this->counter_->isRunning() )
-			$this->counter_->stop();
+		if( self::$hrtime_loaded_ ) {
+			if( $this->counter_->isRunning() )
+				$this->counter_->stop();
 
-		$this->counter_->start();
-		$this->nano_sum_ = 0;
+			$this->counter_->start();
+			$this->nano_sum_ = 0;
+		}
+		else {
+			$this->counter_ = nano_time();
+		}
 
 	}
 
 	public function stop() {
 
-		if( $this->counter_->isRunning() )
-			$this->counter_->stop();
-
+		if( self::$hrtime_loaded_ ) {
+			if( $this->counter_->isRunning() )
+				$this->counter_->stop();
+		}
+		else {
+			$this->ellapsed_ = bcsub(nano_time(), $this->counter_);
+		}
 	}
 
 	public function restart() {
@@ -69,22 +94,38 @@ class nano_timer {
 
 	public function last_nano_time() {
 
-		$this->counter_->stop();
-		$e = $this->counter_->getLastElapsedTicks();
-		$this->counter_->start();
+		if( self::$hrtime_loaded_ ) {
+			$this->counter_->stop();
+			$e = $this->counter_->getLastElapsedTicks();
+			$this->counter_->start();
 
-		$this->nano_sum_ = bcadd($this->nano_sum_, $e);
+			$this->nano_sum_ = bcadd($this->nano_sum_, $e);
 
-		return bcdiv(bcmul($this->nano_sum_, $this->nano_mult_), $this->freq_);
+			return bcdiv(bcmul($this->nano_sum_, $this->nano_mult_), $this->freq_);
+		}
+
+		return bcsub(nano_time(), $this->counter_);
 
 	}
 
 	public function nano_time($seconds = true, $stop = true) {
 
-		if( $stop )
-			$this->counter_->stop();
+		if( self::$hrtime_loaded_ ) {
+			if( $stop )
+				$this->counter_->stop();
 
-		$ns = bcdiv(bcmul($this->counter_->getElapsedTicks(), $this->nano_mult_), $this->freq_);
+			$ns = bcdiv(bcmul($this->counter_->getElapsedTicks(), $this->nano_mult_), $this->freq_);
+
+			if( $seconds )
+				return [ $ns, $this->nano2secs($ns) ];
+
+			return $ns;
+		}
+
+		if( $stop )
+			$this->stop();
+
+		$ns = bcsub(nano_time(), $this->counter_);
 
 		if( $seconds )
 			return [ $ns, $this->nano2secs($ns) ];
