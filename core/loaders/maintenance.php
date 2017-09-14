@@ -57,7 +57,7 @@ EOT
 			$infobase->exec("DROP TABLE IF EXISTS customers_fts");
 			$infobase->create_scheme();
 
-			$infobase = new srv1c\infobase;
+			$infobase = new infobase;
 			$infobase->set_create_if_not_exists(false);
 			$infobase->initialize();
 
@@ -100,11 +100,13 @@ EOT
     		error_log("SQLITE INCREMENTAL VACUUMED, ellapsed: " . $timer->ellapsed_string($timer->last_nano_time()));
 		}
 
+		$ct = time();
+
 		$infobase->exec(<<<EOT
 			REPLACE INTO constants (
 				name, value_type, value_n
 			) VALUES (
-				'@last_maintenance', 2, ${time()}
+				'@last_maintenance', 2, ${ct}
 			)
 EOT
 		);
