@@ -8,39 +8,61 @@ require_once CORE_DIR . 'utils.php';
 //------------------------------------------------------------------------------
 function get_trigger_infobase() {
 
-	$infobase = new SQLite3(APP_DIR . 'data' . DIRECTORY_SEPARATOR . 'events.sqlite');
+	$fname = APP_DIR . 'data' . DIRECTORY_SEPARATOR . 'events.sqlite';
+	$exists = file_exists($fname);
+	$infobase = new SQLite3($fname);
 	$infobase->busyTimeout(config::$sqlite_busy_timeout);
 	$infobase->enableExceptions(true);
 
-	$pgsz = config::$sqlite_page_size;
-	$infobase->exec("PRAGMA page_size = ${pgsz}");
+	if( $exists === false ) {
 
-	$infobase->exec('PRAGMA journal_mode = WAL');
-	$infobase->exec('PRAGMA count_changes = OFF');
-	$infobase->exec('PRAGMA auto_vacuum = INCREMENTAL');
+		$infobase->exec('PRAGMA auto_vacuum = INCREMENTAL');
+
+		$pgsz = config::$sqlite_page_size;
+		$infobase->exec("PRAGMA page_size = ${pgsz}");
+
+		$infobase->exec('PRAGMA journal_mode = WAL');
+		$infobase->exec('PRAGMA count_changes = OFF');
+
+		$infobase->exec('PRAGMA synchronous = NORMAL');
+
+		$temp_store = config::$sqlite_temp_store;
+		$infobase->exec("PRAGMA temp_store = ${temp_store}");
+
+		$infobase->exec(<<<'EOT'
+			CREATE TABLE IF NOT EXISTS events (
+				timestamp	INTEGER,
+				ready		INTEGER,
+				sent		INTEGER,
+				event		TEXT
+			) /*WITHOUT ROWID*/
+EOT
+		);
+
+		$index_name = 'i' . substr(hash('haval256,3', 'events_by_ready'), -4);
+
+		$infobase->exec(<<<EOT
+			CREATE INDEX IF NOT EXISTS ${index_name} ON events (ready)
+EOT
+		);
+
+		$index_name = 'i' . substr(hash('haval256,3', 'events_by_ready_sent'), -4);
+
+		$infobase->exec(<<<EOT
+			CREATE INDEX IF NOT EXISTS ${index_name} ON events (ready, sent)
+EOT
+		);
+
+		$index_name = 'i' . substr(hash('haval256,3', 'events_by_timestamp'), -4);
+
+		$infobase->exec(<<<EOT
+			CREATE INDEX IF NOT EXISTS ${index_name} ON events (timestamp)
+EOT
+		);
+	}
 
 	$cachesz = config::$sqlite_cache_size;
 	$infobase->exec("PRAGMA cache_size = -${cachesz}");
-	$infobase->exec('PRAGMA synchronous = NORMAL');
-
-	$temp_store = config::$sqlite_temp_store;
-	$infobase->exec("PRAGMA temp_store = ${temp_store}");
-
-	$infobase->exec(<<<'EOT'
-		CREATE TABLE IF NOT EXISTS events (
-			timestamp	INTEGER,
-			ready		INTEGER,
-			event		TEXT
-		) /*WITHOUT ROWID*/
-EOT
-	);
-
-	$index_name = 'i' . substr(hash('haval256,3', 'events_by_ready'), -4);
-
-	$infobase->exec(<<<EOT
-		CREATE INDEX IF NOT EXISTS ${index_name} ON events (ready)
-EOT
-	);
 
 	return $infobase;
 

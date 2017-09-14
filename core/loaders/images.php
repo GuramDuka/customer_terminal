@@ -353,8 +353,7 @@ class images_loader extends objects_loader {
 		$timer->start();
 
 		$trigger = new \events_trigger;
-		$event = [ 'images' => array_keys($event) ];
-		$trigger->event(json_encode($event, JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION));
+		$trigger->event([ 'images' => array_keys($event) ]);
 		$trigger->fire();
 
 		if( config::$log_trigger_timing ) {

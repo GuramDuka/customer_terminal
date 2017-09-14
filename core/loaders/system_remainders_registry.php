@@ -78,10 +78,10 @@ EOT
 
 			extract($object);
 
+			$event[$product_uuid] = null;
+
 			foreach( $fields_uuid as $field )
 				$$field = uuid2bin(@$$field);
-
-			$event[$product_uuid] = null;
 
 			$w = '';
 
@@ -258,8 +258,7 @@ EOT
 		$timer->start();
 
 		$trigger = new \events_trigger;
-		$event = [ 'system_remainders' => array_keys($event) ];
-		$trigger->event(json_encode($event, JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION));
+		$trigger->event([ 'system_remainders' => array_keys($event) ]);
 		$trigger->fire();
 
 		if( config::$log_trigger_timing ) {

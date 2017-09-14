@@ -2,6 +2,8 @@
 //------------------------------------------------------------------------------
 namespace srv1c {
 //------------------------------------------------------------------------------
+require_once CORE_DIR . 'mq' . DIRECTORY_SEPARATOR . 'infobase.php';
+//------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------
 class maintenancer {
@@ -96,6 +98,11 @@ EOT
 			$timer = new \nano_timer;
 
 			$infobase->exec('PRAGMA incremental_vacuum');
+
+			config::$sqlite_cache_size = 4096;
+			$tinfobase = get_trigger_infobase();
+			$tinfobase->exec('DELETE FROM events WHERE timestamp <= ' . (time() - 86400));
+			$tinfobase->exec('PRAGMA incremental_vacuum');
 
     		error_log("SQLITE INCREMENTAL VACUUMED, ellapsed: " . $timer->ellapsed_string($timer->last_nano_time()));
 		}

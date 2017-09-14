@@ -22,7 +22,7 @@ function get_events() {
 		FROM
 			events
 		WHERE
-			ready
+			ready = 1
 		ORDER BY
 			timestamp,
 			rowid

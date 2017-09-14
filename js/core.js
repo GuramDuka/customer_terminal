@@ -3880,7 +3880,7 @@ class HtmlPageEvents extends HtmlPageState {
 				if( e.attributes.uuid )
 					m[e.attributes.uuid.value] = true;
 
-			let walk = function (uuids) {
+			let walk = (uuids) => {
 
 				for( let uuid of uuids )
 					if( m[uuid] )
@@ -3898,6 +3898,9 @@ class HtmlPageEvents extends HtmlPageState {
 
 				if( e.remainders )
 					walk(e.remainders);
+
+				if( e.system_remainders )
+					walk(e.system_remainders);
 
 				if( e.reserves )
 					walk(e.reserves);

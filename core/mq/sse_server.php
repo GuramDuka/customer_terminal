@@ -135,8 +135,8 @@ try {
 		FROM
 			events
 		WHERE
-			ready
-			AND NOT sent
+			ready = 1
+			AND sent IS NULL
 		ORDER BY
 			timestamp,
 			rowid

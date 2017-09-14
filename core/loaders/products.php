@@ -188,8 +188,7 @@ EOT;
 		$timer->start();
 
 		$trigger = new \events_trigger;
-		$event = [ 'products' => array_keys($event) ];
-		$trigger->event(json_encode($event, JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION));
+		$trigger->event([ 'products' => array_keys($event) ]);
 		$trigger->fire();
 
 		if( config::$log_trigger_timing ) {

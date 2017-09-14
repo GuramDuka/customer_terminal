@@ -41,10 +41,10 @@ class infobase extends \SQLite3 {
 
 			$pgsz = config::$sqlite_page_size;
 
+			$this->exec('PRAGMA auto_vacuum = INCREMENTAL');
 			$this->exec("PRAGMA page_size = ${pgsz}");
 			$this->exec('PRAGMA journal_mode = WAL');
 			$this->exec('PRAGMA count_changes = OFF');
-			$this->exec('PRAGMA auto_vacuum = INCREMENTAL');
 
 		}
 
