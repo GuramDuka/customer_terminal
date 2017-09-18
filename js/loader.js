@@ -65,13 +65,14 @@ function core_gear_loader() {
 	let resizer = e => {
 		let r = res();
 		let [ww, wh] = window_size();
+		let desktop = !SmartPhone.isAny() && !md.mobile() && !md.tablet() && !md.phone();
 		let html = `
 			:root {
 				--dppx					: ${r.dppx};
 				--dpi					: ${r.dpi};
 				--dpcm					: ${r.dpcm};
 				--dpmm					: ${r.dpmm};
-				--desktop				: ${!SmartPhone.isAny() && !md.mobile() && !md.tablet() && !md.phone() ? 1 : 0};
+				--desktop				: ${desktop ? 1 : 0};
 				--tablet				: ${md.tablet() ? 1 : 0};
 				--smart-phone			: ${SmartPhone.isAny() || md.phone() ? 1 : 0};
 				--window-width			: ${ww};
@@ -84,6 +85,7 @@ function core_gear_loader() {
 				--debug					: ${qp.dbg || qp.debug ? 1 : 0};
 			}
 		`;
+
 		let style = document.getElementById(style_id);
 
 		if( !style ) {
