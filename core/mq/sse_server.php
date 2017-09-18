@@ -48,7 +48,6 @@ try {
 		if( $infobase === null ) {
 
 			$infobase = new srv1c\infobase;
-			$infobase->set_create_if_not_exists(false);
 			$infobase->initialize();
 
 		}

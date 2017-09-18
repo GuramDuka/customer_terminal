@@ -1013,10 +1013,10 @@ class Render {
 
 			let f = new_page_state.category_ !== null_uuid && new_page_state.product_ === null_uuid;
 
-			selsb.fade(f);
-			carbb.fade(f);
+			selsb && selsb.fade(f);
+			carbb && carbb.fade(f);
 
-			let e = xpath_eval_single('html/body/div[@categories]');
+			let e = xpath_single('html/body/div[@categories]');
 
 			for( let cat_uuid in new_page_state.paging_state_by_category_ ) {
 
@@ -1041,7 +1041,7 @@ class Render {
 
 			}
 
-			selsb.blink(new_paging_state.selections_checked_);
+			selsb && selsb.blink(new_paging_state.selections_checked_);
 
 		};
 
@@ -1049,10 +1049,10 @@ class Render {
 
 			let f = new_page_state.category_ !== null_uuid && new_page_state.product_ === null_uuid;
 
-			selsb.fade(f);
-			carbb.fade(f);
+			selsb && selsb.fade(f);
+			carbb && carbb.fade(f);
 
-			let e = xpath_eval_single('html/body/div[@categories]');
+			let e = xpath_single('html/body/div[@categories]');
 
 			for( let cat_uuid in new_page_state.paging_state_by_category_ ) {
 
@@ -1091,19 +1091,19 @@ class Render {
 
 			}
 
-			carbb.blink(new_paging_state.select_by_car_checked_);
+			carbb && carbb.blink(new_paging_state.select_by_car_checked_);
 
 		};
 
 		let to_cart = function () {
 
-			backb.fadein();
-			pcart.fadein();
-			plist.fadeout();
-			pctrl.fadeout();
-			pinfo.fadeout();
-			selsb.fadeout();
-			carbb.fadeout();
+			backb && backb.fadein();
+			pcart && pcart.fadein();
+			plist && plist.fadeout();
+			pctrl && pctrl.fadeout();
+			pinfo && pinfo.fadeout();
+			selsb && selsb.fadeout();
+			carbb && carbb.fadeout();
 
 			for( let e of catsb )
 				e.fadeout();
@@ -1115,13 +1115,13 @@ class Render {
 
 		let to_list = function () {
 
-			backb.fadeout();
-			pcart.fadeout();
-			plist.fadein();
-			pctrl.fadein();
-			pinfo.fadeout();
-			selsb.fadeout();
-			carbb.fadeout();
+			backb && backb.fadeout();
+			pcart && pcart.fadeout();
+			plist && plist.fadein();
+			pctrl && pctrl.fadein();
+			pinfo && pinfo.fadeout();
+			selsb && selsb.fadeout();
+			carbb && carbb.fadeout();
 
 			for( let e of catsb )
 				e.fadein();
@@ -3279,12 +3279,16 @@ class HtmlPageEvents extends HtmlPageState {
 							btn.setAttribute('mode', 'percent');
 							element.display(false);
 							xpath_eval_single('div[@btn and @discount_percent]', element.parentNode).display(true);
+							let v = xpath_eval_single('div[@discount_value]/input[@discount_value]', element.parentNode);
+							this.discount_value_text_type_handler(v, cur_page_state, v.value);
 						}
 						else if( attrs.discount_percent ) {
 							let btn = xpath_eval_single('div[@btn and @discount]', element.parentNode);
 							btn.setAttribute('mode', 'price');
 							element.display(false);
 							xpath_eval_single('div[@btn and @discount_price]', element.parentNode).display(true);
+							let v = xpath_eval_single('div[@discount_value]/input[@discount_value]', element.parentNode);
+							this.discount_value_text_type_handler(v, cur_page_state, v.value);
 						}
 						else if( attrs.discount_accept ) {
 							let holder = xpath_eval_single('div[@btn and @discount]', element.parentNode);
@@ -3292,6 +3296,10 @@ class HtmlPageEvents extends HtmlPageState {
 								let value = holder.attributes.value.value;
 								if( !value.isEmpty() ) {
 									new_page_state = this.btn_dst_discount_accept_handler(cur_page_state, product, value);
+
+									if( document.activeElement === xpath_eval_single('div[@discount_value]/input[@discount_value]', element.parentNode) )
+										document.activeElement.blur();
+
 									this.switch_dst_discount_middle_pitem(holder);
 								}
 							}
@@ -3590,7 +3598,7 @@ class HtmlPageEvents extends HtmlPageState {
 							xpath_eval_single('html/body/div[@top]/div[@auth]').innerHTML = '';
 							this.barcode_scanner_rewrite(new_page_state, cur_page_state);
 						}
-						else if( element.attrs.vk_cancel ) {
+						else if( element.attributes.vk_cancel ) {
 							element.parentNode.display(false);
 						}
 
@@ -3724,10 +3732,10 @@ class HtmlPageEvents extends HtmlPageState {
 				e.deferredTarget = e.currentTarget ? e.currentTarget : e.deferredTarget;
 			}
 			else {
-				if( show_alert ) {
+				if( show_alert )
 					this.show_alert('<pre error>' + ex.message + "\n" + ex.stack + '</pre>', cur_page_state);
-					console.error(ex.message);
-				}
+				console.log(ex);
+				//console.log(ex.message + "\n" + ex.stack);
 				throw ex;
 			}
 
@@ -4057,13 +4065,16 @@ class HtmlPageManager extends HtmlPageEvents {
 			add_event(document, 'selectstart', (e) => { e.preventDefault(); return false; }, true);
 		}
 
-		if( this.dct_ )
+		if( this.dct_ ) {
 			add_event(window, 'barcode', e => this.events_handler(e), false);
+			add_event(window, 'startup_auth', e => this.events_handler(e), false);
+		}
 
 		add_event(window, 'startup', e => this.events_handler(e), false);
-		add_event(window, 'startup_auth', e => this.events_handler(e), false);
+	
 		setTimeout(() => {
-			window.dispatchEvent(new CustomEvent('startup_auth'));
+			if( this.dct_ )
+				window.dispatchEvent(new CustomEvent('startup_auth'));
 			window.dispatchEvent(new CustomEvent('startup'));
 		});
 	}

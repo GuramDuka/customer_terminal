@@ -56,7 +56,6 @@ EOT
 		$timer = new \nano_timer;
 
 		$this->infobase_ = new infobase;
-		$this->infobase_->set_create_if_not_exists(false);
 		$this->infobase_->initialize();
 
 		$pgsz = config::$page_size;
@@ -272,22 +271,27 @@ EOT
 			$anchor_filter = '(' . substr($anchor_filter, 4) . ')';*/
 
 			$filter = $this->infobase_->escapeString(transform_fts_filter($fts_filter));
+			$filter3 = mb_str_replace('"', '', $filter);
 			$raw_filter = $this->infobase_->escapeString($fts_filter);
 
 			$sql = <<<EOT
 				SELECT
-					MAX(rowid), uuid
+					MAX(rowid) AS rowid, uuid
 				FROM
 					products_fts
 				WHERE
 					-- Search for matches in all columns except "barcode"
 					-- TODO: for sqlite 3.20 -> products_fts MATCH '(-barcode : (${filter})) OR (barcode : ("${raw_filter}"))'
+					-- FTS5
 					products_fts MATCH '(-barcode : ${filter}) OR (barcode : "${raw_filter}")'
+					-- FTS3
+					--OR
+					--products_fts MATCH '(code:${filter3}) OR (name:${filter3}) OR (article:${filter3}) OR (description:${filter3}) OR (barcode:${raw_filter})'
 				GROUP BY
        				uuid
 EOT
 			;
-			
+			error_log($sql);
 			//$bind_values['fts_filter'] = $anchor_filter . ' AND ' . transform_fts_filter($fts_filter);
 
 			$with = @$selections === null && @$car === null ? 'WITH' : ',';

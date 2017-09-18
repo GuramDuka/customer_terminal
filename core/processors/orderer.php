@@ -68,7 +68,6 @@ EOT
 
 		$this->session_uuid_ = session_startup();
 		$this->infobase_ = new infobase;
-		$this->infobase_->set_create_if_not_exists(false);
 		$this->infobase_->initialize();
 
 		$this->infobase_->begin_transaction();

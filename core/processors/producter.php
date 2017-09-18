@@ -17,7 +17,6 @@ class producter_handler extends handler {
 		$timer = new \nano_timer;
 
 		$infobase = new infobase;
-		$infobase->set_create_if_not_exists(false);
 		$infobase->initialize();
 
 		extract($this->request_);

@@ -117,7 +117,7 @@ EOT
 			SELECT
 				name							AS name,
 				value_type						AS value_type,
-				COALESCE(value_uuid, value_s)	AS value
+				COALESCE(value_uuid, value_s, value_b, value_n)	AS value
 			FROM
 				constants
 			WHERE
@@ -138,7 +138,7 @@ EOT
 			if( $bin2uuid && $value_type === 4 )
 				$a[$name] = bin2uuid(@$value);
 			else if( $value_type === 1 )
-				$a[$name] = $value === 0 ? false : true;
+				$a[$name] = $value === null || $value === 0 ? false : true;
 			else
 				$a[$name] = $value;
 
@@ -207,9 +207,10 @@ EOT
 		}
 
 		//$data['barcode_eangnivc'] = htmlspecialchars($data['barcode_eangnivc'], ENT_HTML5);
-
-		if( $data !== null ) {
+		if( $data !== null )
 			$this->response_['order'] = $data;
+
+		if( $data !== null && @$data['uuid'] !== null ) {
 
 			if( @$this->request_['paper'] !== null ) {
 				$orders = @$_SESSION['ORDERS'];
@@ -231,7 +232,6 @@ EOT
 
 		$this->session_uuid_ = session_startup();
 		$this->infobase_ = new infobase;
-		$this->infobase_->set_create_if_not_exists(false);
 		$this->infobase_->initialize();
 
 		extract($this->request_);
@@ -352,11 +352,17 @@ EOT
 		else {
 			$c = $this->fetch_constants();
 
-			$this->response_['constants'] = [
-				'pending_orders'				=> $c['pending_orders'],
-				'ТекущийМагазинАдрес'			=> $c['ТекущийМагазинАдрес'],
-				'ТекущийМагазинПредставление'	=> $c['ТекущийМагазинПредставление']
+			$allowed = [
+				'pending_orders'				=> false,
+				'ТекущийМагазинАдрес'			=> '',
+				'ТекущийМагазинПредставление'	=> ''
 			];
+
+			foreach( $c as $k => $v )
+				if( array_key_exists($k, $allowed) )
+					$allowed[$k] = $v;
+
+			$this->response_['constants'] = $allowed;
 		}
 
 		$timer->restart();

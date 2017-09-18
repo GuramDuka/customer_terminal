@@ -12,12 +12,6 @@ namespace srv1c {
 //------------------------------------------------------------------------------
 class infobase extends \SQLite3 {
 
-	protected $create_if_not_exists_ = true;
-
-	public function set_create_if_not_exists($v) {
-		$this->create_if_not_exists = $v;
-	}
-
 	public function __construct() {
 	}
 
@@ -56,7 +50,7 @@ class infobase extends \SQLite3 {
 		$this->exec("PRAGMA temp_store = ${temp_store}");
 		//$this->exec('PRAGMA busy_timeout = 180000');
 
-		if( config::$debug ) {
+		if( $new_ib || config::$force_create_infobase ) {
 
 			$s = 'SQLITE compile options: ';
 			$result = $this->query('PRAGMA compile_options');
@@ -65,10 +59,6 @@ class infobase extends \SQLite3 {
 				$s .= "\n" . $r['compile_option'];
 
 			error_log($s);
-
-		}
-
-		if( ($new_ib && $this->create_if_not_exists_) || config::$force_create_infobase ) {
 
 			try {
 
@@ -600,7 +590,7 @@ EOT
 EOT
 		);
 
-		$this->exec(<<<'EOT'
+		$sql = <<<'EOT'
 			CREATE VIRTUAL TABLE IF NOT EXISTS products_fts USING fts5 (
 				uuid UNINDEXED,
 				code,
@@ -611,7 +601,8 @@ EOT
 				--prefix = '2 3 4',
 				detail = full,
 				--columnsize = 1,
-        		tokenize = "unicode61");
+        		tokenize = "unicode61"
+			);
 
 			-- Triggers to keep the FTS index up to date.
 			CREATE TRIGGER IF NOT EXISTS products_ad AFTER DELETE ON products FOR EACH ROW
@@ -693,7 +684,8 @@ EOT
 				inn,
 				description,
 				detail = full,
-        		tokenize = "unicode61");
+        		tokenize = "unicode61"
+			);
 
 			-- Triggers to keep the FTS index up to date.
 			CREATE TRIGGER IF NOT EXISTS customers_ad AFTER DELETE ON customers FOR EACH ROW
@@ -711,7 +703,23 @@ EOT
 				INSERT INTO customers_fts VALUES (new.uuid, new.name_fti, new.inn, new.description_fti);
 			END;
 EOT
-		);
+		;
+
+		try {
+			$this->exec($sql);
+		}
+		catch( \Throwable $e ) {
+
+			if( mb_strpos($e->getMessage(), 'no such module: fts') === false )
+				throw $e;
+
+			$sql = mb_str_replace('fts5', 'fts3', $sql);
+			$sql = mb_str_replace('detail', '--detail', $sql);
+			//$sql = mb_str_replace('tokenize', '--tokenize', $sql);
+
+			$this->exec($sql);
+
+		}
 
 	}
 

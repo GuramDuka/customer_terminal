@@ -23,7 +23,6 @@ class pending_orders {
 		$timer = new \nano_timer;
 
 		$infobase = new infobase;
-		$infobase->set_create_if_not_exists(false);
 		$infobase->initialize();
 
 		if( @$this->parameters_['operation'] === 'GET' ) {

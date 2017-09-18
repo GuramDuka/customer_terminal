@@ -20,7 +20,6 @@ class maintenancer {
 		config::$sqlite_temp_store = 'FILE';
 
 		$infobase = new infobase;
-		$infobase->set_create_if_not_exists(false);
 		$infobase->initialize();
 
 		$result = $infobase->query(<<<'EOT'
@@ -31,36 +30,39 @@ class maintenancer {
 			FROM
 				constants
 			WHERE
-				name IN ('@last_maintenance')
+				name IN ('@last_maintenance', '@last_merge_fts')
 EOT
 		);
 
 		$last_maintenance = 0;
+		$last_merge_fts = 0;
 
-		while( $r = $result->fetchArray(SQLITE3_ASSOC) )
-			$last_maintenance = $r['value'];
+		while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
+			extract($r);
+			$name = mb_substr($name, 1);
+			$$name = $value;
+		}
 
 		//list($y, $m, $d) = explode('-', date('Y-m-d', time()));
 		//$day_begin = mktime(0, 0, 0, $m, $d, $y);
 		//$day_end = mktime(23, 59, 59, $m, $d, $y);
-		$cur_day = intval(time() / 86400);
+		$ct = time();
+		$cur_hour = intval($ct / 3600);
+		$last_merge_fts = intval($last_merge_fts / 3600);
+		$cur_day = intval($ct / 86400);
 		$last_maintenance_day = intval($last_maintenance / 86400);
-
-		if( $last_maintenance_day === $cur_day )
-			return;
 
 		extract($this->parameters_);
 
-		if( @recreate_fts ) {
+		if( @clean_fts && $last_maintenance_day !== $cur_day ) {
 
 			$timer = new \nano_timer;
 
-			$infobase->exec("DROP TABLE IF EXISTS products_fts");
+			/*$infobase->exec("DROP TABLE IF EXISTS products_fts");
 			$infobase->exec("DROP TABLE IF EXISTS customers_fts");
 			$infobase->create_scheme();
 
 			$infobase = new infobase;
-			$infobase->set_create_if_not_exists(false);
 			$infobase->initialize();
 
 			$infobase->exec( <<<'EOT'
@@ -92,31 +94,92 @@ EOT
 			);
 
     		error_log("SQLITE FTS TABLES RECREATED, ellapsed: " . $timer->ellapsed_string($timer->last_nano_time()));
+*/
+			$infobase->exec(<<<'EOT'
+				WITH ids AS ( 
+					SELECT
+						MAX(rowid) AS rowid, uuid, barcode
+					FROM
+						products_fts
+					GROUP BY
+       					uuid, barcode
+				)
+				DELETE FROM products_fts
+				WHERE
+					rowid NOT IN (SELECT rowid FROM ids);
+
+				WITH ids AS ( 
+					SELECT
+						MAX(rowid) AS rowid, uuid
+					FROM
+						customers_fts
+					GROUP BY
+       					uuid
+				)
+				DELETE FROM customers_fts
+				WHERE
+					rowid NOT IN (SELECT rowid FROM ids)
+EOT
+			);
+
+    		error_log("SQLITE FTS TABLES CLEANED, ellapsed: " . $timer->ellapsed_string($timer->last_nano_time()));
+
 		}
 
-		if( @incremental_vacuum ) {
+		if( @merge_fts && $last_merge_fts !== $cur_hour ) {
+
+			foreach( [ 'products_fts', 'customers_fts' ] as $t ) {
+				$timer = new \nano_timer;
+				try {
+					$infobase->exec("INSERT INTO ${t} (${t}, rank) VALUES('merge', 150)");
+				}
+				catch( \Throwable $e ) {
+
+					$m = $e->getMessage();
+
+					if( mb_strpos($m, 'SQL logic error') === false &&
+						mb_strpos($m, 'no column named rank') === false )
+						throw $e;
+
+					$infobase->exec("INSERT INTO ${t} (${t}) VALUES('merge=8,150')");
+				}
+    			error_log("SQLITE FTS MERGE, ${t} ellapsed: " . $timer->ellapsed_string($timer->last_nano_time()));
+			}
+
+			$infobase->exec(<<<EOT
+				REPLACE INTO constants (
+					name, value_type, value_n
+				) VALUES (
+					'@last_merge_fts', 2, ${ct}
+				)
+EOT
+			);
+
+		}
+
+		if( @incremental_vacuum && $last_maintenance_day !== $cur_day ) {
 			$timer = new \nano_timer;
 
 			$infobase->exec('PRAGMA incremental_vacuum');
 
 			config::$sqlite_cache_size = 4096;
 			$tinfobase = get_trigger_infobase();
-			$tinfobase->exec('DELETE FROM events WHERE timestamp <= ' . (time() - 86400));
+			$tinfobase->exec('DELETE FROM events WHERE timestamp <= ' . ($ct - 86400));
 			$tinfobase->exec('PRAGMA incremental_vacuum');
 
     		error_log("SQLITE INCREMENTAL VACUUMED, ellapsed: " . $timer->ellapsed_string($timer->last_nano_time()));
 		}
 
-		$ct = time();
-
-		$infobase->exec(<<<EOT
-			REPLACE INTO constants (
-				name, value_type, value_n
-			) VALUES (
-				'@last_maintenance', 2, ${ct}
-			)
+		if( (@clean_fts || @incremental_vacuum) && $last_maintenance_day !== $cur_day ) {
+			$infobase->exec(<<<EOT
+				REPLACE INTO constants (
+					name, value_type, value_n
+				) VALUES (
+					'@last_maintenance', 2, ${ct}
+				)
 EOT
-		);
+			);
+		}
 	}
 
 };

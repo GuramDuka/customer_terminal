@@ -19,7 +19,6 @@ class categorer_handler extends handler {
 		$timer = new \nano_timer;
 
 		$this->infobase_ = new infobase;
-		$this->infobase_->set_create_if_not_exists(false);
 		$this->infobase_->initialize();
 
 		extract($this->request_);

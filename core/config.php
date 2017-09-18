@@ -12,7 +12,7 @@ class config {
 	public static $sqlite_busy_timeout							= 1200000;	// 1200 seconds - 20 minutes
 	public static $sqlite_tx_duration							= 50000000;	// in nanoseconds, 1000ns == 1micros, 1000000ns == 1ms, 1000000000ns = 1s. 50ms by default
 	public static $sqlite_page_size								= 4096;
-	public static $sqlite_cache_size							= 65536;	// 131072, 262144, 524288
+	public static $sqlite_cache_size							= 524288;	// 131072, 262144, 524288
 	public static $sqlite_temp_store							= 'MEMORY';
 
 };
