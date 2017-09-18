@@ -66,13 +66,13 @@ Header set Access-Control-Allow-Methods GET,PUT,POST
 	ExpiresByType image/svg+xml "modification plus 3600 seconds"
 	ExpiresByType text/javascript "modification plus 600 seconds"
 	ExpiresByType text/html "modification plus 600 seconds"
-	ExpiresByType text/css "modification plus 1 seconds"
+	ExpiresByType text/css "modification plus 600 seconds"
 	ExpiresByType text/json "modification plus 0 seconds"
 	ExpiresByType application/x-shockwave-flash "modification plus 3600 seconds"
-	ExpiresByType application/x-javascript "modification plus 1 seconds"
-	ExpiresByType application/javascript "modification plus 1 seconds"
+	ExpiresByType application/x-javascript "modification plus 600 seconds"
+	ExpiresByType application/javascript "modification plus 600 seconds"
 	ExpiresByType application/x-font-ttf "modification plus 3600 seconds"
-	ExpiresByType application/xhtml+xml "modification plus 1 seconds"
+	ExpiresByType application/xhtml+xml "modification plus 600 seconds"
 	ExpiresByType application/json "modification plus 0 seconds"
 </IfModule>
 
