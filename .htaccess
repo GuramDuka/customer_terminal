@@ -78,18 +78,15 @@ Header set Access-Control-Allow-Methods GET,PUT,POST
 
 <IfModule headers_module>
 	<filesMatch "\.(ico|pdf|flv|jpg|jpeg|png|gif|swf)$">
-		Header set Cache-Control "max-age=2592000, public"
+		Header set Cache-Control "max-age=86400, public"
 	</filesMatch>
 	<filesMatch "\.(css)$">
-		Header set Cache-Control "max-age=604800, public"
+		Header set Cache-Control "max-age=3600, public"
 	</filesMatch>
 	<filesMatch "\.(js)$">
-		Header set Cache-Control "max-age=216000, private"
-	</filesMatch>
-	<filesMatch "\.(xml|txt)$">
-		Header set Cache-Control "max-age=216000, public, must-revalidate"
+		Header set Cache-Control "max-age=3600, private"
 	</filesMatch>
 	<filesMatch "\.(html|htm|php)$">
-		Header set Cache-Control "max-age=1, private, must-revalidate"
+		Header set Cache-Control "max-age=600, private, must-revalidate"
 	</filesMatch>
 </ifModule>

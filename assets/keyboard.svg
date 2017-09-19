@@ -8,8 +8,8 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="16"
-   height="16"
-   style="fill:#888"
+   height="12"
+   style="fill:#888888"
    version="1.1"
    id="svg26"
    sodipodi:docname="keyboard.svg"
@@ -22,7 +22,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -42,83 +42,87 @@
      id="namedview28"
      showgrid="false"
      inkscape:zoom="14.75"
-     inkscape:cx="-3.6610169"
+     inkscape:cx="-15.322034"
      inkscape:cy="8"
      inkscape:window-x="-4"
      inkscape:window-y="-4"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg26" />
-  <path
-     inkscape:connector-curvature="0"
-     id="path2"
-     d="m 0.5,4.5 h 15 v 11 h -15 z"
-     style="fill:none;stroke:#008bff;stroke-opacity:1" />
-  <rect
-     id="rect4"
-     y="6"
-     x="2"
-     height="2"
-     width="2"
-     style="fill:#008bff;fill-opacity:1" />
-  <rect
-     id="rect6"
-     y="6"
-     x="5"
-     height="2"
-     width="2"
-     style="fill:#008bff;fill-opacity:1" />
-  <rect
-     id="rect8"
-     y="6"
-     x="8"
-     height="2"
-     width="2"
-     style="fill:#008bff;fill-opacity:1" />
-  <path
-     inkscape:connector-curvature="0"
-     id="path10"
-     d="m 11,6 h 3 v 5 H 12 V 8 h -1 z"
-     style="fill:#008bff;fill-opacity:1" />
-  <rect
-     id="rect12"
-     y="12"
-     x="12"
-     height="2"
-     width="2"
-     style="fill:#008bff;fill-opacity:1" />
-  <rect
-     id="rect14"
-     y="12"
-     x="5"
-     height="2"
-     width="6"
-     style="fill:#008bff;fill-opacity:1" />
-  <rect
-     id="rect16"
-     y="9"
-     x="9"
-     height="2"
-     width="2"
-     style="fill:#008bff;fill-opacity:1" />
-  <rect
-     id="rect18"
-     y="9"
-     x="6"
-     height="2"
-     width="2"
-     style="fill:#008bff;fill-opacity:1" />
-  <rect
-     id="rect20"
-     y="12"
-     x="2"
-     height="2"
-     width="2"
-     style="fill:#008bff;fill-opacity:1" />
-  <rect
-     id="rect22"
-     y="9"
-     x="2"
-     height="2"
-     width="3"
-     style="fill:#008bff;fill-opacity:1" />
+  <g
+     id="g836"
+     transform="translate(0,-4)">
+    <path
+       style="fill:none;stroke:#008bff;stroke-opacity:1"
+       d="m 0.5,4.5 h 15 v 11 h -15 z"
+       id="path2"
+       inkscape:connector-curvature="0" />
+    <rect
+       style="fill:#008bff;fill-opacity:1"
+       width="2"
+       height="2"
+       x="2"
+       y="6"
+       id="rect4" />
+    <rect
+       style="fill:#008bff;fill-opacity:1"
+       width="2"
+       height="2"
+       x="5"
+       y="6"
+       id="rect6" />
+    <rect
+       style="fill:#008bff;fill-opacity:1"
+       width="2"
+       height="2"
+       x="8"
+       y="6"
+       id="rect8" />
+    <path
+       style="fill:#008bff;fill-opacity:1"
+       d="m 11,6 h 3 v 5 H 12 V 8 h -1 z"
+       id="path10"
+       inkscape:connector-curvature="0" />
+    <rect
+       style="fill:#008bff;fill-opacity:1"
+       width="2"
+       height="2"
+       x="12"
+       y="12"
+       id="rect12" />
+    <rect
+       style="fill:#008bff;fill-opacity:1"
+       width="6"
+       height="2"
+       x="5"
+       y="12"
+       id="rect14" />
+    <rect
+       style="fill:#008bff;fill-opacity:1"
+       width="2"
+       height="2"
+       x="9"
+       y="9"
+       id="rect16" />
+    <rect
+       style="fill:#008bff;fill-opacity:1"
+       width="2"
+       height="2"
+       x="6"
+       y="9"
+       id="rect18" />
+    <rect
+       style="fill:#008bff;fill-opacity:1"
+       width="2"
+       height="2"
+       x="2"
+       y="12"
+       id="rect20" />
+    <rect
+       style="fill:#008bff;fill-opacity:1"
+       width="3"
+       height="2"
+       x="2"
+       y="9"
+       id="rect22" />
+  </g>
 </svg>

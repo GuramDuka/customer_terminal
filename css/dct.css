@@ -63,26 +63,43 @@
 		position			: relative;
 	}
 
+	html {
+		width				: 100%;
+		min-height			: calc(var(--max-window-height));
+		height				: calc(var(--max-window-height));
+		margin				: 0;
+		padding				: 0;
+	}
+
 	html > body {
-		width				: calc(var(--window-width) * 1px);
-		min-height			: calc((var(--screen-height) - var(--screen-height) / 3) * 1px);
-		height				: calc(var(--window-height) * 1px);
+		width				: 100%;
+		/*min-height			: calc((var(--screen-height) - var(--screen-height) / 3));*/
+		min-height			: calc(var(--max-window-height));
+		height				: calc(var(--max-window-height));
+		margin				: 0;
+		padding				: 0;
 	}
 
 	html > body > div[top] {
-		height				: 10%;
+		float				: left;
+		height				: calc(6% - var(--screen-portrait) * 2.5% * var(--not-smart-phone) + 1% * var(--smart-phone) + 4% * var(--screen-landscape) * var(--smart-phone));
+		/*height				: 6%;*/
+		margin				: 0;
+		padding				: 0;
 	}
 
 	html > body > div[top] > div[logo] {
 		float				: left;
-		width				: 17.5%;
+		width				: 15%;
 		height				: 100%;
 		margin-right		: 2px;
+		background-position	: left center;
 	}
 
 	html > body > div[top] > div[auth] {
 		float				: left;
-		width				: 20%;
+		width				: auto;
+		max-width			: 20%;
 		height				: 100%;
 		margin-right		: 2px;
 		word-wrap			: break-word;
@@ -93,12 +110,14 @@
 		text-decoration		: none;
 		text-transform		: uppercase;
 		text-align			: left;
+		padding-top			: calc(var(--dpmm) * 1);
+		padding-left		: calc(var(--dpmm) * 1);
 	}
 
 	html > body > div[top] > div[cart_informer] {
 		float				: right;
-		width				: 55%;
-		height				: 90%;
+		width				: auto;
+		height				: 75%;
 	}
 
 	html > body > div[top] > div[cart_informer] > div[cinfo] {
@@ -122,41 +141,33 @@
 		margin-left			: 3px;
 	}
 
-	html > body > div[top] > div[cart_informer] > div[btn][drop],
-	html > body > div[top] > div[cart_informer] > div[btn][cart],
-	html > body > div[top] > div[cart_informer] > div[btn][cheque] {
-		height				: 20%;
-		float				: right;
-		margin-right		: 3px;
-		display				: none;
-	}
-
-	html > body > div[top] > div[cart_informer] > div[btn][drop] > img[btn_ico] {
-		/* fix: shift down */
-		margin-top			: -2.1%;
-	}
-
-	html > body > div[top] > div[cart_informer] > div[btn][cart] > img[btn_ico] {
-		/* fix: shift down */
-		margin-top			: -3.1%;
-	}
-
-	html > body > div[top] > div[cart_informer] > div[btn][cheque] > img[btn_ico] {
-		/* fix: shift down */
-		margin-top			: -3.1%;
-	}
-
 	html > body > div[middle] {
+		float				: left;
 		display				: inline-block;
-		height				: 78.6%;
+		height				: calc(100%
+				- /* top */
+				(6% - var(--screen-portrait) * 2.5% * var(--not-smart-phone) + 1% * var(--smart-phone) + 4% * var(--screen-landscape) * var(--smart-phone))
+				- /* mount */
+				(10% - var(--screen-portrait) * 2.5% * var(--not-smart-phone) + 4% * var(--screen-landscape) * var(--smart-phone))
+		);
+		/*height				: 84%;*/
 		overflow			: auto;
+		margin				: 0;
+		padding				: 0;
+		/*border				: 1px solid red;*/
 	}
 
 	html > body > div[mount] {
-		position			: static;
-		height				: calc(10.75% + var(--smart-phone) * 0.03125%);
+		float				: left;
+		position			: relative;
+		height				: calc(10% - var(--screen-portrait) * 2.5% * var(--not-smart-phone) + 4% * var(--screen-landscape) * var(--smart-phone));
+		/*height				: 10%;*/
+		background-size		: 100% calc(80% - var(--screen-landscape) * 10% - var(--screen-portrait) * 4%
+					- 5% * var(--screen-landscape) * var(--smart-phone)), 100% 100%;
+		background-position	: center bottom;
+		top					: inherit;
 
-		vertical-align		: middle;
+		vertical-align		: top;
 		text-align			: center;
 		font-size			: 50%;
 		font-weight			: bolder;
@@ -164,6 +175,9 @@
 		text-decoration		: none;
 		text-transform		: uppercase;
 		color				: darkblue;
+		margin				: 0;
+		padding				: 0;
+		/*border				: 1px solid blue;*/
 	}
 
 	html > body > i[btn] {
@@ -177,43 +191,36 @@
 		height				: 24px;
 		background-image	: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoV2luZG93cykiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QzFFMjMzNTBFNjcwMTFFMkIzMERGOUMzMzEzM0E1QUMiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QzFFMjMzNTFFNjcwMTFFMkIzMERGOUMzMzEzM0E1QUMiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpDMUUyMzM0RUU2NzAxMUUyQjMwREY5QzMzMTMzQTVBQyIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpDMUUyMzM0RkU2NzAxMUUyQjMwREY5QzMzMTMzQTVBQyIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PtQr90wAAAUuSURBVHjanFVLbFRVGP7ua97T9DGPthbamAYYBNSMVbBpjCliWWGIEBMWsnDJxkh8RDeEDW5MDGticMmGBWnSlRSCwgLFNkqmmrRIqzjTznTazkxn5s7c6/efzm0G0Jhwkj/nP+d/nv91tIWFBTQaDQWapkGW67p4ltUub5qmAi0UCqF/a/U2m81tpmddotwwDGSz2dzi4uKSaOucnJycGhsbe1XXdQiIIcdxEAgEtgXq9brySHCht79UXi/8QheawN27d385fPjwuEl6XyKR6LdtW7t06RLK5TKOHj2K/fv3Q87Dw8OYn5/HiRMnMDs7i5mZGQwODiqlPp8PuVwO6XRaOXb16lXl1OnTp5FMJvtosF8M+MWLarWqGJaWlpBKpRRcu3YN4+PjmJ6exsTEhDJw5coVjI6OKgPhcBiZTAbxeBx+vx+XL19Gd3c3Tp48Ka9zqDYgBlTQxYNgMIhIJKLCILkQb+TZsgvdsiyFi+feWRR7oRNZyanQtvW2V4DEUUBiK2eJpeDirSyhCe7F2QPh8fiEp72i9PbsC5G52DbiKZA771yr1dTuGfJ4PQNPFoAyQNR1aNEmsS5eyB3PgjeooMZd2AWvNmzYci/Gea7TeFOcI93jV/K67noGmi4vdRI9gPSDeMLSdKUBZZczlWm1rTtHjLZ24d+WER2tc8N1m+Y+ID74wx0zGYvhg9UNrJdtHJyZRdQfwPsrq9g99xsGlgsYmr6BNzO/IVwsYfjBQ6XYz6JI/72MV366B5/lw0elOkJWGUM3bmKtWjXSLuLaBWhnPnnp0FfoiFi4+TMfVAb2poBkDLjO845uYLEAjL4ALGWBP5YAOsP4AJYBFDaB1HOSVWD2PuV95H2RdV93Lv74/cf6p6Zxq/h6OofeOPJBC39JtONdwOAAViOs4p4OFGTf0Uc8iiyrr9YdQrUnDLsngrVOC0jQib44HlF2RafRZBz1Qy+vfhgK3NJZBlrm+LEm9qWwzFgLU7Ozg0JxZP06jQSRpQ7EerAWDSt6PuhHPmChEAog56fCLvJT5hHTm3OZkz3DyLx7XNWTGEA1GkV14gjWgwbW0ESVjYRwCOuai03L5E7OUBAV4kXSS4auoGIaKOma4m8EA5R1sMEGLh95C+XuLph0WJWpxepYYLtfT0RRgY1KgNODY6BoaChRuEhDCIZQYseuki5KN6hcQHiq7OZNv4/Zq2O6P4Lfkwn46vZjjaYZrIpvWbpzjLErrc4xUGE4avRedpYJalRcIl5hQius/SrPm9xrNOQYJhao6BvNUeWqtY8KaWuNjHOFAr7mM9f4NA4UbKysoUJ8PV9UzVOx6wxDDWUOxnK1pmCD07fOMAvtIsM3l89Dl3HRGhVma9AZMqjOnz2LQqWCxs6dqr3T7x1DTzKJaG8SekcHhg4cgI/56uKdlKnBV/WndqN3YAB/7tyBd3oT6GBIOzs7kc/nDfFdDFT5bS73cp06dQoaPa/Rw/rtO/resTHxxE2m9rCrbSR27UJCcMf1BpiA5rAAGgdfc868fUR1sMwj0cm9Iu9IctweisViB3hhKTHDcHc5jv/LspbyaZrR1OD82/fIlOkuB9LnEWRmDX2TsddUPg3D5gvuc0je0rZaD5EW6G3yjS+A3eeBEWq3XW/Abw1HhUspXADufQb86oW7tZytkYCN//3hHwBvDALPi8EnSOYK8DAOfCc2h4aGcO7cuafkzampqf9UripH12/DtOZbx8ciVGzYy5OO40o25ascGRl5Ssc/AgwAjW3JwqIUjSYAAAAASUVORK5CYII=");*/
 
-		width				: calc(var(--dpmm) * 10 * 1px);
-		height				: calc(var(--dpmm) * 10 * 1px);
-		/*top					: calc(100% - 11%);
-		left				: calc(100% - calc(var(--dpmm) * 11 * 1px));*/
-
+		width				: calc(var(--dpmm) * 9);
+		height				: calc(var(--dpmm) * 9);
+		top					: calc(100%
+				- var(--dpmm) * 10
+				- var(--debug) * var(--desktop) * 88%
+		);
 		background-color	: transparent;
-		background-size		: contain;
+		background-size		: 100% 100%;
 		background-repeat	: no-repeat;
-		background-position	: center;
+		background-position	: center center;
 		margin				: 0px;
 		padding				: 0px;
-		float				: none;
 		border				: 0;
+		float				: none;
 	}
 
 	html > body > i[btn][scan] {
 		background-image	: url(../assets/scanner/if_barcode_173153.svg);
-		top					: calc(100% - 9.5% - var(--smart-phone) * 0.5% - var(--debug) * var(--desktop) * 88%);
-		left				: calc(100% - calc(var(--dpmm) * 9 * 1px));
-		width				: calc(var(--dpmm) * 9 * 1px);
-		height				: calc(var(--dpmm) * 9 * 1px);
+		left				: calc(100% - var(--dpmm) * 9 - var(--dpmm) * 1);
 		display				: inline-block;
 	}
 
 	html > body > i[btn][order] {
 		background-image	: url(../assets/80e2334a553b118e3a09d7a44b266cd0.svg);
-		left				: calc(0% + 1px);
-		top					: calc(100% - 9.5% - var(--smart-phone) * 0.5% - var(--debug) * var(--desktop) * 88%);
-		width				: calc(var(--dpmm) * 9 * 1px);
-		height				: calc(var(--dpmm) * 9 * 1px);
+		left				: calc(0% + var(--dpmm) * 1);
 	}
 
 	html > body > i[btn][vks] {
 		background-image	: url(../assets/keyboard.svg);
-		left				: calc(var(--dpmm) * 8 * 1px + 1px);
-		top					: calc(100% - 9.5% - var(--smart-phone) * 0.5% - var(--debug) * var(--desktop) * 88%);
-		height				: calc(var(--dpmm) * 6 * 1px);
+		left				: calc(var(--dpmm) * 9 + var(--dpmm) * 2);
 		display				: inline-block;
 	}
 
@@ -261,7 +268,7 @@
 	html > body > div[middle] > div[pitem] {
 		width				: 100%;
 		height				: auto;
-		min-height			: calc(var(--dpmm) * 11 * 1px);
+		min-height			: calc(var(--dpmm) * 11);
 		float				: left;
 		padding-top			: 2px;
 		border-top			: 3px solid #dfba3c;
@@ -293,15 +300,15 @@
 	}
 
 	html > body > div[middle] > div[pitem] > div[txt][have_img] {
-		width				: calc(100% - var(--dpmm) * 9.99 * 1px);
+		width				: calc(100% - var(--dpmm) * 9.99);
 	}
 
 	html > body > div[middle] > div[pitem] > i[pimg] {
 		position			: absolute;
 		top					: 2px;
-		left				: calc(100% - var(--dpmm) * 10 * 1px);
-		width				: calc(var(--dpmm) * 10 * 1px); /* 10mm */
-		height				: calc(var(--dpmm) * 10 * 1px); /* 10mm */
+		left				: calc(100% - var(--dpmm) * 10);
+		width				: calc(var(--dpmm) * 10); /* 10mm */
+		height				: calc(var(--dpmm) * 10); /* 10mm */
 		/*float				: right;*/
 		background-color	: transparent;
 		background-size		: 100% auto;
@@ -314,7 +321,7 @@
 		float				: none;
 		width				: auto;
 		height				: auto;
-		min-height			: calc(var(--dpmm) * 10 * 1px);
+		min-height			: calc(var(--dpmm) * 10);
 		font-family			: "droid";
 		font-size			: calc(100% - var(--smart-phone) * 5% - var(--desktop) * 35%);
 		font-weight			: bold;
@@ -330,8 +337,8 @@
 	html > body > div[middle] > div[pitem] > div[btn] {
 		display				: none;
 		float				: none;
-		width				: calc(var(--dpmm) * 9 * 1px);
-		height				: calc(var(--dpmm) * 9 * 1px);
+		width				: calc(var(--dpmm) * 9);
+		height				: calc(var(--dpmm) * 9);
 		padding				: 0;
 		margin				: 0;
 		margin-bottom		: 2px;
@@ -378,7 +385,7 @@
 		float				: none;
 		width				: auto;
 		height				: auto;
-		min-height			: calc(var(--dpmm) * 10 * 1px);
+		min-height			: calc(var(--dpmm) * 10);
 		font-family			: "droid";
 		font-size			: calc(100% - var(--smart-phone) * 5% - var(--desktop) * 35%);
 		font-weight			: bold;
@@ -407,7 +414,7 @@
 	html > body > div[middle] > div[orders_panel] > div[order] {
 		width				: 100%;
 		height				: auto;
-		min-height			: calc(var(--dpmm) * 11 * 1px);
+		min-height			: calc(var(--dpmm) * 11);
 		float				: left;
 		/*white-space			: nowrap;*/
 		word-wrap			: break-word;
@@ -429,7 +436,7 @@
 		position			: relative;
 		top					: 0;
 		left				: 0;
-		width				: calc(100% - var(--dpmm) * 9.99 * 1px);
+		width				: calc(100% - var(--dpmm) * 9.99);
 		width				: 100%;
 		height				: auto;
 	}
@@ -438,9 +445,9 @@
 		display				: none;
 		position			: absolute;
 		top					: 0;
-		left				: calc(100% - var(--dpmm) * 10 * 1px);
-		width				: calc(var(--dpmm) * 10 * 1px);
-		height				: 90%; /*calc(var(--dpmm) * 10 * 1px);*/
+		left				: calc(100% - var(--dpmm) * 10);
+		width				: calc(var(--dpmm) * 10);
+		height				: 90%;
 		overflow			: hidden;
 		border				: 0;
 		padding				: 0;
@@ -450,8 +457,8 @@
 	html > body > div[middle] > div[orders_panel] > div[order] > div[btn] {
 		display				: none;
 		float				: left;
-		width				: calc(var(--dpmm) * 9 * 1px);
-		height				: calc(var(--dpmm) * 9 * 1px);
+		width				: calc(var(--dpmm) * 9);
+		height				: calc(var(--dpmm) * 9);
 		padding				: 0;
 		margin				: 0;
 		line-height			: 0;
@@ -490,7 +497,7 @@
 		left				: 2%;
 		width				: calc(96% - 3px * 2);
 		height				: calc(96% - 3px * 2);
-		min-height			: calc((var(--screen-height) - var(--screen-height) / 3) * 1px);
+		min-height			: calc(var(--max-window-height) - var(--max-window-height) 10 / 100);
 		float				: none;
 		border				: 3px solid #dfba3c;
 		border-radius		: 7px;
@@ -506,33 +513,29 @@
 		background-color	: transparent;
 		background-size		: contain;
 		background-repeat	: no-repeat;
-		background-position	: center;
-		width				: calc(var(--dpmm) * (6 - var(--smart-phone) * 1.1) * 1px);
-		height				: calc(var(--dpmm) * (6 - var(--smart-phone) * 1.1) * 1px);
+		background-position	: center center;
+		width				: calc(var(--dpmm) * 9);
+		height				: calc(var(--dpmm) * 9);
 		display				: inline-block;
 		margin				: 0;
 		padding				: 0;
 		float				: none;
 		border				: 0;
 		float				: right;
-		margin-top			: 2px;
-		margin-right		: 2px;
-		margin-bottom		: 4px;
+		margin-top			: 4px;
+		margin-right		: calc(var(--dpmm) * 1);
 	}
 
 	html > body > div[search_panel] > input[vks] {
 		float				: left;
-		width				: calc(100% - var(--dpmm) * (10 - var(--smart-phone) * 1.7) * 1px);
-		/*position			: relative;
-		left				: 2px;
-		top					: 4px;*/
+		width				: calc(100% - var(--dpmm) * 9 - var(--dpmm) * 3);
+		height				: calc(var(--dpmm) * 9);
 		padding				: 0;
-		margin-top			: 4px;
-		margin-left			: 4px;
-		margin-bottom		: 4px;
+		margin				: 4px;
 		border-radius		: 3px;
 		box-shadow			: 0 0 5px rgba(0, 0, 0, 0.5);
-		font-size			: calc(100% + var(--smart-phone) * 50%);
+		/*font-size			: calc(100% + var(--smart-phone) * 50% + var(--tablet) * 50%);*/
+		font-size			: calc(var(--dpmm) * (8 - var(--smart-phone) * 4 + var(--tablet) * 2));
 	}
 
 	html > body > div[search_panel] > div[results] {
@@ -547,7 +550,7 @@
 	html > body > div[search_panel] > div[results] > div[result] {
 		float				: none;
 		width				: calc(100% - 2px);
-		min-height			: calc(var(--dpmm) * 5 * 1px);
+		min-height			: calc(var(--dpmm) * 5);
 		background-color	: transparent;
 		padding-top			: 2px;
 		padding-bottom		: 2px;
@@ -567,7 +570,7 @@
 		height				: auto;
 		word-wrap			: break-word;
 		white-space			: normal;
-		font-size			: 72%;
+		font-size			: calc(72% + var(--smart-phone) * 15% + var(--tablet) * 25%);
 		font-weight			: bold;
 		text-align			: left;
 		text-overflow		: clip;
@@ -578,16 +581,16 @@
 	}
 
 	html > body > div[search_panel] > div[results] > div[result] > div[txt][have_img] {
-		width				: calc(100% - var(--dpmm) * 5.5 * 1px);
+		width				: calc(100% - var(--dpmm) * 5.5);
 	}
 
 	html > body > div[search_panel] > div[results] > div[result] > i[pimg] {
 		position			: absolute;
 		top					: 0;
 		margin				: 1px;
-		left				: calc(100% - var(--dpmm) * 5.05 * 1px);
-		width				: calc(var(--dpmm) * 5 * 1px);
-		height				: calc(var(--dpmm) * 5 * 1px);
+		left				: calc(100% - var(--dpmm) * 5.05);
+		width				: calc(var(--dpmm) * 5);
+		height				: calc(var(--dpmm) * 5);
 		/*float				: right;*/
 		background-color	: transparent;
 		background-size		: 100% auto;
@@ -599,9 +602,9 @@
 		display				: none;
 		z-index				: 900;
 		position			: absolute;
-		top					: calc(1px * var(--window-height) / 2 - (var(--dpmm) * 25 / 2) * 1px);
-		left				: calc(1px * var(--window-width) / 2 - (var(--dpmm) * 41 / 2) * 1px);
-		width				: calc(var(--dpmm) * 41 * 1px);
+		top					: calc(var(--window-height) / 2 - (var(--dpmm) * 25 / 2));
+		left				: calc(var(--window-width) / 2 - (var(--dpmm) * 41 / 2));
+		width				: calc(var(--dpmm) * 41);
 		height				: auto;
 		float				: none;
 		border				: 3px solid #dfba3c;
@@ -618,14 +621,14 @@
 		background-size		: contain;
 		background-repeat	: no-repeat;
 		background-position	: center;
-		width				: calc(var(--dpmm) * 9 * 1px);
-		height				: calc(var(--dpmm) * 7 * 1px);
+		width				: calc(var(--dpmm) * 9);
+		height				: calc(var(--dpmm) * 7);
 		display				: inline-block;
 		margin				: 0;
 		padding				: 0;
 		float				: none;
 		border				: 0;
-		margin				: calc(var(--dpmm) * 1 * 1px);
+		margin				: calc(var(--dpmm));
 	}
 
 	html > body > div[auth_panel] > label[btn][vk_login] {
@@ -645,8 +648,8 @@
 		padding				: 0;
 		border-radius		: 3px;
 		box-shadow			: 0 0 2px rgba(0, 0, 0, 0.8);
-		font-size			: calc(100% + var(--smart-phone) * 37% - var(--desktop) * 22%);
-		margin				: calc(var(--dpmm) * 1 * 1px);
+		font-size			: calc(100% + var(--smart-phone) * 27%  + var(--tablet) * 37% - var(--desktop) * 22%);
+		margin				: calc(var(--dpmm));
 	}
 
 }

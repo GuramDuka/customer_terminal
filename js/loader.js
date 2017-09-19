@@ -64,24 +64,51 @@ function core_gear_loader() {
 
 	let resizer = e => {
 		let r = res();
-		let [ww, wh] = window_size();
 		let desktop = !SmartPhone.isAny() && !md.mobile() && !md.tablet() && !md.phone();
+		let pxr = window.devicePixelRatio || (screen.availWidth / document.documentElement.clientWidth);
+		let ww = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+		let wh = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+		let portrait = screen.width <= screen.height;
+		let landscape = screen.width > screen.height;
+		let mww, mwh;
+
+		if( portrait ) {
+			mww = window.maxPortraitWidth = window.maxPortraitWidth === undefined || window.maxPortraitWidth < ww ? ww : window.maxPortraitWidth;
+			mwh = window.maxPortraitHeight = window.maxPortraitHeight === undefined || window.maxPortraitHeight < wh ? wh : window.maxPortraitHeight;
+		}
+
+		if( landscape ) {
+			mww = window.maxLandscapeWidth = window.maxLandscapeWidth === undefined || window.maxLandscapeWidth < ww ? ww : window.maxLandscapeWidth;
+			mwh = window.maxLandscapeHeight = window.maxLandscapeHeight === undefined || window.maxLandscapeHeight < wh ? wh : window.maxLandscapeHeight;
+		}
+
+		let phone = SmartPhone.isAny() || md.phone();
+		let tablet = md.tablet();
+
 		let html = `
 			:root {
-				--dppx					: ${r.dppx};
-				--dpi					: ${r.dpi};
-				--dpcm					: ${r.dpcm};
-				--dpmm					: ${r.dpmm};
+				--dppx					: ${r.dppx}px;
+				--dpi					: ${r.dpi}px;
+				--dpcm					: ${r.dpcm}px;
+				--dpmm					: ${r.dpmm}px;
 				--desktop				: ${desktop ? 1 : 0};
-				--tablet				: ${md.tablet() ? 1 : 0};
-				--smart-phone			: ${SmartPhone.isAny() || md.phone() ? 1 : 0};
-				--window-width			: ${ww};
-				--window-height			: ${wh};
-				--screen-width			: ${screen.width};
-				--screen-height			: ${screen.height};
+				--not-desktop			: ${desktop ? 0 : 1};
+				--tablet				: ${tablet ? 1 : 0};
+				--not-tablet			: ${tablet ? 0 : 1};
+				--smart-phone			: ${phone ? 1 : 0};
+				--not-smart-phone		: ${phone ? 0 : 1};
+				--window-width			: ${ww}px;
+				--window-height			: ${wh}px;
+				--max-window-width		: ${mww}px;
+				--max-window-height		: ${mwh}px;
+				--screen-pixel-ratio	: ${pxr};
+				--screen-width			: ${screen.width}px;
+				--screen-height			: ${screen.height}px;
+				--screen-avail-width	: ${screen.availWidth}px;
+				--screen-avail-height	: ${screen.availHeight}px;
 				--screen-aspect-ratio	: ${screen.width / screen.height};
-				--screen-portrait		: ${screen.width <= screen.height ? 1 : 0};
-				--screen-landscape		: ${screen.width > screen.height ? 1 : 0};
+				--screen-portrait		: ${portrait ? 1 : 0};
+				--screen-landscape		: ${landscape ? 1 : 0};
 				--debug					: ${qp.dbg || qp.debug ? 1 : 0};
 			}
 		`;

@@ -2115,7 +2115,7 @@ class HtmlPageEvents extends HtmlPageState {
 			new_page_state.auth_ = data.auth;
 			new_page_state.authorized_ = data.auth.authorized;
 		
-			xpath_eval_single('html/body/div[@top]/div[@auth]').innerHTML = `<br>Авторизовано: ${data.auth.user}`;
+			xpath_eval_single('html/body/div[@top]/div[@auth]').innerHTML = `Авторизовано: ${data.auth.user}`;
 		}
 
 		return new_page_state;
@@ -2160,7 +2160,6 @@ class HtmlPageEvents extends HtmlPageState {
 	}*/
 
 	window_resize_handler() {
-
 		/*let [ w, h ] = window_size();
 		let b = xpath_eval_single('html/body');
 		let sp = SmartPhone.isAny();
@@ -2423,6 +2422,10 @@ class HtmlPageEvents extends HtmlPageState {
 		if( a.expanded ) {
 			p.focus();
 			p.click();
+		}
+		else {
+			if( document.activeElement === p )
+				document.activeElement.blur();
 		}
 	}
 
@@ -3388,6 +3391,9 @@ class HtmlPageEvents extends HtmlPageState {
 						xpath_eval_single('html/body/div[@search_panel]').display(false);
 						xpath_eval_single('html/body/i[@btn and @vks]').display(true);
 						cur_page_state.search_panel_ = false;
+
+						if( document.activeElement === xpath_eval_single('input[@vks]', element.parentNode) )
+							document.activeElement.blur();
 					}
 					else if( attrs.vks && element.ascend('search_panel') && !attrs.touchmove ) {
 
@@ -3600,6 +3606,10 @@ class HtmlPageEvents extends HtmlPageState {
 						}
 						else if( element.attributes.vk_cancel ) {
 							element.parentNode.display(false);
+
+							if( document.activeElement === xpath_eval_single('input[@login_user]', element.parentNode)
+								|| document.activeElement === xpath_eval_single('input[@login_pass]', element.parentNode) )
+								document.activeElement.blur();
 						}
 
 					}
@@ -4090,18 +4100,6 @@ function dct_html_body() {
 					<p ccount></p>
 					<p csum></p>
 				</div>
-				<div btn cheque>
-					<img btn_ico src="assets/cheque.ico">
-					<span btn_txt>ПРЕДЧЕК</span>
-				</div>
-				<div btn cart>
-					<img btn_ico src="assets/cart/cart_edit.ico">
-					<span btn_txt>ИЗМЕНИТЬ</span>
-				</div>
-				<div btn drop>
-					<img btn_ico src="assets/cart/cart_delete.ico">
-					<span btn_txt>ОЧИСТИТЬ</span>
-				</div>
 			</div>
 		</div>
 		<div middle>
@@ -4115,7 +4113,7 @@ function dct_html_body() {
 		<i btn order></i>
 		<i btn vks blink2></i>
 		<div mount>
-			<p>&nbsp;</p>
+			<!--<p>&nbsp;</p>-->
 			<p mag></p>
 			<p address></p>
 		</div>
