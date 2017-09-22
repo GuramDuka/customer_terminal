@@ -83,6 +83,8 @@ EOT
 
 		if( @$customer !== null )
 			$request['customer'] = $customer;
+		if( @$comment !== null )
+			$request['comment'] = $comment;
 		if( @$remove !== null )
 			$request['remove'] = $remove;
 
@@ -106,11 +108,7 @@ EOT
 			$st->bindValue(':request', $request_json);
 			$st->execute();
 		}
-		else if( @$customer !== null ) {
-			$data = request_exchange_node($exchange_url . '/order', $exchange_user, $exchange_pass, $request);
-			$this->response_['order'] = $data;
-		}
-		else if( @$remove !== null ) {
+		else if( @$customer !== null || @$comment !== null || @$remove !== null ) {
 			$data = request_exchange_node($exchange_url . '/order', $exchange_user, $exchange_pass, $request);
 			$this->response_['order'] = $data;
 		}
@@ -129,7 +127,10 @@ EOT
 
 			if( @$customer !== null ) {
 				$orders[$order]['customer_uuid'] = $data['customer_uuid'];
-				$orders[$order]['customer'] = $data['customer'];
+				$orders[$order]['customer'] = htmlspecialchars($data['customer'], ENT_HTML5);
+			}
+			else if( @$comment !== null ) {
+				$orders[$order]['comment'] = htmlspecialchars($data['comment'], ENT_HTML5);
 			}
 			else if( @$this->request_['remove'] !== null ) {
 				unset($orders[$order]);

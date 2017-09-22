@@ -104,7 +104,7 @@
 		margin-right		: 2px;
 		word-wrap			: break-word;
 		white-space			: normal;
-		font-size			: 55%;
+		font-size			: calc(55% + var(--tablet) * 20%);
 		font-weight			: bolder;
 		text-overflow		: ellipsis;
 		text-decoration		: none;
@@ -268,7 +268,7 @@
 	html > body > div[middle] > div[pitem] {
 		width				: 100%;
 		height				: auto;
-		min-height			: calc(var(--dpmm) * 11);
+		min-height			: auto;
 		float				: left;
 		padding-top			: 2px;
 		border-top			: 3px solid #dfba3c;
@@ -280,6 +280,10 @@
 		vertical-align		: top;
 	}
 
+	html > body > div[middle] > div[pitem][have_img] {
+		min-height			: calc(var(--dpmm) * 11);
+	}
+
 	html > body > div[middle] > div[pitem] > div[txt] {
 		position			: relative;
 		top					: 0;
@@ -289,7 +293,7 @@
 		/*white-space			: nowrap;*/
 		word-wrap			: break-word;
 		white-space			: normal;
-		font-size			: 90%;
+		font-size			: calc(90% + var(--tablet) * 20%);
 		font-weight			: bold;
 		text-align			: left;
 		text-overflow		: ellipsis;
@@ -414,12 +418,12 @@
 	html > body > div[middle] > div[orders_panel] > div[order] {
 		width				: 100%;
 		height				: auto;
-		min-height			: calc(var(--dpmm) * 11);
+		/*min-height			: calc(var(--dpmm) * 11);*/
 		float				: left;
 		/*white-space			: nowrap;*/
 		word-wrap			: break-word;
 		white-space			: normal;
-		font-size			: 90%;
+		font-size			: calc(90% + var(--tablet) * 20%);
 		font-weight			: bold;
 		text-align			: left;
 		text-overflow		: ellipsis;
@@ -434,48 +438,70 @@
 
 	html > body > div[middle] > div[orders_panel] > div[order] > div[txt] {
 		position			: relative;
+		float				: none;
 		top					: 0;
 		left				: 0;
-		width				: calc(100% - var(--dpmm) * 9.99);
-		width				: 100%;
+		/*width				: calc(100% - var(--dpmm) * 9.99);*/
+		width				: auto;
 		height				: auto;
 	}
 
-	html > body > div[middle] > div[orders_panel] > div[order] > iframe[order] {
+	html > body > div[middle] > div[orders_panel] > div[order] > i[btn] {
 		display				: none;
-		position			: absolute;
-		top					: 0;
-		left				: calc(100% - var(--dpmm) * 10);
-		width				: calc(var(--dpmm) * 10);
-		height				: 90%;
-		overflow			: hidden;
-		border				: 0;
-		padding				: 0;
-		margin				: 0;
-	}
-
-	html > body > div[middle] > div[orders_panel] > div[order] > div[btn] {
-		display				: none;
-		float				: left;
+		float				: none;
 		width				: calc(var(--dpmm) * 9);
 		height				: calc(var(--dpmm) * 9);
 		padding				: 0;
 		margin				: 0;
-		line-height			: 0;
+		line-height			: normal;
 		vertical-align		: middle;
 		text-align			: center;
 		background-size		: 80% 80%;
 		background-repeat	: no-repeat;
 		background-position	: center;
 		margin-left			: 2px;
+
+		background-color	: #FFDD57;
+		border				: 1px solid #dfba3c;
+		border-radius		: 3px;
+		box-shadow			: none;
 	}
 
-	html > body > div[middle] > div[orders_panel] > div[order] > div[btn][customer] {
+	html > body > div[middle] > div[orders_panel] > div[order] > i[btn][customer] {
 		background-image	: url(../assets/specialist-user.svg);
 	}
 
-	html > body > div[middle] > div[orders_panel] > div[order] > div[btn][remove] {
+	html > body > div[middle] > div[orders_panel] > div[order] > i[btn][comment] {
+		background-image	: url(../assets/chat.svg);
+	}
+
+	html > body > div[middle] > div[orders_panel] > div[order] > i[btn][comment_accept] {
+		background-image	: url(../assets/discount_accept.svg);
+	}
+
+	html > body > div[middle] > div[orders_panel] > div[order] > i[btn][remove] {
 		background-image	: url(../assets/remove-order.svg);
+	}
+
+	html > body > div[middle] > div[orders_panel] > div[order] > textarea[comment_value] {
+		display				: none;
+		float				: none;
+
+		line-height			: normal;
+		width				: auto;
+		min-height			: calc(var(--dpmm) * 8.25);
+		height				: auto;
+		width				: calc(
+					35% * var(--screen-portrait) * var(--smart-phone) + 60% * var(--screen-landscape) * var(--smart-phone) +
+					65% * var(--screen-portrait) * var(--tablet)      + 80% * var(--screen-landscape) * var(--tablet)
+		);
+		font-size			: calc(90% + var(--smart-phone) * 50% + var(--tablet) * 50%);
+		font-weight			: bold;
+		margin-left			: 2px;
+		margin-right		: 2px;
+		/*border				: 1px solid blue;*/
+		vertical-align		: middle;
+		text-align			: justify;
 	}
 
 	html > body > img[debug_barcode] {
@@ -528,7 +554,7 @@
 
 	html > body > div[search_panel] > input[vks] {
 		float				: left;
-		width				: calc(100% - var(--dpmm) * 9 - var(--dpmm) * 3);
+		width				: calc(100% - var(--dpmm) * 9 - var(--dpmm) * 5);
 		height				: calc(var(--dpmm) * 9);
 		padding				: 0;
 		margin				: 4px;
@@ -550,7 +576,7 @@
 	html > body > div[search_panel] > div[results] > div[result] {
 		float				: none;
 		width				: calc(100% - 2px);
-		min-height			: calc(var(--dpmm) * 5);
+		min-height			: auto;
 		background-color	: transparent;
 		padding-top			: 2px;
 		padding-bottom		: 2px;
@@ -560,6 +586,10 @@
 		border-top			: 3px solid #dfba3c;
 		border-radius		: 3px;
 		/*box-shadow			: 0 0 5px rgba(0, 0, 0, 0.5);*/
+	}
+
+	html > body > div[search_panel] > div[results] > div[result][have_img] {
+		min-height			: calc(var(--dpmm) * 5);
 	}
 
 	html > body > div[search_panel] > div[results] > div[result] > div[txt] {

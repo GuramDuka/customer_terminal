@@ -82,7 +82,7 @@ function core_gear_loader() {
 			mwh = window.maxLandscapeHeight = window.maxLandscapeHeight === undefined || window.maxLandscapeHeight < wh ? wh : window.maxLandscapeHeight;
 		}
 
-		let phone = SmartPhone.isAny() || md.phone();
+		let phone = /*SmartPhone.isAny() ||*/ md.phone();
 		let tablet = md.tablet();
 
 		let html = `

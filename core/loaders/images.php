@@ -64,7 +64,7 @@ class images_loader extends objects_loader {
 
 		$canvas = null;
 
-		if( config::$convert_images || config::$scale_images || config::$scale_canvas ) {
+		if( extension_loaded('imagick') && (config::$convert_images || config::$scale_images || config::$scale_canvas) ) {
 
 			$raw = base64_decode($raw);
 			$im = new \Imagick;

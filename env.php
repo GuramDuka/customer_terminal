@@ -1,5 +1,11 @@
 <?php
 
+$v = 0;
+for($i=1;$i<99;$i++) {
+$v+=$i;
+}
+
+print '<pre style="text-align: justify">'.var_export($v,true).'</pre>';
 print '<pre style="text-align: justify">'.var_export($_SERVER,true).'</pre>';
 print '<pre style="text-align: justify">'.var_export($_GET,true).'</pre>';
 print '<pre style="text-align: justify">'.phpinfo().'</pre>';

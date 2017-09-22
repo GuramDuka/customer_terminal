@@ -39,13 +39,13 @@ class searcher_handler extends handler {
 
 			$sql = <<<EOT
 				SELECT
-					MAX(a.rowid),
-					a.uuid
+					MAX(rowid),
+					uuid
 				FROM
-					products_fts AS a
+					products_fts
 				WHERE
-					-- TODO: for sqlite 3.20 -> products_fts MATCH '(name : (${filter})) OR (barcode : ("${raw_filter}"))'
-					products_fts MATCH '(name : ${filter}) OR (barcode : "${raw_filter}")'
+					name MATCH '${filter}'
+					OR barcode MATCH '"${raw_filter}"'
 				GROUP BY
        				uuid
 EOT
@@ -80,7 +80,7 @@ EOT
 					COALESCE(q.quantity, 0) > 0
 				ORDER BY
 					a.name
-				LIMIT 250 OFFSET 0
+				LIMIT 50 OFFSET 0
 EOT
 			;
 
@@ -126,13 +126,16 @@ EOT
 
 			$sql = <<<EOT
 				SELECT
-					MAX(a.rowid),
-					a.uuid
+					MAX(rowid),
+					uuid
 				FROM
-					customers_fts AS a
+					customers_fts
 				WHERE
 					-- TODO: for sqlite 3.20 -> customers_fts MATCH '({name description} : (${filter})) OR (inn : ("${raw_filter}"))'
-					customers_fts MATCH '({name description} : ${filter}) OR (inn : "${raw_filter}")'
+					-- customers_fts MATCH '({name description} : ${filter}) OR (inn : "${raw_filter}")'
+					name MATCH '${filter}'
+					OR description MATCH '${filter}'
+					OR inn MATCH '"${raw_filter}"'
 				GROUP BY
        				uuid
 EOT
@@ -154,7 +157,7 @@ EOT
 						ON a.uuid = f.uuid
 				ORDER BY
 					a.name
-				LIMIT 250 OFFSET 0
+				LIMIT 50 OFFSET 0
 EOT
 			;
 

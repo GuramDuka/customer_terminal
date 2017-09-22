@@ -280,13 +280,19 @@ EOT
 				FROM
 					products_fts
 				WHERE
+					code MATCH '${filter}'
+					OR name MATCH '${filter}'
+					OR article MATCH '${filter}'
+					OR description MATCH '${filter}'
+					OR barcode MATCH '"${raw_filter}"'
+
 					-- Search for matches in all columns except "barcode"
 					-- TODO: for sqlite 3.20 -> products_fts MATCH '(-barcode : (${filter})) OR (barcode : ("${raw_filter}"))'
 					-- FTS5
-					products_fts MATCH '(-barcode : ${filter}) OR (barcode : "${raw_filter}")'
+					-- products_fts MATCH '(-barcode : ${filter}) OR (barcode : "${raw_filter}")'
 					-- FTS3
-					--OR
-					--products_fts MATCH '(code:${filter3}) OR (name:${filter3}) OR (article:${filter3}) OR (description:${filter3}) OR (barcode:${raw_filter})'
+					-- OR
+					-- products_fts MATCH '(code:${filter3}) OR (name:${filter3}) OR (article:${filter3}) OR (description:${filter3}) OR (barcode:${raw_filter})'
 				GROUP BY
        				uuid
 EOT

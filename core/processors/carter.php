@@ -207,8 +207,11 @@ EOT
 		}
 
 		//$data['barcode_eangnivc'] = htmlspecialchars($data['barcode_eangnivc'], ENT_HTML5);
-		if( $data !== null )
+		if( $data !== null ) {
+			$data['customer'] = htmlspecialchars($data['customer'], ENT_HTML5);
+			$data['comment'] = htmlspecialchars($data['comment'], ENT_HTML5);
 			$this->response_['order'] = $data;
+		}
 
 		if( $data !== null && @$data['uuid'] !== null ) {
 

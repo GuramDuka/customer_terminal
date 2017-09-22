@@ -2264,8 +2264,12 @@ class HtmlPageEvents extends HtmlPageState {
 				e.display(false);
 
 			let e = xpath_eval_single('div[@btn and @discount]', element);
-			for( let q of xpath_eval('div[@discount_value or (@btn and (@discount_price or @discount_percent or @discount_accept))]', element) )
+			for( let q of xpath_eval('div[@discount_value or (@btn and (@discount_price or @discount_percent or @discount_accept))]', element) ) {
 				q.display(false);
+
+				if( document.activeElement === xpath_single('input[@discount_value]', q) )
+					document.activeElement.blur();
+			}
 
 			xpath_eval_single('div[@pbuy_quantity]', element).display(false);
 			//xpath_eval_single('div[@txt]/font[@pprice]', element).display(true);
@@ -2278,7 +2282,7 @@ class HtmlPageEvents extends HtmlPageState {
 				e.display(e.attributes.discount ? new_page_state.authorized_ : true);
 
 			let e = xpath_eval_single('div[@btn and @discount]', element);
-			for( let q of xpath_eval('div[@discount_value or (@btn and (@discount_price or @discount_percent or @discount_accept))]', element) )
+			for( let q of xpath_eval('div[@discount_value or (@btn and (@discount_price or @discount_percent or @discount_accept))]', element) ) {
 				q.display(e.attributes.expanded
 					&& (
 						!q.attributes.btn
@@ -2287,6 +2291,13 @@ class HtmlPageEvents extends HtmlPageState {
 						|| q.attributes.discount_accept
 					)
 				);
+
+				if( e.attributes.expanded ) {
+					let p = xpath_single('input[@discount_value]', q);
+					if( p && document.activeElement !== p )
+						p.focus();
+				}
+			}
 
 			xpath_eval_single('div[@pbuy_quantity]', element).display(true);
 			//xpath_eval_single('div[@txt]/font[@pprice]', element).display(false);
@@ -2421,7 +2432,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 		if( a.expanded ) {
 			p.focus();
-			p.click();
+			//p.click();
 		}
 		else {
 			if( document.activeElement === p )
@@ -2460,7 +2471,7 @@ class HtmlPageEvents extends HtmlPageState {
 			if( !e ) {
 				m.insertAdjacentHTML('afterend', `
 					<div pitem="${n}" uuid="${p.uuid}" price="${p.price}" fliphin>
-						<div txt${p.img_uuid ? ' have_img' : ''}>
+						<div txt>
 							<font pcode style="color:darkblue" blink2></font>
 							<font pname></font>
 							<font pprice></font>
@@ -2512,8 +2523,18 @@ class HtmlPageEvents extends HtmlPageState {
 			}
 
 			let img = xpath_eval_single('i[@pimg]', e);
-			img.setAttribute('img_url', p.img_url);
-			img.style.backgroundImage = `url(${p.img_ico})`;
+			if( p.img_uuid ) {
+				img.setAttribute('img_url', p.img_url);
+				img.style.backgroundImage = `url(${p.img_ico})`;
+				e.setAttribute('have_img', '');
+				txt.setAttribute('have_img', '');
+			}
+			else {
+				if( e.attributes.have_img )
+					e.removeAttribute('have_img');
+				if( txt.attributes.have_img )
+					txt.removeAttribute('have_img');
+			}
 			img.display(p.img_uuid);
 
 			// http://en.wikipedia.org/wiki/Arrow_%28symbol%29#Arrows_in_Unicode
@@ -2597,7 +2618,8 @@ class HtmlPageEvents extends HtmlPageState {
 			for( let order of orders ) {
 				let p = xpath_single('div[@uuid=\'' + order.uuid + '\']', panel);
 
-				if( !p || p.attributes.customer_uuid.value !== order.customer_uuid )
+				if( !p || (p.attributes.customer_uuid.value !== order.customer_uuid
+							|| p.attributes.comment.value !== order.comment) )
 					modified = true;
 
 				this.barcode_scanner_insert_order(order);
@@ -2633,24 +2655,30 @@ class HtmlPageEvents extends HtmlPageState {
 		if( e ) {
 			e.setAttribute('customer_uuid', order.customer_uuid);
 			xpath_eval_single('div[@txt]/font[@customer_name]', e).innerHTML = order.customer;
+			e.setAttribute('comment', order.comment);
+			xpath_eval_single('div[@txt]/font[@comment]', e).innerHTML = order.comment;
 		}
 		else {
 			panel.insertAdjacentHTML('afterbegin', `
-				<div order uuid="${order.uuid}" customer_uuid="${order.customer_uuid}">
+				<div order uuid="${order.uuid}" customer_uuid="${order.customer_uuid}" comment="${order.comment}">
 					<div txt>
 						<font>Заказ&nbsp;</font><font style="color:darkblue" blink2>№&nbsp;${order.number}</font>
 						<font> от ${this.date_formatter_(order.date).trim()}</font>
 						<font>, </font><font customer_name>${order.customer}</font>
 						<font>, Сумма:&nbsp;${order.totals}<i rouble>&psi;</i></font>
 						<font>, EAN13:&nbsp;${order.barcode}</font>
+						<font comment>${order.comment.isEmpty() ? '' : ', '}${order.comment}</font>
 					</div>
-					<div btn customer></div>
-					<div btn remove></div>
+					<i btn customer></i>
+					<i btn comment></i>
+					<textarea comment_value placeholder="Вводите текст ..."></textarea>
+					<i btn comment_accept></i>
+					<i btn remove></i>
 				</div>
 			`.replace(/(?:[\r\n\t])/g, ''));
 
 			this.setup_events(xpath_eval('div[@order and @uuid=\'' + order.uuid + '\']', panel));
-			this.setup_events(xpath_eval('div[@order and @uuid=\'' + order.uuid + '\']/div[@btn]', panel));
+			this.setup_events(xpath_eval('div[@order and @uuid=\'' + order.uuid + '\']/*[(self::i and @btn) or self::textarea]', panel));
 		}
 
 		/*let iframe = document.createElement('iframe');
@@ -2966,7 +2994,7 @@ class HtmlPageEvents extends HtmlPageState {
 				let pimg = p.img_uuid ? `<i pimg img_url="${p.img_url}" style="background-image:url(${p.img_ico})"></i>` : '';
 
 				html += `
-					<div result uuid="${p.uuid}" price="${p.price}" fliphin>
+					<div result uuid="${p.uuid}" price="${p.price}" fliphin${p.img_uuid ? ' have_img' : ''}>
 						<div txt${p.img_uuid ? ' have_img' : ''}>
 							<font pcode style="color:darkblue" blink2>[${p.code}]</font>
 							<font pname> ${name}</font>
@@ -2999,6 +3027,30 @@ class HtmlPageEvents extends HtmlPageState {
 		let results = xpath_eval_single('div[@results]', panel);
 		results.innerHTML = html.replace(/(?:[\r\n\t])/g, '');
 		this.setup_events(xpath_eval('div[@result]', results));
+
+	}
+
+	switch_dst_middle_order_comment(element) {
+
+		if( element.attributes.expanded )
+			element.removeAttribute('expanded');
+		else
+			element.setAttribute('expanded', '');
+
+		for( let p of xpath_eval('*[(self::i and (@btn and @comment_accept)) or (self::textarea and @comment_value)]', element.parentNode) )
+			p.display(element.attributes.expanded);
+
+		let p = xpath_eval_single('textarea[@comment_value]', element.parentNode);
+
+		if( element.attributes.expanded ) {
+			if( p.value.isEmpty() && element.parentNode.attributes.comment )
+				p.value = element.parentNode.attributes.comment.value;
+			if( p !== document.activeElement )
+				p.focus();
+		}
+		else if( p === document.activeElement ) {
+			document.activeElement.blur();
+		}
 
 	}
 
@@ -3037,6 +3089,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 			let element		= e.currentTarget ? e.currentTarget : e.deferredTarget;
 			let attrs		= element && element.attributes ? element.attributes : {};
+			let touchmove	= attrs.touchmove;
 
 			this.start_		= e.start ? e.start : mili_time();
 			e.start			= this.start_;
@@ -3135,7 +3188,7 @@ class HtmlPageEvents extends HtmlPageState {
 						new_page_state = this.pimg_pitem_ptable_plist_handler(element);
 
 					}
-					else if( attrs.pimg && (element.ascend('pinfo') || element.ascend('pitem/middle')) && !attrs.touchmove ) {
+					else if( attrs.pimg && (element.ascend('pinfo') || element.ascend('pitem/middle')) && !touchmove ) {
 
 						this.pimg_pinfo_handler(cur_page_state, element);
 
@@ -3248,17 +3301,17 @@ class HtmlPageEvents extends HtmlPageState {
 						new_page_state = this.btn_vk_handler(cur_page_state, cur_paging_state, element);
 
 					}
-					else if( attrs.btn && attrs.scan && !attrs.touchmove ) {
+					else if( attrs.btn && attrs.scan && !touchmove ) {
 
 						this.btn_scan_handler();
 
 					}
-					else if( attrs.btn && attrs.order && !attrs.touchmove ) {
+					else if( attrs.btn && attrs.order && !touchmove ) {
 
 						new_page_state = this.btn_cheque_cart_informer_handler(cur_page_state);
 
 					}
-					else if( attrs.btn && element.ascend('pitem/middle') && !attrs.touchmove ) {
+					else if( attrs.btn && element.ascend('pitem/middle') && !touchmove ) {
 						// change cart
 						let product = element.parentNode.attributes.uuid.value;
 
@@ -3299,51 +3352,123 @@ class HtmlPageEvents extends HtmlPageState {
 								let value = holder.attributes.value.value;
 								if( !value.isEmpty() ) {
 									new_page_state = this.btn_dst_discount_accept_handler(cur_page_state, product, value);
-
-									if( document.activeElement === xpath_eval_single('div[@discount_value]/input[@discount_value]', element.parentNode) )
-										document.activeElement.blur();
-
+									//if( document.activeElement === xpath_eval_single('div[@discount_value]/input[@discount_value]', element.parentNode) )
+									//	document.activeElement.blur();
 									this.switch_dst_discount_middle_pitem(holder);
 								}
 							}
 						}
 					}
-					else if( attrs.discount_value && element.ascend('discount_value/pitem/middle') && !attrs.touchmove ) {
+					else if( attrs.discount_value && element.ascend('discount_value/pitem/middle') && !touchmove ) {
+						/*if( element === document.activeElement ) {
+							prevent_default = false;
+						}
+						else {
+							e.stopImmediatePropagation();
+							e.preventDefault();
+							e.target.focus();
+							e.target.click();
+						}*/
+						if( element === document.activeElement )
+							document.activeElement.blur();
+						element.focus();
 					}
 					else if( attrs.pitem && element.ascend('middle')
 						&& !(((e.target.attributes.btn || e.target.attributes.pimg) && e.target.ascend('pitem/middle')) || e.target.ascend('discount_value/pitem/middle'))
-						&& !attrs.touchmove ) {
+						&& !touchmove ) {
 
 						new_page_state = this.switch_dst_middle_pitem(cur_page_state, cur_paging_state, element);
 
 					}
 					else if( attrs.order && element.ascend('orders_panel')
-						&& !(e.target.attributes.btn && e.target.ascend('order/orders_panel'))
-						&& !attrs.touchmove ) {
-						
-						for( let p of xpath_eval('div[@btn]', element) )
-							p.display(!attrs.expanded);
+						&& !((e.target.attributes.btn || e.target.attributes.comment_value) && e.target.ascend('order/orders_panel'))
+						&& !touchmove ) {
 
 						if( attrs.expanded )
 							element.removeAttribute('expanded');
 						else
 							element.setAttribute('expanded', '');
+						
+						for( let p of xpath_eval('i[@btn and (@customer or @comment or @remove)]', element) )
+							p.display(attrs.expanded);
 
+						let q = xpath_eval_single('i[@btn and @comment]', element);
+
+						for( let p of xpath_eval('*[(self::i and (@btn and (@comment_accept))) or (self::textarea and @comment_value)]', element) )
+							p.display(attrs.expanded && q.attributes.expanded);
+
+						let a = xpath_eval_single('textarea[@comment_value]', element);
+
+						if( attrs.expanded && q.attributes.expanded ) {
+							if( a !== document.activeElement )
+								a.focus();
+						}
+						else if( a === document.activeElement ) {
+							document.activeElement.blur();
+						}
 					}
-					else if( attrs.btn && element.ascend('order/orders_panel') && !attrs.touchmove ) {
+					else if( attrs.comment_value && element.ascend('order/orders_panel') && !touchmove ) {
+						if( element === document.activeElement )
+							document.activeElement.blur();
+						element.focus();
+					}
+					else if( attrs.btn && element.ascend('order/orders_panel') && !touchmove ) {
 
 						let order = element.parentNode.attributes.uuid.value;
 
 						// switch on search panel
 						if( attrs.customer ) {
 							let panel = xpath_eval_single('html/body/div[@search_panel]');
-							panel.display(true);
+							if( !panel.attributes.view || panel.attributes.view.value !== 'customers' ) {
+								xpath_eval_single('div[@results]', panel).innerHTML = '';
+								xpath_eval_single('input[@vks]', panel).value = '';
+							}
 							panel.setAttribute('view', 'customers');
 							panel.setAttribute('order', order);
+							panel.display(true);
 							xpath_eval_single('html/body/i[@btn and @vks]').display(false);
 							xpath_eval_single('input[@vks]', panel).focus();
-							xpath_eval_single('input[@vks]', panel).click();
+							//xpath_eval_single('input[@vks]', panel).click();
 							cur_page_state.search_panel_ = true;
+						}
+						else if( attrs.comment ) {
+							this.switch_dst_middle_order_comment(element);
+						}
+						else if( attrs.comment_accept ) {
+							[ new_page_state ] = this.clone_page_state();
+							let p = xpath_eval_single('textarea[@comment_value]', element.parentNode);
+
+							let request = {
+								'module'		: 'orderer',
+								'handler'		: 'orderer',
+								'order'			: order,
+								'comment'		: p.value
+							};
+
+							if( cur_page_state.authorized_ && cur_page_state.auth_ ) {
+								request.user = cur_page_state.auth_.user_uuid;
+								request.pass = cur_page_state.auth_.pass;
+							}
+
+							show_alert = true;
+							let data = this.post_json('proxy.php', request);
+
+							if( data.errno !== 0 )
+								throw new Error(data.error + "\n" + data.stacktrace);
+
+							new_page_state.modified_ = true;
+
+							if( new_page_state && new_page_state.modified_ ) {
+
+								if( this.pending_orders_ ) {
+									this.setup_pending_orders_refresh();
+								}
+								else {
+									let comment = data.order.comment;
+									xpath_eval_single('div[@txt]/font[@comment]', element.parentNode).innerHTML = (comment.isEmpty() ? '' : ', ') + comment;
+									this.switch_dst_middle_order_comment(xpath_eval_single('i[@btn and @comment]', element.parentNode));
+								}
+							}
 						}
 						else if( attrs.remove ) {
 							[ new_page_state ] = this.clone_page_state();
@@ -3383,10 +3508,10 @@ class HtmlPageEvents extends HtmlPageState {
 						}
 					}
 					else if( attrs.search_panel ) {
-						if( document.activeElement === xpath_eval_single('input[@vks]', element) )
-							document.activeElement.blur();
+						//if( document.activeElement === xpath_eval_single('input[@vks]', element) )
+						//	document.activeElement.blur();
 					}
-					else if( attrs.vks && attrs.btn && element.ascend('search_panel') && !attrs.touchmove ) {
+					else if( attrs.vks && attrs.btn && element.ascend('search_panel') && !touchmove ) {
 						// switch off search panel
 						xpath_eval_single('html/body/div[@search_panel]').display(false);
 						xpath_eval_single('html/body/i[@btn and @vks]').display(true);
@@ -3395,9 +3520,9 @@ class HtmlPageEvents extends HtmlPageState {
 						if( document.activeElement === xpath_eval_single('input[@vks]', element.parentNode) )
 							document.activeElement.blur();
 					}
-					else if( attrs.vks && element.ascend('search_panel') && !attrs.touchmove ) {
+					else if( attrs.vks && element.ascend('search_panel') && !touchmove ) {
 
-						if( element === document.activeElement ) {
+						/*if( element === document.activeElement ) {
 							prevent_default = false;
 						}
 						else {
@@ -3405,17 +3530,20 @@ class HtmlPageEvents extends HtmlPageState {
 							e.preventDefault();
 							e.target.focus();
 							e.target.click();
-						}
+						}*/
+						if( element === document.activeElement )
+							document.activeElement.blur();
+						element.focus();
 
 					}
-					else if( attrs.results && element.ascend('search_panel') ) {
+					else if( attrs.results && element.ascend('search_panel') && touchmove ) {
 						if( document.activeElement === xpath_eval_single('input[@vks]', element.parentNode) )
 							document.activeElement.blur();
 					}
 					else if( attrs.result && element.ascend('results/search_panel') ) {
 						let panel = element.parentNode.parentNode;
 
-						if( !attrs.touchmove && panel.attributes.view.value === 'products' ) {
+						if( !touchmove && panel.attributes.view.value === 'products' ) {
 							let product = attrs.uuid.value;
 							let cart_entity = cur_page_state.cart_by_uuid_[product];
 
@@ -3451,7 +3579,7 @@ class HtmlPageEvents extends HtmlPageState {
 								new_page_state.search_panel_ = false;
 							}
 						}
-						else if( !attrs.touchmove && panel.attributes.view.value === 'customers' ) {
+						else if( !touchmove && panel.attributes.view.value === 'customers' ) {
 							[ new_page_state ] = this.clone_page_state();
 							let order = panel.attributes.order.value;
 
@@ -3495,43 +3623,47 @@ class HtmlPageEvents extends HtmlPageState {
 							}
 						}
 					}
-					else if( attrs.btn && attrs.vks && !attrs.touchmove ) {
+					else if( attrs.btn && attrs.vks && !touchmove ) {
 
 						// switch on search panel
 						let panel = xpath_eval_single('html/body/div[@search_panel]');
+						if( !panel.attributes.view || panel.attributes.view.value !== 'products' ) {
+							xpath_eval_single('div[@results]', panel).innerHTML = '';
+							xpath_eval_single('input[@vks]', panel).value = '';
+						}
 						panel.display(true).setAttribute('view', 'products');
 						xpath_eval_single('html/body/i[@btn and @vks]').display(false);
 						xpath_eval_single('input[@vks]', panel).focus();
-						xpath_eval_single('input[@vks]', panel).click();
+						//xpath_eval_single('input[@vks]', panel).click();
 						cur_page_state.search_panel_ = true;
 
 					}
-					else if( attrs.logo && element.ascend('top') && !attrs.touchmove ) {
+					else if( attrs.logo && element.ascend('top') && !touchmove ) {
 						// switch on auth panel
 						let panel = xpath_eval_single('html/body/div[@auth_panel]');
 						panel.display(true);
 
 						let p = xpath_eval_single('input[@login_user]', panel);
 						p.focus();
-						p.click();
+						//p.click();
 
 						p = xpath_eval_single('label[@vk_logout]', panel);
 						p.display(cur_page_state.authorized_);
 
 					}
-					else if( attrs.login_user && element.ascend('auth_panel') && !attrs.touchmove ) {
+					else if( attrs.login_user && element.ascend('auth_panel') && !touchmove ) {
 						if( document.activeElement !== element ) {
 							element.focus();
-							element.click();
+							//element.click();
 						}
 					}
-					else if( attrs.login_pass && element.ascend('auth_panel') && !attrs.touchmove ) {
+					else if( attrs.login_pass && element.ascend('auth_panel') && !touchmove ) {
 						if( document.activeElement !== element ) {
 							element.focus();
-							element.click();
+							//element.click();
 						}
 					}
-					else if( attrs.btn && element.ascend('auth_panel') && !attrs.touchmove ) {
+					else if( attrs.btn && element.ascend('auth_panel') && !touchmove ) {
 
 						if( attrs.vk_login ) {
 							[ new_page_state ] = this.clone_page_state();
@@ -3614,19 +3746,18 @@ class HtmlPageEvents extends HtmlPageState {
 
 					}
 
-					if( attrs.touchmove )
+					if( touchmove )
 						element.removeAttribute('touchmove');
-					//Render.debug(2, e.currentTarget.innerHTML);
 					break;
 
 				case 'touchcancel'	:
-					if( attrs.touchmove )
+					if( touchmove )
 						element.removeAttribute('touchmove');
 					prevent_default = false;
 					break;
 
 				case 'touchstart'	:
-					if( attrs.touchmove )
+					if( touchmove )
 						element.removeAttribute('touchmove');
 					//if( attrs.middle && this.debug_ && this.dct_ ) {
 					//	this.startx_ = e.touches[0].pageX;
@@ -3641,7 +3772,6 @@ class HtmlPageEvents extends HtmlPageState {
 					//	let disty = this.starty_ - e.touches[0].pageY;
 					//	Render.debug(1, 'TM:&nbsp;' + Math.trunc(distx) + '&nbsp;' + Math.trunc(disty));
 					//}
-					//Render.debug(1, e.currentTarget.innerHTML);
 					if( typeof element.setAttribute === 'function' )
 						element.setAttribute('touchmove', '');
 
@@ -3673,7 +3803,7 @@ class HtmlPageEvents extends HtmlPageState {
 					}
 					break;
 
-				case 'blur'			:		
+				case 'blur'			:
 					this.setup_text_type_event(element, null);
 					break;
 
