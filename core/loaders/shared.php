@@ -192,10 +192,10 @@ function request_exchange_node($exchange_url_hide, $exchange_user_hide, $exchang
 	curl_setopt($ch, CURLOPT_HTTPHEADER			, [
 		'Content-Type: application/json; charset=utf-8',
 		'Cache-Control: no-store, no-cache, must-revalidate, max-age=0',
-		'Accept: */*',
+		'Accept: */*'
 		//'Accept: application/json; charset=utf-8',
 		//'Accept: text/html, application/xhtml+xml, application/xml; q=0.9,*/*; q=0.8',
-		'Accept-Encoding: gzip, deflate'
+		//'Accept-Encoding: gzip, deflate'
 	]);
 
 	curl_setopt($ch, CURLOPT_USERPWD			, "$exchange_user:$exchange_pass");

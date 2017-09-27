@@ -461,7 +461,7 @@ function res() {
 	let dppx = () => {
 		// devicePixelRatio: Webkit (Chrome/Android/Safari), Opera (Presto 2.8+), FF 18+
 		let dpp = Math.min(+window.devicePixelRatio, 1.5);
-		return typeof window == 'undefined' ? 0 : +dpp || ie() || 0;
+		return typeof window === 'undefined' ? 0 : +dpp || ie() || 0;
 	};
 	let dpcm = () => {
     	return dppx() * one.dpcm;

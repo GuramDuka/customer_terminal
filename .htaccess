@@ -31,6 +31,7 @@ Header set Access-Control-Allow-Methods GET,PUT,POST
 	<IfModule headers_module>
 		Header unset ETag
 	</IfModule>
+	FileETag None
     AddOutputFilterByType DEFLATE text/plain
     AddOutputFilterByType DEFLATE text/html
     AddOutputFilterByType DEFLATE text/xml
