@@ -56,7 +56,7 @@ class infobase extends \SQLite3 {
 			$result = $this->query('PRAGMA compile_options');
 
 			while( $r = $result->fetchArray(SQLITE3_ASSOC) )
-				$s .= "\n" . $r['compile_option'];
+				$s .= "\n" . $r['compile_options'];
 
 			error_log($s);
 
@@ -601,7 +601,7 @@ EOT
 				--prefix = '2 3 4',
 				detail = full,
 				--columnsize = 1,
-        		tokenize = "unicode61"
+        		tokenize = "unicode61 remove_diacritics 0 tokenchars '-_:;[]{}()/\|,.*+-<>?=&^%$#@!`~' separators ' '"
 			);
 
 			-- Triggers to keep the FTS index up to date.
@@ -684,7 +684,7 @@ EOT
 				inn,
 				description,
 				detail = full,
-        		tokenize = "unicode61"
+        		tokenize = "unicode61 remove_diacritics 0 tokenchars '-_:;[]{}()/\|,.*+-<>?=&^%$#@!`~' separators ' '"
 			);
 
 			-- Triggers to keep the FTS index up to date.

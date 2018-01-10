@@ -1147,9 +1147,9 @@
 		animation			: fadein 0ms;
 	}
 
-	/**[blink][fadein] {
-		animation			: blink 0.6s cubic-bezier(1.0, 0, 0.7, 1.0) infinite alternate, fadein 200ms;
-	}*/
+	*[blink][fadein] {
+		animation			: blink 0.6s cubic-bezier(1.0, 0, 0.7, 1.0) infinite alternate, fadein 150ms;
+	}
 
 	/*@keyframes fadeout {
     	from { opacity: 1; }
@@ -1174,8 +1174,8 @@
 		animation			: fadeout 0ms;
 	}
 
-	/**[blink][fadeout] {
-		animation			: blink 0.6s cubic-bezier(1.0, 0, 0.7, 1.0) infinite alternate, fadeout 2000ms;
-	}*/
+	*[blink][fadeout] {
+		animation			: blink 0.6s cubic-bezier(1.0, 0, 0.7, 1.0) infinite alternate, fadeout 150ms;
+	}
 
 }

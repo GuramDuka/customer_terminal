@@ -13,12 +13,22 @@ class images_loader extends objects_loader {
 		$cw = config::$canvas_width;
 		$ch = config::$canvas_height;
 
-		$g = $im->getImageGeometry();
-		$w = $g['width'];
-		$h = $g['height'];
+		$r = $im->despeckleImage();
+		\runtime_exception::throw_false($r);
+
+		// fuzz
+		$r = $im->trimImage(0.09);
+		\runtime_exception::throw_false($r);
+
+		$r = $im->despeckleImage();
+		\runtime_exception::throw_false($r);
+
+		// trim
+		$r = $im->trimImage(0);
+		\runtime_exception::throw_false($r);
 
 		// resize proportionally to fit on the canvas, base on max dimension
-		$im->thumbnailImage($cw, $ch, true);
+		$r = $im->thumbnailImage($cw, $ch, true);
 
 		$g = $im->getImageGeometry();
 		$w = $g['width'];
@@ -27,19 +37,29 @@ class images_loader extends objects_loader {
 		$canvas = new \Imagick;
 		$canvas->newImage($cw, $ch, config::$canvas_color, config::$canvas_format);
 		
-		if( config::$canvas_interlace )
-			$canvas->setInterlaceScheme(\Imagick::INTERLACE_PLANE);
-
 		if( config::$canvas_format === 'jpg' ) {
 
 			$canvas->setImageCompression(\Imagick::COMPRESSION_JPEG);
 			$canvas->setImageCompressionQuality(config::$canvas_compression_quality);
 
+			if( config::$canvas_interlace )
+				$canvas->setInterlaceScheme(\Imagick::INTERLACE_PLANE);
 		}
 		else if( substr(config::$canvas_format, 0, 3) === 'png' ) {
 
-			$canvas->setImageCompression(\Imagick::COMPRESSION_ZIP);
+			//$canvas->setOption('png:bit-depth', 6);
+			//$canvas->setOption('png:color-type', 6);
+			//$canvas->setOption('png:compression-level', 9);
+			//$canvas->setOption('png:bit-depth', 8);
 
+			$canvas->setImageCompression(\Imagick::COMPRESSION_ZIP);
+			$canvas->setImageCompressionQuality(config::$canvas_compression_quality);
+
+			if( config::$canvas_interlace )
+				$canvas->setInterlaceScheme(\Imagick::INTERLACE_PNG);
+
+			if( config::$canvas_format === 'png8' )
+				$im->posterizeImage(24, \Imagick::DITHERMETHOD_FLOYDSTEINBERG); // NO, RIEMERSMA, FLOYDSTEINBERG
 		}
 		
 		// The overlay x and y coordinates
@@ -83,20 +103,21 @@ class images_loader extends objects_loader {
 
 				}
 
-				if( config::$convert_images && config::$images_interlace )
-					$im->setInterlaceScheme(\Imagick::INTERLACE_PLANE);
-
-
 				if( config::$convert_images && config::$images_format === 'jpg' ) {
 
 					$im->setImageCompression(\Imagick::COMPRESSION_JPEG);
 					$im->setImageCompressionQuality(config::$images_compression_quality);
+
+					if( config::$convert_images && config::$images_interlace )
+						$im->setInterlaceScheme(\Imagick::INTERLACE_PLANE);
 
 				}
 				else if( config::$convert_images && substr(config::$images_format, 0, 3) === 'png' ) {
 
 					$im->setImageCompression(\Imagick::COMPRESSION_ZIP);
 
+					if( config::$convert_images && config::$images_interlace )
+						$im->setInterlaceScheme(\Imagick::INTERLACE_PNG);
 				}
 
 				if( config::$convert_images )
@@ -200,7 +221,7 @@ class images_loader extends objects_loader {
 
 				$dir = APP_DIR . get_image_path($uuid);
 				$name = $dir . DIRECTORY_SEPARATOR . str_replace('-', '+', $object['uuid']);
-				$canvas_name = $dir . DIRECTORY_SEPARATOR . $object['uuid'] . '.' . config::$canvas_format;
+				$canvas_name = $dir . DIRECTORY_SEPARATOR . $object['uuid'] . '.' . substr(config::$canvas_format, 0, 3);
 
 				if( @$erase ) {
 

@@ -34,10 +34,10 @@ class config extends \config {
 	public static $log_timing									= true;
 	public static $log_trigger_timing							= false;
 	public static $page_size									= 6;
-	public static $convert_images								= false;
+	public static $convert_images								= true;
 	public static $images_format								= 'jpg';
-	public static $images_interlace								= true;
-	public static $images_compression_quality					= 85;
+	public static $images_interlace								= false;
+	public static $images_compression_quality					= 95;
 	public static $scale_images									= false;
 	public static $image_width									= 211;
 	public static $image_height									= 280;
@@ -46,8 +46,8 @@ class config extends \config {
 	public static $canvas_width									= 400;
 	public static $canvas_height								= 400;
 	public static $canvas_format								= 'jpg';
-	public static $canvas_interlace								= true;
-	public static $canvas_compression_quality					= 95;
+	public static $canvas_interlace								= false;
+	public static $canvas_compression_quality					= 35;
 	public static $force_create_infobase						= false;
 	public static $force_rewrite_pages							= false;
 	public static $cars_selections_registry_max_values_on_row	= 12;

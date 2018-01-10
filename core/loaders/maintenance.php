@@ -30,12 +30,13 @@ class maintenancer {
 			FROM
 				constants
 			WHERE
-				name IN ('@last_maintenance', '@last_merge_fts')
+				name IN ('@last_maintenance', '@last_merge_fts', '@last_clean_fts')
 EOT
 		);
 
 		$last_maintenance = 0;
 		$last_merge_fts = 0;
+		$last_clean_fts = 0;
 
 		while( $r = $result->fetchArray(SQLITE3_ASSOC) ) {
 			extract($r);
@@ -49,52 +50,16 @@ EOT
 		$ct = time();
 		$cur_hour = intval($ct / 3600);
 		$last_merge_fts = intval($last_merge_fts / 3600);
+		$last_clean_fts = intval($last_clean_fts / 3600);
 		$cur_day = intval($ct / 86400);
 		$last_maintenance_day = intval($last_maintenance / 86400);
 
 		extract($this->parameters_);
 
-		if( @clean_fts && $last_maintenance_day !== $cur_day ) {
+		if( @clean_fts && $last_clean_fts !== $cur_hour ) {
 
 			$timer = new \nano_timer;
 
-			/*$infobase->exec("DROP TABLE IF EXISTS products_fts");
-			$infobase->exec("DROP TABLE IF EXISTS customers_fts");
-			$infobase->create_scheme();
-
-			$infobase = new infobase;
-			$infobase->initialize();
-
-			$infobase->exec( <<<'EOT'
-				INSERT INTO customers_fts
-					SELECT
-						p.uuid,
-						p.name_fti AS name,
-						p.inn AS inn,
-						p.description_fti AS description
-					FROM
-						customers AS p
-EOT
-			);
-
-			$infobase->exec(<<<'EOT'
-				INSERT INTO products_fts
-					SELECT
-						p.uuid,
-						p.code_fti AS code,
-						p.name_fti AS name,
-						p.article_fti AS article,
-						p.description_fti AS description,
-						b.barcode
-					FROM
-						products AS p
-							LEFT JOIN barcodes_registry AS b
-							ON p.uuid = b.product_uuid
-EOT
-			);
-
-    		error_log("SQLITE FTS TABLES RECREATED, ellapsed: " . $timer->ellapsed_string($timer->last_nano_time()));
-*/
 			$infobase->exec(<<<'EOT'
 				WITH ids AS ( 
 					SELECT
@@ -123,6 +88,15 @@ EOT
 			);
 
     		error_log("SQLITE FTS TABLES CLEANED, ellapsed: " . $timer->ellapsed_string($timer->last_nano_time()));
+
+			$infobase->exec(<<<EOT
+				REPLACE INTO constants (
+					name, value_type, value_n
+				) VALUES (
+					'@last_clean_fts', 2, ${ct}
+				)
+EOT
+			);
 
 		}
 

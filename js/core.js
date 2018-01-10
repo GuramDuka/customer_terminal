@@ -1,3 +1,5 @@
+// https://addons.mozilla.org/ru/firefox/addon/full-screen-for-firefox/
+// Open about:config then change the pref full-screen-api.allow-trusted-requests-only
 //------------------------------------------------------------------------------
 let null_uuid = '00000000-0000-0000-0000-000000000000';
 let manager = null;
@@ -1691,6 +1693,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 					let table = xpath_eval_single('html/body/div[@table]', iframe, iframe);
 					let html = '';
+					let rouble = '&#x20bd;';//'<i rouble>&nbsp;</i>';
 
 					for( let i = 0; i < new_page_state.cart_.length; i++ ) {
 
@@ -1698,8 +1701,8 @@ class HtmlPageEvents extends HtmlPageState {
 
 						html = html + `
 							<p product>
-							${i + 1}. ${e.name + ' [' + e.code + ']'} ${e.price + '<i rouble>&psi;</i>'} ${e.buy_quantity + '&nbsp;шт'}
-							<span psum>&nbsp;=${e.price * e.buy_quantity + '<i rouble>&psi;</i>'}</span>
+							${i + 1}. ${e.name + ' [' + e.code + ']'} ${e.price + rouble} ${e.buy_quantity + '&nbsp;шт'}
+							<span psum>&nbsp;=${e.price * e.buy_quantity + rouble}</span>
 							</p>`
 						;
 
@@ -1709,7 +1712,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 					let footer = xpath_eval_single('html/body/div[@footer]', iframe, iframe);
 					xpath_eval_single('p[@totals]/span[@txt]'	, footer, iframe).innerHTML = 'Сумма:';
-					xpath_eval_single('p[@totals]/span[@sum]'	, footer, iframe).innerHTML = data.order.totals + '<i rouble>&psi;</i>';
+					xpath_eval_single('p[@totals]/span[@sum]'	, footer, iframe).innerHTML = data.order.totals + rouble;
 
 					let barcode = data.order.barcode;
 					//barcode = data.order.barcode_eangnivc;
@@ -2404,7 +2407,7 @@ class HtmlPageEvents extends HtmlPageState {
 
 				let e = xpath_eval_single('div[@discount_value]', element.parentNode.parentNode);
 				xpath_eval_single('font[@price]', e).innerHTML = n;
-				xpath_eval_single('font[@summ]', e).innerHTML = n * cart_entity.buy_quantity;
+				xpath_eval_single('font[@summ]', e).innerHTML = round(n * cart_entity.buy_quantity, 2);
 			}
 		}
 	}
@@ -4453,6 +4456,8 @@ function core() {
 		head.appendChild(lnk);
 
 	}
+	else
+		doFullScreen();
 
 	if( !qp.dct ) {
 

@@ -36,10 +36,10 @@ function get_image_url($base_image_uuid, $base_image_ext, $canvas = false) {
 
 		if( $canvas ) {
 
-			if( file_exists($name . $guid . '.' . config::$canvas_format) ) {
+			if( file_exists($name . $guid . '.' . substr(config::$canvas_format, 0, 3)) ) {
 
 				$uuid = $guid;
-				$ext = config::$canvas_format;
+				$ext = substr(config::$canvas_format, 0, 3);
 
 			}
 			else if( file_exists($name . $guid . '.' . $ext) ) {
@@ -49,9 +49,9 @@ function get_image_url($base_image_uuid, $base_image_ext, $canvas = false) {
 			}
 			else if( file_exists($name . $uuid . '.' . $ext) ) {
 			}
-			else if( file_exists($name . $uuid . '.' . config::$canvas_format) ) {
+			else if( file_exists($name . $uuid . '.' . substr(config::$canvas_format, 0, 3)) ) {
 
-				$ext = config::$canvas_format;
+				$ext = substr(config::$canvas_format, 0, 3);
 
 			}
 			else {//if( !file_exists($name . $guid . '.' . $ext) ) {
@@ -65,9 +65,9 @@ function get_image_url($base_image_uuid, $base_image_ext, $canvas = false) {
 
 			if( file_exists($name . $uuid . '.' . $ext) ) {
 			}
-			else if( file_exists($name . $uuid . '.' . config::$canvas_format) ) {
+			else if( file_exists($name . $uuid . '.' . substr(config::$canvas_format, 0, 3)) ) {
 
-				$ext = config::$canvas_format;
+				$ext = substr(config::$canvas_format, 0, 3);
 
 			}
 			else {//if( !file_exists($name . $uuid . '.' . $ext) ) {
@@ -180,16 +180,16 @@ function request_exchange_node($exchange_url_hide, $exchange_user_hide, $exchang
 	$request = $request_json_encoded ? $request_hide : json_encode($request_hide, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 	$request_hide = '';
 
-	$ch = curl_init();
+	$ch = \curl_init();
 
 	\runtime_exception::throw_false($ch);
 
 	if( strtolower((substr($exchange_url, 0, 5)) === 'https') ) {
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+		\curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		\curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 	}
 
-	curl_setopt($ch, CURLOPT_HTTPHEADER			, [
+	\curl_setopt($ch, CURLOPT_HTTPHEADER			, [
 		'Content-Type: application/json; charset=utf-8',
 		'Cache-Control: no-store, no-cache, must-revalidate, max-age=0',
 		'Accept: */*'
@@ -198,31 +198,31 @@ function request_exchange_node($exchange_url_hide, $exchange_user_hide, $exchang
 		//'Accept-Encoding: gzip, deflate'
 	]);
 
-	curl_setopt($ch, CURLOPT_USERPWD			, "$exchange_user:$exchange_pass");
-	curl_setopt($ch, CURLOPT_HTTPAUTH			, CURLAUTH_BASIC);
-	curl_setopt($ch, CURLOPT_FAILONERROR		, false);
-	curl_setopt($ch, CURLOPT_URL				, $exchange_url);
-	curl_setopt($ch, CURLOPT_REFERER			, $exchange_url);
-	curl_setopt($ch, CURLOPT_VERBOSE			, false);
-	curl_setopt($ch, CURLOPT_POST				, true);
-	curl_setopt($ch, CURLOPT_FOLLOWLOCATION		, true);
-	curl_setopt($ch, CURLOPT_POSTFIELDS			, $request);
-	//curl_setopt($ch, CURLOPT_USERAGENT		, "Mozilla/4.0 (Windows; U; Windows NT 5.0; En; rv:1.8.0.2) Gecko/20070306 Firefox/1.0.0.4");
-	curl_setopt($ch, CURLOPT_HEADER				, true);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER		, true);
-	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT		, 15);
-	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS	, 15000);
-	curl_setopt($ch, CURLOPT_TIMEOUT			, 30);
-	curl_setopt($ch, CURLOPT_TIMEOUT_MS			, 30000);
-	//curl_setopt($ch, CURLOPT_COOKIEJAR		, TMP_DIR . 'cookie.txt');		// get auth
-	//curl_setopt($ch, CURLOPT_COOKIEFILE		, TMP_DIR . 'cookie.txt');		// use auth
+	\curl_setopt($ch, CURLOPT_USERPWD			, "$exchange_user:$exchange_pass");
+	\curl_setopt($ch, CURLOPT_HTTPAUTH			, CURLAUTH_BASIC);
+	\curl_setopt($ch, CURLOPT_FAILONERROR		, false);
+	\curl_setopt($ch, CURLOPT_URL				, $exchange_url);
+	\curl_setopt($ch, CURLOPT_REFERER			, $exchange_url);
+	\curl_setopt($ch, CURLOPT_VERBOSE			, false);
+	\curl_setopt($ch, CURLOPT_POST				, true);
+	\curl_setopt($ch, CURLOPT_FOLLOWLOCATION	, true);
+	\curl_setopt($ch, CURLOPT_POSTFIELDS		, $request);
+	//\curl_setopt($ch, CURLOPT_USERAGENT		, "Mozilla/4.0 (Windows; U; Windows NT 5.0; En; rv:1.8.0.2) Gecko/20070306 Firefox/1.0.0.4");
+	\curl_setopt($ch, CURLOPT_HEADER			, true);
+	\curl_setopt($ch, CURLOPT_RETURNTRANSFER	, true);
+	\curl_setopt($ch, CURLOPT_CONNECTTIMEOUT	, 15);
+	\curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS	, 15000);
+	\curl_setopt($ch, CURLOPT_TIMEOUT			, 30);
+	\curl_setopt($ch, CURLOPT_TIMEOUT_MS		, 30000);
+	//\curl_setopt($ch, CURLOPT_COOKIEJAR		, TMP_DIR . 'cookie.txt');		// get auth
+	//\curl_setopt($ch, CURLOPT_COOKIEFILE		, TMP_DIR . 'cookie.txt');		// use auth
 
-	$response = curl_exec($ch);
+	$response = \curl_exec($ch);
 
 	\curl_exception::throw_curl_error($ch);
 
-	$curl_info = curl_getinfo($ch);
-	curl_close($ch);
+	$curl_info = \curl_getinfo($ch);
+	\curl_close($ch);
 
 	// if CURLOPT_FAILONERROR === true && http_code !== 200 then curl library automatical set curl_error to nonzero
 	// and this check not needed

@@ -275,8 +275,8 @@ EOT
 			$raw_filter = $this->infobase_->escapeString($fts_filter);
 
 			$sql = <<<EOT
-				SELECT
-					MAX(rowid) AS rowid, uuid
+				SELECT DISTINCT
+					uuid
 				FROM
 					products_fts
 				WHERE
@@ -293,11 +293,9 @@ EOT
 					-- FTS3
 					-- OR
 					-- products_fts MATCH '(code:${filter3}) OR (name:${filter3}) OR (article:${filter3}) OR (description:${filter3}) OR (barcode:${raw_filter})'
-				GROUP BY
-       				uuid
 EOT
 			;
-			error_log($sql);
+			//error_log($sql);
 			//$bind_values['fts_filter'] = $anchor_filter . ' AND ' . transform_fts_filter($fts_filter);
 
 			$with = @$selections === null && @$car === null ? 'WITH' : ',';
